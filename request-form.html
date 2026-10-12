@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
+<title>Целевая форма заявки</title>
+<meta name="description" content="Прототип целевой формы создания заявки (Figma 6783:33804): пустая форма → черновик при первом вводе (Figma 7439:148673)">
+<style>
+  /* Layout: ЛК клиента/админа — вкладка «Группы заявок» → экран группы (черновик / отправлена) → модалки DS; сверху харнесс прототипа */
+  :root{
+    color-scheme: dark;
+    --bg:#181C1F;
+    --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.06); --panel-solid:#26292C;
+    --field:rgba(255,255,255,.10);
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --text:#ffffff; --text-2:#e3e9eb; --muted:#8A9092; --muted2:#6E767A;
+    --label:rgba(255,255,255,.6); --dim:rgba(255,255,255,.35);
+    --primary:#07BBB2; --primary-dim:rgba(7,187,178,.14);
+    --accent:#61C7D6; --accent-dim:rgba(97,199,214,.10);
+    /* DS «Text» (статус, 1178:522) */
+    --st-pending:#F5CD06; --st-work:#61C7D6; --st-done:#00E887; --st-error:#FF6674; --st-none:#808C99;
+    /* DS «Alert» */
+    --warn:#F5CD06; --warn-bg:rgba(245,205,6,.10);
+    --err:#FF6674; --err-bg:rgba(255,102,116,.10);
+    --glass:rgba(24,28,31,.62);
+    --radius:16px; --r-field:12px; --r-pill:32px;
+    --f: "Commissioner", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--f); color:var(--text);
+    background:
+      url("bg.webp") top center / cover no-repeat,
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.45;
+  }
+  a{color:var(--primary); text-decoration:none}
+  button{font-family:inherit}
+  [hidden]{display:none!important}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  /* ---------- харнесс прототипа ---------- */
+  .harness{background:rgba(20,23,26,.94); border-bottom:1px solid var(--line); padding:10px clamp(16px,4vw,40px)}
+  .harness-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px 22px; max-width:1240px; margin:0 auto}
+  .harness .tag{font-size:10px; letter-spacing:.14em; font-weight:600; color:var(--primary);
+    border:1px solid rgba(7,187,178,.5); border-radius:5px; padding:3px 8px; text-transform:uppercase}
+  .ctl{display:flex; align-items:center; gap:9px; min-width:0; flex-wrap:wrap}
+  .ctl > span.lbl{font-size:11px; color:var(--muted); letter-spacing:.04em; white-space:nowrap}
+  .seg{display:inline-flex; flex-wrap:wrap; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:3px}
+  .seg button{appearance:none; border:0; background:transparent; color:var(--muted);
+    font-size:12.5px; font-weight:500; padding:6px 11px; border-radius:6px; cursor:pointer; white-space:nowrap; transition:.12s}
+  .seg button:hover{color:#fff}
+  .seg button[aria-pressed="true"]{background:var(--primary); color:#04231f; font-weight:600}
+  .hint{font-size:11.5px; color:var(--muted2); flex:1 1 300px; min-width:0; margin:0}
+  .hint b{color:var(--muted); font-weight:500}
+
+  /* ---------- меню переключения прототипов (общее для страниц) ---------- */
+  .proto-menu{position:relative; flex:none}
+  .pm-trigger{appearance:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:#fff;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:6px 11px}
+  .pm-trigger:hover{border-color:var(--line-strong)}
+  .pm-chev{width:13px;height:13px;color:var(--muted); transition:transform .15s}
+  .pm-trigger[aria-expanded="true"] .pm-chev{transform:rotate(180deg)}
+  .pm-pop{position:absolute; top:calc(100% + 8px); left:0; z-index:60; min-width:290px;
+    background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px}
+  .pm-pop a{display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:8px; color:#fff; font-size:13px; font-weight:500}
+  .pm-pop a:hover{background:rgba(255,255,255,.06)}
+  .pm-pop a .pm-ic{width:16px;height:16px;color:var(--muted);flex:none;margin-top:1px}
+  .pm-pop a small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px;line-height:1.35}
+  .pm-pop a[aria-current="page"]{background:var(--primary-dim)}
+  .pm-pop a[aria-current="page"] .pm-ic{color:var(--primary)}
+
+  /* ---------- верхняя навигация ЛК: прозрачная, стекло при скролле ---------- */
+  .topnav{position:sticky; top:env(safe-area-inset-top,0px); z-index:35;
+    background:transparent; border-bottom:1px solid transparent; padding:0 clamp(16px,4vw,40px);
+    transition:background .22s ease, border-color .22s ease}
+  body.scrolled .topnav{background:var(--glass);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom-color:var(--line)}
+  .topnav-in{max-width:1240px; margin:0 auto; height:56px; display:flex; align-items:center; gap:24px}
+  .brand-links,.nav-links{display:flex; gap:22px; align-items:center; min-width:0}
+  .nav-links{gap:20px; overflow-x:auto; scrollbar-width:none}
+  .nav-links::-webkit-scrollbar{display:none}
+  .brand-links a,.nav-links a{display:flex; align-items:center; gap:7px; color:var(--muted); font-weight:500; font-size:13.5px; white-space:nowrap}
+  .brand-links a.active,.nav-links a.active{color:#fff}
+  .nav-links a.new{color:var(--primary)}
+  .brand-links .ic{width:15px;height:15px;opacity:.75}
+  .who{margin-left:auto; display:flex; align-items:center; gap:10px; white-space:nowrap}
+  .who .help{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#cfd6d8;background:rgba(255,255,255,.08)}
+  .who .help svg{width:16px;height:16px}
+  .who .nm{font-size:13px;font-weight:600;line-height:1.1}
+  .who .rl{font-size:11px;color:var(--muted)}
+
+  /* ---------- шапка группы: залипает под навигацией + glass, как в «Переводе свободных полей» ---------- */
+  .lk-header{position:sticky; top:calc(var(--topnav-h,56px) + env(safe-area-inset-top,0px)); z-index:30;
+    background:transparent; box-shadow:none; transition:background .22s ease, box-shadow .22s ease}
+  body.scrolled .lk-header{background:var(--glass);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    box-shadow:0 12px 34px -22px rgba(0,0,0,.8)}
+  .lk-header-in{max-width:1320px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 0}
+  .lk-header .crumbs{margin:0 0 10px}
+  .crumbs a{color:var(--muted)}
+  .crumbs a:hover{color:#fff}
+  .lk-header .head{margin-top:0; flex-wrap:nowrap; align-items:center}
+  .lk-header h1{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .backc{appearance:none; flex:none; width:32px; height:32px; border-radius:50%; border:0; cursor:pointer; display:grid; place-items:center;
+    background:rgba(255,255,255,.10); color:#fff}
+  .backc:hover{background:rgba(255,255,255,.16)}
+  .backc svg{width:16px; height:16px}
+  .gsum{margin:8px 0 0; font-size:13px; color:var(--muted); display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px; row-gap:2px}
+  .gsum .bul{color:var(--dim)}
+  .gsum .ghost{color:var(--warn)}
+  /* табы заявок — DS «Filter tabs» (1152:2905): пилюли r32, Medium 16/20, неактивный — opacity .8 */
+  .rtabs{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:14px 0 14px; margin:0 -4px; padding-inline:4px}
+  .rtabs::-webkit-scrollbar{display:none}
+  .rtab{appearance:none; flex:none; display:inline-flex; align-items:center; gap:7px; cursor:pointer; white-space:nowrap;
+    padding:6px 12px; border-radius:var(--r-pill); border:1px solid transparent; background:transparent;
+    color:#fff; font-size:16px; line-height:20px; font-weight:500; opacity:.8; transition:opacity .12s, background .12s}
+  .rtab:hover{opacity:1; background:rgba(255,255,255,.06)}
+  .rtab[aria-selected="true"]{opacity:1; background:rgba(255,255,255,.10); border-color:#fff}
+  .rtab svg{width:14px; height:14px; flex:none}
+  .rtab .edot{width:8px; height:8px; border-radius:50%; background:var(--err); flex:none}
+  .rtab.add-tab{color:var(--accent); opacity:1}
+  .rtab.add-tab:hover{background:var(--accent-dim)}
+  #gPanel{scroll-margin-top:calc(var(--stack-h,200px) + 12px)}
+  #gPanel{margin-top:12px}
+  #gPanel .req-head{cursor:default; display:block}
+  .rh1{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap}
+  .rh1 .kebab{margin-left:auto}
+  /* название заявки: меньше названия группы (h1 22–30px), больше секций формы (17px) */
+  #gPanel .req-title{font-size:22px; line-height:28px; font-weight:600; letter-spacing:-.3px; margin:0; white-space:normal}
+  .rh2{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 4px; padding-top:8px; font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
+  .rh2 .soon{color:var(--warn)}
+  .rh2 .sv.err{color:var(--err); font-weight:500}
+  .rh2 .btn.link{font-size:16px; padding:0 2px}
+  @media (max-width:560px){ #gPanel .req-title{font-size:19px; line-height:24px} .rh2{font-size:14px; line-height:20px} }
+  #gPanel .req-head:hover{background:none}
+  .kid-row{display:flex; align-items:center; gap:6px}
+  @media (max-width:560px){
+    .lk-header .crumbs{display:none}
+    .lk-header .head{flex-wrap:wrap; row-gap:8px}
+    .lk-header h1{white-space:normal; flex:1 1 0; font-size:20px}
+    .lk-header .head .acts{order:2; margin-left:0}
+    .lk-header .head .acts .lbl{display:none}
+    .lk-header .head .acts .btn{width:32px; padding:0}
+    .lk-header #gRef,.lk-header #gStatus{order:3}
+    .rtab{font-size:15px}
+  }
+  .kid-row .kid{flex:1; min-width:0}
+
+  /* ---------- контейнер ---------- */
+  .wrap{max-width:1320px; margin:0 auto; padding:18px clamp(16px,4vw,40px) 80px}
+
+  /* ---------- примитивы DS ---------- */
+  .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    height:40px; padding:0 20px; border:0; border-radius:var(--r-pill); font-size:15px; font-weight:500; color:#fff;
+    background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
+    white-space:nowrap; transition:background .12s, filter .12s}
+  .btn:hover{background:rgba(255,255,255,.15)}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn.primary{background:var(--primary); box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.danger{background:rgba(255,102,116,.16); color:#ffb3ba; box-shadow:inset 0 0 0 1px rgba(255,102,116,.35)}
+  .btn.danger:hover{background:rgba(255,102,116,.24)}
+  .btn:disabled{background:rgba(255,255,255,.06); color:var(--dim); box-shadow:none; cursor:not-allowed; filter:none}
+  .btn.sm{height:32px; padding:0 14px; font-size:13.5px}
+  .btn.link{height:auto; padding:4px 2px; background:none; box-shadow:none; color:var(--accent); font-size:13.5px}
+  .btn.link:hover{background:none; text-decoration:underline}
+  .btn.link.del{color:#ff9aa3}
+
+  .status{display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:var(--r-pill);
+    background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    font-size:14px; line-height:22px; font-weight:500; color:#fff; white-space:nowrap}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:var(--st-none);flex:none}
+  .status.s-new .dot{background:var(--st-pending)}
+  .status.s-draft{color:var(--dim); font-weight:400}
+  .status.s-wait .dot{background:transparent; border:2px solid rgba(255,255,255,.25); border-top-color:var(--accent); animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .ref{display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,.10); border-radius:6px;
+    padding:2px 8px; font-size:13px; font-weight:600; color:#fff; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .ref .h{color:var(--dim); font-weight:600}
+  .ref.draft{color:var(--label); font-weight:500}
+  .ref.wait{color:var(--label); font-weight:500}
+  .ref.wait::before{content:""; width:9px; height:9px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--accent); animation:spin .8s linear infinite}
+
+  .alert{display:flex; gap:10px; align-items:flex-start; border-radius:12px; padding:14px 16px; font-size:14px; font-weight:500; line-height:20px}
+  .alert > svg{width:18px;height:18px;flex:none;margin-top:1px}
+  .alert .body{flex:1; min-width:0}
+  .alert .body small{display:block; margin-top:3px; font-weight:400; color:rgba(255,255,255,.72); font-size:13px}
+  .alert.warn{background:var(--warn-bg); color:var(--warn)}
+  .alert.err{background:var(--err-bg); color:var(--err)}
+  .alert.info{background:var(--accent-dim); color:var(--accent)}
+  .alert ul{margin:8px 0 0; padding:0; list-style:none; display:grid; gap:6px}
+  .alert li{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; color:#ffd2d6; font-weight:400; font-size:13.5px}
+  .alert li .btn.link{color:#fff; font-size:13px}
+
+  .f{display:flex; flex-direction:column; gap:8px; min-width:0}
+  .f label{font-size:13px; color:var(--label)}
+  .f label i{color:var(--err); font-style:normal}
+  .f input,.f select{height:46px; width:100%; border-radius:var(--r-field); background:var(--field);
+    border:1px solid transparent; color:#fff; font:inherit; font-size:15px; padding:0 14px; transition:border-color .12s}
+  .f select{appearance:none; padding-right:38px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center}
+  .f select option{background:#26292C; color:#fff}
+  .f input::placeholder{color:rgba(255,255,255,.38)}
+  .f input:hover,.f select:hover{border-color:rgba(255,255,255,.14)}
+  .f input:focus,.f select:focus{outline:none; border-color:var(--primary)}
+  .f.wide{grid-column:1 / -1}
+  .f .lab{font-size:13px; color:var(--label)}
+  .f .lab i{color:var(--err); font-style:normal}
+  .f textarea{width:100%; min-height:84px; resize:vertical; border-radius:var(--r-field); background:var(--field); border:1px solid transparent;
+    color:#fff; font:inherit; font-size:15px; padding:12px 14px; transition:border-color .12s}
+  .f textarea::placeholder{color:rgba(255,255,255,.38)}
+  .f textarea:hover{border-color:rgba(255,255,255,.14)}
+  .f textarea:focus{outline:none; border-color:var(--primary)}
+  .f .hint-t{font-size:12px; color:var(--muted2); line-height:1.35}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chipb{appearance:none; cursor:pointer; border:1px solid transparent; background:rgba(255,255,255,.10); color:#fff;
+    border-radius:var(--r-pill); padding:6px 14px; font-size:14px; line-height:22px; text-align:left}
+  .chipb:hover{background:rgba(255,255,255,.14)}
+  .chipb[aria-checked="true"]{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+  .f.bad .lab{color:var(--err)}
+  .f.bad .chipb{border-color:rgba(255,102,116,.55)}
+  .f.bad textarea{border-color:var(--err)}
+  .fsec{padding:18px 0 4px; border-bottom:1px solid var(--line)}
+  .fsec:last-of-type{border-bottom:0}
+  .fsec h3{font-size:17px; font-weight:600; margin:0; letter-spacing:-.2px}
+  .fsec .form,.fsec .kv-grid{margin-top:14px}
+  .card .fsec:first-child{padding-top:0}
+  .f .err-t{display:none; font-size:12px; color:var(--err)}
+  .f.bad label{color:var(--err)}
+  .f.bad input,.f.bad select{border-color:var(--err)}
+  .f.bad .err-t{display:block}
+
+  .chk{display:flex; gap:12px; align-items:flex-start; cursor:pointer; font-size:14.5px; color:var(--text-2)}
+  .chk input{appearance:none; width:18px; height:18px; flex:none; margin:1px 0 0; border-radius:4px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; cursor:pointer; display:grid; place-items:center}
+  .chk input:checked{background:var(--primary); border-color:var(--primary)}
+  .chk input:checked::after{content:""; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:translateY(-1px) rotate(45deg)}
+
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .ftab{appearance:none; cursor:pointer; border:1px solid transparent; background:rgba(255,255,255,.10); color:#fff;
+    border-radius:var(--r-pill); padding:6px 14px; font-size:14.5px; line-height:22px}
+  .ftab:hover{background:rgba(255,255,255,.14)}
+  .ftab[aria-pressed="true"]{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+  .ftab .n{color:var(--muted); margin-left:6px; font-variant-numeric:tabular-nums}
+
+  /* ---------- шапки экранов ---------- */
+  .backpill{appearance:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.06); border:1px solid var(--line); color:#dfe8e7; font-size:13.5px; font-weight:500;
+    padding:8px 16px 8px 12px; border-radius:999px}
+  .backpill:hover{background:rgba(255,255,255,.1)}
+  .backpill svg{width:16px;height:16px}
+  .crumbs{font-size:12.5px; color:var(--muted); margin:4px 0 12px}
+  h1{font-size:clamp(22px,3vw,30px); font-weight:600; letter-spacing:-.5px; margin:0; text-wrap:balance}
+  .head{display:flex; align-items:center; gap:12px 14px; flex-wrap:wrap; margin-top:16px}
+  .head .acts{margin-left:auto; display:flex; gap:10px; flex-wrap:wrap}
+  .lead{color:var(--muted); font-size:14px; margin:10px 0 0; max-width:78ch}
+  .meta{display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:10px; color:var(--muted); font-size:13px}
+  .meta b{color:var(--text-2); font-weight:500}
+  .stack{display:grid; gap:12px; margin-top:18px}
+  .stack:empty{display:none}
+
+  /* ---------- список групп ---------- */
+  .toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; margin-top:20px}
+  .search{position:relative; flex:0 1 380px; margin-left:auto}
+  .search svg{position:absolute; left:14px; top:50%; width:18px; height:18px; transform:translateY(-50%); color:var(--label); pointer-events:none}
+  .search input{width:100%; height:44px; border-radius:var(--r-field); background:var(--field); border:1px solid transparent;
+    color:#fff; font:inherit; font-size:14.5px; padding:0 14px 0 42px}
+  .search input::placeholder{color:rgba(255,255,255,.4)}
+  .search input:focus{outline:none; border-color:var(--primary)}
+  .search-note{font-size:12.5px; color:var(--muted); margin-top:10px}
+  .search-note b{color:var(--text-2); font-weight:500}
+
+  .groups{display:grid; gap:12px; margin-top:18px}
+  .grp{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .grp-head{display:grid; grid-template-columns:20px minmax(0,1.25fr) minmax(0,1.3fr) auto; align-items:center; gap:10px 18px;
+    padding:16px 20px; cursor:pointer}
+  .grp-head:hover{background:rgba(255,255,255,.025)}
+  .chev{width:18px;height:18px;color:var(--muted);transition:transform .15s;display:grid;place-items:center}
+  .chev svg{width:18px;height:18px}
+  .grp.open .grp-head .chev{transform:rotate(90deg)}
+  .grp-title{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .grp-title b{font-size:15.5px; font-weight:600}
+  .grp-sub{font-size:12.5px; color:var(--muted); margin-top:4px}
+  .grp-vol{font-size:13.5px; color:var(--text-2); min-width:0}
+  .grp-vol .regs{color:var(--muted); font-size:12.5px; margin-top:3px}
+  .miss{color:var(--warn); font-style:normal}
+  .tagc{font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--accent); background:var(--accent-dim); border-radius:6px; padding:2px 7px}
+  .lock{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:500; color:var(--warn); background:var(--warn-bg); border-radius:6px; padding:2px 8px; white-space:nowrap}
+  .lock svg{width:12px;height:12px}
+  .grp-kids{display:none; padding:2px 20px 16px 58px; gap:8px}
+  .grp.open .grp-kids{display:grid}
+  .kid{appearance:none; cursor:pointer; text-align:left; color:inherit; width:100%;
+    display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; padding:11px 14px; border-radius:12px;
+    background:var(--panel-2); border:1px solid var(--line)}
+  .kid:hover{border-color:var(--line-strong); background:rgba(255,255,255,.08)}
+  .kid.hit{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim)}
+  .kid .t{font-weight:600; font-size:14.5px}
+  .kid .m{color:var(--muted); font-size:13px; min-width:0}
+  .kid .r{margin-left:auto; display:flex; align-items:center; gap:10px}
+  .grp-kids .open-g{justify-self:start; margin-top:2px}
+  .empty{border:1px dashed var(--line-strong); border-radius:var(--radius); padding:44px 20px; text-align:center; color:var(--muted)}
+  .empty b{display:block; color:var(--text-2); font-size:15px; font-weight:600; margin-bottom:6px}
+
+  /* ---------- экран группы ---------- */
+  .counters{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+  .chip{display:flex; align-items:baseline; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px}
+  .chip b{font-size:18px; font-weight:600; font-variant-numeric:tabular-nums}
+  .chip span{font-size:13px; color:var(--muted)}
+  .chip.warn{border-color:rgba(245,205,6,.3); background:var(--warn-bg)}
+  .chip.warn span{color:var(--warn)}
+  .chip.ghost{background:transparent; border-style:dashed}
+  .regline{font-size:13px; color:var(--muted); margin-top:10px}
+  .regline b{color:var(--text-2); font-weight:500}
+
+  .sec{font-size:18px; font-weight:600; margin:28px 0 2px; letter-spacing:-.2px}
+  .sec-sub{color:var(--muted); font-size:13.5px; margin:0 0 14px}
+  .reqs{display:grid; gap:10px}
+  .req{background:var(--panel-2); border:1px solid var(--line-strong); border-radius:12px; overflow:hidden}
+  .req.bad{border-color:rgba(255,102,116,.55)}
+  .req.copy{border-color:rgba(245,205,6,.35)}
+  .req.priv{border-style:dashed}
+  .req.flash{animation:flash 1.2s ease-out}
+  @keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+  .req-head{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; padding:13px 16px; cursor:pointer}
+  .req-head:hover{background:rgba(255,255,255,.03)}
+  .req.open .req-head .chev{transform:rotate(90deg)}
+  .req-title{font-size:15px; font-weight:600; white-space:nowrap}
+  .req-meta{font-size:13px; color:var(--muted); min-width:0}
+  .req-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+  .dmeta{font-size:12px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .dmeta .exp.soon{color:var(--warn)}
+  .dmeta .sv{color:var(--text-2)}
+  .dmeta .sv.err{color:var(--err); font-weight:500}
+  .dmeta .btn.link{font-size:12px; padding:0 2px; color:var(--accent)}
+  .req.bad .miss{color:var(--err)}
+  .kebab{appearance:none; border:0; background:transparent; color:var(--muted); width:32px; height:32px; border-radius:8px;
+    display:grid; place-items:center; cursor:pointer; flex:none}
+  .kebab:hover,.kebab[aria-expanded="true"]{background:rgba(255,255,255,.10); color:#fff}
+  .kebab svg{width:18px;height:18px}
+  .rmenu{position:fixed; z-index:70; width:260px; background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px; animation:fade .12s ease-out}
+  .rmenu button{appearance:none; border:0; background:none; color:#fff; font-size:14px; font-weight:500; text-align:left; cursor:pointer;
+    padding:10px 12px; border-radius:8px; display:flex; gap:10px; align-items:flex-start}
+  .rmenu button svg{width:16px; height:16px; flex:none; margin-top:2px; color:var(--muted)}
+  .rmenu button:hover,.rmenu button:focus-visible{background:rgba(255,255,255,.08); outline:none}
+  .rmenu button small{display:block; color:var(--muted); font-size:12px; font-weight:400; margin-top:2px}
+  .rmenu .del,.rmenu .del svg{color:#ff9aa3}
+  .req-body{display:none; padding:4px 16px 16px; border-top:1px solid var(--line)}
+  .req.open .req-body{display:block}
+  .req-body > .alert{margin-top:14px}
+  .form{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 18px; margin-top:16px}
+  .kv-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 24px; margin-top:16px}
+  .kv .k{display:block; font-size:12.5px; color:var(--muted)}
+  .kv .v{font-size:14.5px; color:var(--text-2)}
+  .form-note{font-size:12px; color:var(--muted2); margin:14px 0 0}
+  .req-acts{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
+  .req-acts .note{font-size:12.5px; color:var(--muted); margin-right:auto; flex:1 1 220px}
+  .req-acts .sp,.foot .sp{flex:1}
+
+  .add{appearance:none; cursor:pointer; width:100%; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:10px;
+    min-height:56px; padding:10px 16px; border-radius:12px; border:1.5px dashed rgba(97,199,214,.55); background:rgba(255,255,255,.025);
+    color:var(--accent); font-size:15px; font-weight:500}
+  .add:hover{background:var(--accent-dim)}
+  .add svg{width:18px;height:18px}
+  .add small{color:var(--muted); font-size:12.5px; font-weight:400}
+
+  .foot{display:flex; flex-wrap:wrap; align-items:center; gap:12px 14px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line)}
+  .foot .note{flex:1 1 300px; font-size:13px; color:var(--muted)}
+  .foot .note.warn{color:var(--warn)}
+  /* отправка доступна из любой заявки: панель действий липнет к низу экрана (BRD §4.2.1) */
+  .foot.sticky{position:sticky; bottom:0; z-index:20; margin:24px -16px 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    background:rgba(24,28,31,.82); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    border-top:1px solid var(--line); border-radius:14px 14px 0 0}
+  /* карточка вложенной заявки */
+  .band{display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:18px; padding:14px 18px; border-radius:14px;
+    background:var(--accent-dim); box-shadow:inset 0 0 0 1px rgba(97,199,214,.25)}
+  .band .lbl{color:var(--text-2); font-weight:500}
+  .band .sp{flex:1}
+  .band small{flex-basis:100%; color:var(--muted); font-size:12.5px}
+  .card{margin-top:18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px clamp(18px,2.6vw,30px)}
+  .card h2{font-size:17px; font-weight:600; margin:0}
+  .card .kv-grid{margin-top:18px}
+
+  /* ---------- модалка DS (glass) ---------- */
+  .mbg{position:fixed; inset:0; z-index:80; background:rgba(8,11,13,.55); display:grid; place-items:start center;
+    overflow:auto; padding:max(28px,6vh) 16px 28px; animation:fade .14s ease-out}
+  @keyframes fade{from{opacity:0}}
+  .modal{width:min(640px,100%); border-radius:20px; padding:32px clamp(20px,4vw,32px); display:flex; flex-direction:column; gap:22px;
+    background:rgba(46,50,54,.78); -webkit-backdrop-filter:blur(60px) saturate(1.3); backdrop-filter:blur(60px) saturate(1.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -20px rgba(0,0,0,.75)}
+  .m-top{display:flex; align-items:flex-start; gap:12px}
+  .m-top h2{font-size:24px; line-height:32px; font-weight:600; margin:0; letter-spacing:-.3px; flex:1}
+  .m-x{appearance:none; border:0; background:rgba(255,255,255,.08); color:#cfd6d8; width:32px; height:32px; border-radius:50%; cursor:pointer; display:grid; place-items:center; flex:none}
+  .m-x:hover{background:rgba(255,255,255,.14)}
+  .m-x svg{width:16px;height:16px}
+  .m-lead{color:var(--label); font-size:14.5px; margin:-10px 0 0}
+  .m-acts{display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; padding-top:4px}
+  .sum{display:flex; gap:12px; align-items:flex-start; background:var(--accent-dim); border-radius:12px; padding:14px 16px; font-size:14.5px; color:var(--text-2)}
+  .sum .sig{color:var(--accent); font-weight:600; font-size:17px; line-height:20px}
+  .sum b{color:#fff}
+  .prevs{display:grid; gap:10px}
+  .prev{background:rgba(255,255,255,.06); border-radius:12px; padding:14px 16px}
+  .prev-h{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .prev-h b{font-size:15px}
+  .prev .kv-grid{margin-top:12px; gap:10px 18px}
+  .prev .kv .v{font-size:13.5px}
+  .delta{display:grid; gap:6px; background:rgba(255,255,255,.06); border-radius:12px; padding:14px 16px; font-size:14px; color:var(--text-2)}
+  .delta .row{display:flex; justify-content:space-between; gap:12px}
+  .delta .row span{color:var(--muted)}
+  .delta .up{color:var(--st-done)}
+
+  /* ---------- toast ---------- */
+  #toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:90; transform:translate(-50%,16px);
+    background:var(--panel-solid); border:1px solid var(--line-strong); color:#fff; border-radius:12px; padding:11px 16px;
+    font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; max-width:calc(100vw - 32px)}
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+
+  @media (max-width:860px){
+    .grp-head{grid-template-columns:20px minmax(0,1fr) auto}
+    .grp-vol{grid-column:2 / -1; grid-row:2}
+    .kv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:560px){
+    .form,.kv-grid,.prev .kv-grid{grid-template-columns:1fr}
+    .grp-kids{padding-left:20px}
+    .head .acts{margin-left:0}
+    .search{flex:1 1 100%; margin-left:0}
+    .who .nm,.who .rl{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+<style>
+  /* ---------- целевая форма заявки (Figma 6783:33804 пустая · 7439:148673 черновик) ---------- */
+  .tf-wrap{max-width:1472px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 80px}
+  .topnav-in,.harness-row{max-width:1392px}
+  .tf-crumbs{font-size:12.5px; color:var(--muted); margin:0 0 14px}
+  .tf-crumbs a{color:var(--muted)} .tf-crumbs a:hover{color:#fff}
+  .tf-crumbs span{color:#fff; font-weight:500}
+  .tf-title{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .tf-title h1{font-size:clamp(22px,3vw,28px); line-height:1.25}
+  .tf-back{position:relative; width:40px; height:40px}
+  .tf-back svg{width:18px; height:18px}
+  .tf-tip{position:absolute; left:-6px; bottom:calc(100% + 8px); z-index:40; white-space:nowrap; pointer-events:none;
+    background:#1c2023; border:1px solid var(--line-strong); border-radius:8px; padding:6px 10px; font-size:12px; line-height:16px; color:#fff;
+    box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s; text-align:left; font-weight:400}
+  .tf-tip small{display:block; color:var(--muted); font-size:12px}
+  .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
+  .tf-chip{display:inline-flex; align-items:center; gap:7px; padding:3px 11px; border-radius:var(--r-pill); background:rgba(255,255,255,.10);
+    font-size:12.5px; line-height:18px; color:var(--label)}
+  .tf-chip::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--st-none)}
+  .tf-sub{margin:8px 0 0; font-size:14px; color:var(--muted)}
+  .tf-meta{margin:8px 0 0; font-size:14px; color:var(--muted); display:flex; flex-wrap:wrap; column-gap:6px; row-gap:2px}
+  .tf-meta .bul{color:var(--dim)}
+  .tf-meta .saving{color:var(--accent)}
+
+  .tf-grid{display:grid; grid-template-columns:minmax(0,956px) minmax(240px,372px); justify-content:space-between; gap:24px 48px; margin-top:24px; align-items:start}
+  .tf-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px; min-width:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .tf-mode{display:flex; gap:6px; flex-wrap:wrap}
+  .tf-mode .rtab{font-size:14px; line-height:20px; padding:6px 12px}
+  .tf-drop{appearance:none; width:100%; cursor:pointer; margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:18px 16px 20px; border-radius:12px; border:1px solid var(--line-strong); background:rgba(255,255,255,.02); color:#fff; font:inherit; text-align:center}
+  .tf-drop:hover{background:rgba(255,255,255,.05)}
+  .tf-drop .mic{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.12); margin-bottom:8px}
+  .tf-drop .mic svg{width:16px; height:16px}
+  .tf-drop b{font-size:14px; font-weight:500}
+  .tf-drop small{font-size:12px; color:var(--muted)}
+  .tf-drop.rec .mic{background:var(--err); animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(255,102,116,.18)}}
+
+  .tf-sec{padding:24px 0; border-top:1px solid var(--line); scroll-margin-top:calc(var(--topnav-h,56px) + 16px)}
+  .tf-sec:first-of-type{border-top:0}
+  .tf-sec h2{font-size:22px; line-height:29px; font-weight:600; letter-spacing:-.3px; margin:0 0 24px}
+  .tf-rows{display:grid; gap:24px}
+  .tf-two{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
+  .tf-half{max-width:446px}
+
+  /* поле DS «dynamic input»: плейсхолдер = лейбл внутри, при значении лейбл уезжает вверх */
+  .fi{position:relative; min-width:0}
+  .fi .box{position:relative; display:flex; align-items:center; min-height:46px; border-radius:var(--r-field); background:var(--field);
+    border:1px solid transparent; transition:border-color .12s}
+  .fi .box:hover{border-color:rgba(255,255,255,.14)}
+  .fi .box:focus-within{border-color:var(--primary)}
+  .fi input,.fi select,.fi textarea{appearance:none; flex:1; min-width:0; width:100%; height:44px; border:0; background:transparent; color:#fff;
+    font:inherit; font-size:15px; padding:16px 14px 4px; outline:none}
+  .fi textarea{height:auto; min-height:94px; resize:vertical; padding-top:22px; line-height:20px}
+  .fi select{cursor:pointer; padding-right:40px}
+  .fi select option{background:#26292C; color:#fff}
+  .fi .pl{position:absolute; left:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55); pointer-events:none; transition:.12s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 80px)}
+  .fi .pl i,.qlab i{color:var(--err); font-style:normal}
+  .fi.has .pl,.fi .box:focus-within .pl{top:4px; font-size:12px; line-height:16px}
+  .fi:not(.has) select{color:transparent}
+  .fi .end{display:flex; gap:6px; padding-right:8px; flex:none; color:rgba(255,255,255,.6)}
+  .fi .end svg{width:16px; height:16px}
+  .fi .end.pe{pointer-events:none; position:absolute; right:6px; top:15px}
+  .step{appearance:none; width:28px; height:28px; border:0; border-radius:8px; background:rgba(255,255,255,.10); color:#fff; display:grid; place-items:center; cursor:pointer}
+  .step:hover{background:rgba(255,255,255,.16)}
+  .step svg{width:14px; height:14px}
+  .fi input[type=number]::-webkit-inner-spin-button{display:none}
+  .fi input[type=number]{-moz-appearance:textfield}
+  .fi input[type=date]::-webkit-calendar-picker-indicator{opacity:0; cursor:pointer}
+  .fi:not(.has) input[type=date]{color:transparent}
+  .ht{font-size:12px; line-height:16px; color:var(--muted); margin:6px 0 0}
+  .fi.bad .box{border-color:var(--err)}
+  .fi.bad .pl{color:var(--err)}
+  .et{display:none; font-size:12px; line-height:16px; color:var(--err); margin:6px 0 0}
+  .bad > .et{display:block}
+
+  .q{min-width:0}
+  .qlab{font-size:14px; line-height:20px; color:var(--label); margin:0 0 8px}
+  .q .chips{gap:8px}
+  .q .chipb{font-size:15px; line-height:20px; padding:8px 12px}
+  .q.bad .chipb{border-color:rgba(255,102,116,.55)}
+  .q.bad .qlab{color:var(--err)}
+
+  .tf-foot{display:flex; align-items:center; gap:12px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:24px}
+  .tf-foot .sp{flex:1}
+
+  /* степпер справа */
+  .tf-steps{position:sticky; top:calc(var(--topnav-h,56px) + 16px); display:flex; flex-direction:column; gap:0; padding:0; margin:0; list-style:none}
+  .tf-steps li + li{margin-top:24px; position:relative}
+  .tf-steps li + li::before{content:""; position:absolute; left:19px; top:-18px; height:12px; width:1px; background:var(--line-strong)}
+  .tf-steps button{appearance:none; border:0; background:none; color:var(--muted); font:inherit; font-size:14px; line-height:20px; cursor:pointer;
+    display:flex; align-items:center; gap:12px; padding:0; text-align:left}
+  .tf-steps button:hover{color:#fff}
+  .tf-steps .n{width:40px; height:40px; flex:none; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:500; color:#fff;
+    background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .tf-steps .on button{color:#fff}
+  .tf-steps .on .n{background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+  .tf-steps .done .n{background:var(--primary-dim); box-shadow:inset 0 0 0 1px rgba(7,187,178,.5); color:var(--primary)}
+
+  @media (max-width:1100px){ .tf-grid{grid-template-columns:minmax(0,1fr)} .tf-steps{display:none} }
+  @media (max-width:640px){
+    .tf-card{padding:18px 16px} .tf-two{grid-template-columns:1fr} .tf-half{max-width:none}
+    .tf-sec h2{font-size:19px; line-height:24px; margin-bottom:18px}
+    .tf-foot .btn{flex:1 1 100%}
+    .tf-crumbs{display:none}
+  }
+</style>
+</head>
+<body>
+<!-- ============ ХАРНЕСС ПРОТОТИПА ============ -->
+<div class="harness">
+  <div class="harness-row">
+    <span class="tag">Прототип</span>
+    <div class="proto-menu" id="protoMenu">
+      <button class="pm-trigger" aria-haspopup="menu" aria-expanded="false">
+        <span class="pm-cur">Целевая форма заявки</span>
+        <svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="pm-pop" role="menu" hidden>
+        <a role="menuitem" href="index.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 12h14M5 16h9"/><path d="M15.5 4.5l4 4"/></svg>
+          <span>Экран заявки<small>Перевод полей, роли, статусы, табы</small></span>
+        </a>
+        <a role="menuitem" href="related-requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+          <span>Связанные заявки<small>Колонка «2 + всего N» · карточка · экран заявки (T-03 §3)</small></span>
+        </a>
+        <a role="menuitem" href="request-groups.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>
+          <span>Группа заявок<small>Создание, дублирование заявки и группы, единая отправка (#215)</small></span>
+        </a>
+        <a role="menuitem" href="request-candidates.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><rect x="15" y="5" width="7" height="9" rx="1.5"/></svg>
+          <span>Кандидаты заявки<small>Таблица кандидатов · превью карточки справа</small></span>
+        </a>
+        <a role="menuitem" href="request-form.html" aria-current="page">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M14 17.5l1.5 1.5 3-3"/></svg>
+          <span>Целевая форма заявки<small>Создание заявки · черновик при первом вводе</small></span>
+        </a>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Состояние</span>
+      <div class="seg" id="stateSeg" role="group" aria-label="Состояние формы">
+        <button data-st="empty" aria-pressed="true">Пустая форма</button>
+        <button data-st="draft" aria-pressed="false">Черновик</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ НАВИГАЦИЯ ЛК КЛИЕНТА ============ -->
+<nav class="topnav"><div class="topnav-in">
+  <div class="brand-links">
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
+    <a href="#" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Заявки</span></a>
+  </div>
+  <div class="who"><span class="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg></span><div><div class="nm">ИП Гаврилова</div><div class="rl">Клиент в РФ</div></div></div>
+</div></nav>
+
+<main class="tf-wrap">
+  <p class="tf-crumbs"><a href="#">Заявки</a> / <span>Создать заявку</span></p>
+  <div class="tf-title">
+    <button class="backc tf-back" id="backBtn" aria-label="Вернуться к заявкам">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+      <span class="tf-tip" id="backTip" hidden>Вернуться к заявкам<small>Черновик сохранится</small></span>
+    </button>
+    <h1 id="title">Создать заявку</h1>
+    <span class="tf-chip" id="draftChip" hidden>Черновик</span>
+  </div>
+  <p class="tf-sub" id="sub">Заполните вручную, продиктуйте голосом или загрузите бриф для распознавания нейросетью</p>
+  <p class="tf-meta" id="meta" hidden></p>
+
+  <div class="tf-grid">
+    <form class="tf-card" id="form" novalidate autocomplete="off">
+      <div class="tf-mode" role="tablist">
+        <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать голосом</button>
+        <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить бриф</button>
+      </div>
+      <button type="button" class="tf-drop" id="drop">
+        <span class="mic" id="dropIc"></span>
+        <b id="dropT"></b>
+        <small id="dropS"></small>
+      </button>
+
+      <div style="margin-top:8px">
+        <section class="tf-sec" id="s1">
+          <h2>Способ привлечения и квота</h2>
+          <div class="tf-rows">
+            <div class="fi" data-req><div class="box">
+              <select name="attract"><option value=""></option><option>Квотируемые</option><option>Неквотируемые</option><option>Высококвалифицированные (ВКС)</option><option>Территория опережающего развития (ТОР)</option><option>Не знаю</option></select>
+              <span class="pl">Какой способ привлечения иностранных специалистов?<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div><p class="et">Обязательное поле</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s2">
+          <h2>Потребность в специалистах</h2>
+          <div class="tf-rows">
+            <div class="fi" data-req><div class="box">
+              <select name="region"><option value=""></option><option>Москва</option><option>Московская обл.</option><option>Ленинградская обл.</option><option>Республика Татарстан</option><option>Свердловская обл.</option><option>Краснодарский край</option></select>
+              <span class="pl">Регион работы<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div><p class="et">Обязательное поле</p></div>
+            <div class="fi"><div class="box"><input name="address"><span class="pl">Адрес работы</span></div>
+              <p class="ht">Для квотируемых специалистов адрес должен соответствовать согласованной квоте</p></div>
+            <div class="tf-two">
+              <div class="fi" data-req><div class="box"><input name="qty" type="number" min="1" inputmode="numeric"><span class="pl">Количество специалистов<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div>
+                <p class="et">Обязательное поле</p>
+                <p class="ht">Автоматическая проверка доступного остатка квоты не входит<br>в согласованный объём.</p></div>
+              <div class="fi"><div class="box"><input name="grade"><span class="pl">Грейд или разряд</span></div>
+                <p class="ht">Заполните, если для вакансии используется грейд или разряд</p></div>
+            </div>
+            <div class="q" data-req data-name="term"><p class="qlab">Срок привлечения специалистов<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">6 месяцев</button><button type="button" class="chipb">1 год</button><button type="button" class="chipb">2 года</button><button type="button" class="chipb">Другой срок</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi tf-half"><div class="box"><input name="start" type="date"><span class="pl">Планируемая дата выхода на работу</span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg></span></div>
+              <p class="ht">Планируемую дату можно указать при создании заявки или в черновике.</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s3">
+          <h2>Условия оплаты</h2>
+          <div class="tf-rows">
+            <div class="fi tf-half" data-req><div class="box"><input name="salary" inputmode="numeric"><span class="pl">Заработная плата, ₽<i>*</i></span></div>
+              <p class="et">Обязательное поле</p><p class="ht">В месяц, до вычета НДФЛ</p></div>
+            <div class="q" data-name="probation"><p class="qlab">Предусмотрен ли испытательный срок?</p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s4">
+          <h2>Бытовые условия и логистика</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="food"><p class="qlab">Компания организует питание?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="housing"><p class="qlab">Проживание сотрудников<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Общежитие</button><button type="button" class="chipb">Хостел</button><button type="button" class="chipb">Другое жильё</button><button type="button" class="chipb">Компания не предоставляет жильё</button></div>
+              <p class="et">Обязательное поле</p><p class="ht">Если компания предоставляет жильё, оно должно иметь статус жилого помещения</p></div>
+            <div class="q" data-req data-name="commute"><p class="qlab">Как сотрудники будут добираться до места работы?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Жильё находится в пешей доступности</button><button type="button" class="chipb">Сотрудники добираются самостоятельно</button><button type="button" class="chipb">Компания предоставляет транспорт</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s5">
+          <h2>Организация работ и медицина</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="foreman"><p class="qlab">Нужен ли бригадир?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-name="med"><p class="qlab">Требуется расширенный медосмотр?</p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s6">
+          <h2>Дополнительные услуги</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="tickets"><p class="qlab">Нужна помощь с покупкой билетов?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, купим билеты самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="airport"><p class="qlab">Нужна помощь со встречей сотрудников в аэропорту?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, встретим самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="translator"><p class="qlab">Нужен ли переводчик?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да, в штат</button><button type="button" class="chipb">Да, на период адаптации</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi"><div class="box"><textarea name="extra" rows="3"></textarea><span class="pl">Дополнительная информация</span></div></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s7">
+          <h2>Профиль вакансии и кандидата</h2>
+          <div class="tf-rows">
+            <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Предпочтительный пол специалистов</p>
+              <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
+              <p class="ht">Указывайте предпочтение только при наличии объективных требований, связанных с характером работы</p></div>
+            <div class="q" data-name="age" data-def="Диапазон возраста"><p class="qlab">Предпочтительный возраст</p>
+              <div class="chips"><button type="button" class="chipb">Диапазон возраста</button><button type="button" class="chipb">Не имеет значения</button></div>
+              <p class="ht">Указывайте возраст только при наличии объективных требований, связанных с характером работы</p></div>
+            <div class="tf-two" id="ageRange">
+              <div class="fi" data-req data-def="18"><div class="box"><input name="ageFrom" type="number" min="18" inputmode="numeric"><span class="pl">Возраст от, лет<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
+              <div class="fi"><div class="box"><input name="ageTo" type="number" min="18" inputmode="numeric"><span class="pl">Возраст до, лет</span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div></div>
+            </div>
+            <div class="fi"><div class="box"><textarea name="duties" rows="3"></textarea><span class="pl">Должностные обязанности</span></div>
+              <p class="ht">Опишите основные задачи специалиста</p></div>
+            <div class="fi"><div class="box"><textarea name="reqs" rows="3"></textarea><span class="pl">Требования к специалисту</span></div>
+              <p class="ht">Укажите необходимые навыки, опыт, образование, допуски или сертификаты</p></div>
+            <div class="q" data-name="interview"><p class="qlab">Формат собеседования</p>
+              <div class="chips"><button type="button" class="chipb">Очно</button><button type="button" class="chipb">Онлайн</button><button type="button" class="chipb">Отбор проводит исполнитель</button></div></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s8">
+          <h2>График и переработки</h2>
+          <div class="tf-rows">
+            <div class="q" data-name="schedule"><p class="qlab">Режим работы</p>
+              <div class="chips"><button type="button" class="chipb">5/2, 8 часов в день</button><button type="button" class="chipb">6/1, 8 часов в день</button><button type="button" class="chipb">Сменный график</button><button type="button" class="chipb">Вахта</button><button type="button" class="chipb">Другое</button></div></div>
+            <div class="q" data-name="overtime"><p class="qlab">Планируются ли переработки?</p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="tf-foot">
+        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик</button>
+        <span class="sp"></span>
+        <button type="button" class="btn primary" id="sendBtn">Отправить заявку</button>
+      </div>
+    </form>
+
+    <ol class="tf-steps" id="steps"></ol>
+  </div>
+</main>
+
+<div id="toast" role="status"></div>
+<div id="modalRoot"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const form=$("#form");
+const S={draft:false, created:null, saved:null, mode:"voice", rec:false};
+const pad=n=>String(n).padStart(2,"0");
+const dmy=d=>pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear();
+const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+
+/* ---------- дропзона: голос / бриф ---------- */
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>';
+function renderDrop(){
+  $$(".tf-mode .rtab").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===S.mode));
+  const v=S.mode==="voice";
+  $("#drop").classList.toggle("rec",v&&S.rec);
+  $("#dropIc").innerHTML=v?MIC:UP;
+  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовку"):"Нажмите, чтобы загрузить бриф";
+  $("#dropS").textContent=v?"Убедитесь, что нужные данные находятся рядом":"Нейросеть распознает бриф и заполнит поля формы";
+}
+$$(".tf-mode .rtab").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode; S.rec=false; renderDrop();}));
+$("#drop").addEventListener("click",()=>{
+  if(S.mode==="voice"){ S.rec=!S.rec; renderDrop(); if(!S.rec) toast("В прототипе диктовка не распознаётся"); }
+  else toast("В прототипе загрузка брифа не выполняется");
+});
+
+/* ---------- поля ---------- */
+function syncFi(fi){ const el=fi.querySelector("input,select,textarea"); fi.classList.toggle("has",!!el.value); }
+$$(".fi").forEach(fi=>{
+  const el=fi.querySelector("input,select,textarea");
+  el.addEventListener("input",()=>{syncFi(fi); fi.classList.remove("bad"); touched();});
+  el.addEventListener("change",()=>{syncFi(fi); touched();});
+  fi.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
+    const min=+el.min||0, v=el.value===""?(min||0):+el.value;
+    el.value=Math.max(min, v+(+b.dataset.d)); syncFi(fi); fi.classList.remove("bad"); touched();
+  }));
+});
+$$(".q").forEach(q=>{
+  q.querySelectorAll(".chipb").forEach(c=>{
+    c.setAttribute("role","radio"); c.setAttribute("aria-checked","false");
+    c.addEventListener("click",()=>{
+      const on=c.getAttribute("aria-checked")==="true";
+      q.querySelectorAll(".chipb").forEach(x=>x.setAttribute("aria-checked","false"));
+      if(!on) c.setAttribute("aria-checked","true");
+      q.classList.remove("bad"); syncAge(); touched();
+    });
+  });
+});
+const qVal=q=>{const c=q.querySelector('.chipb[aria-checked="true"]'); return c?c.textContent:"";};
+const setQ=(name,val)=>{const q=$('.q[data-name="'+name+'"]'); q.querySelectorAll(".chipb").forEach(c=>c.setAttribute("aria-checked",c.textContent===val));};
+function syncAge(){ $("#ageRange").hidden = qVal($('.q[data-name="age"]'))!=="Диапазон возраста"; }
+
+/* дефолты макета: пол «Мужской», возраст «Диапазон возраста», от 18 — не считаются вводом пользователя */
+function applyDefaults(){
+  form.querySelectorAll("input,select,textarea").forEach(el=>el.value="");
+  $$(".chipb").forEach(c=>c.setAttribute("aria-checked","false"));
+  $$(".q[data-def]").forEach(q=>setQ(q.dataset.name,q.dataset.def));
+  form.elements.ageFrom.value="18";
+  $$(".fi").forEach(fi=>{syncFi(fi); fi.classList.remove("bad");});
+  $$(".q").forEach(q=>q.classList.remove("bad"));
+  syncAge();
+}
+
+/* ---------- прогресс: только обязательные поля, дефолты засчитываются (#232) ---------- */
+function reqList(){ return $$("[data-req]").filter(n=>!n.closest("[hidden]")); }
+function filled(n){ return n.classList.contains("q") ? !!qVal(n) : !!n.querySelector("input,select,textarea").value; }
+function progress(){ const r=reqList(); return Math.round(r.filter(filled).length/r.length*100); }
+
+/* ---------- черновик: появляется при первом вводе пользователя ---------- */
+let saveT;
+function touched(){
+  if(!S.draft){ S.draft=true; S.created=new Date(); setSeg(); }
+  S.saving=true; renderHead();
+  clearTimeout(saveT); saveT=setTimeout(()=>{S.saving=false; S.saved=new Date(); renderHead(); renderSteps();},600);
+  renderSteps();
+}
+function renderHead(){
+  $("#draftChip").hidden=!S.draft;
+  $("#sub").hidden=S.draft;
+  $("#meta").hidden=!S.draft;
+  $("#backTip").hidden=!S.draft;
+  $("#delBtn").hidden=!S.draft;
+  if(!S.draft) return;
+  const del=new Date(S.created); del.setDate(del.getDate()+30);
+  const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),
+    S.saving?'<span class="saving">Сохраняется…</span>':"Сохранено: "+hm(S.saved||S.created)];
+  $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
+}
+function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===(S.draft?"draft":"empty"))); }
+
+/* ---------- степпер + подсветка текущей секции ---------- */
+const SECS=$$(".tf-sec");
+function renderSteps(){
+  const y=window.scrollY+window.innerHeight*.3;
+  let cur=0; SECS.forEach((s,i)=>{ if(s.getBoundingClientRect().top+window.scrollY<=y) cur=i; });
+  $("#steps").innerHTML=SECS.map((s,i)=>{
+    const req=[...s.querySelectorAll("[data-req]")].filter(n=>!n.closest("[hidden]"));
+    const done=S.draft && req.length && req.every(filled);
+    return '<li class="'+(i===cur?"on":"")+(done?" done":"")+'"><button type="button" data-i="'+i+'"><span class="n">'+(i+1)+'</span>'+s.querySelector("h2").textContent+'</button></li>';
+  }).join("");
+}
+$("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) SECS[+b.dataset.i].scrollIntoView({behavior:"smooth"});});
+
+/* ---------- действия ---------- */
+$("#sendBtn").addEventListener("click",()=>{
+  const miss=reqList().filter(n=>!filled(n));
+  miss.forEach(n=>n.classList.add("bad"));
+  if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
+  toast("Заявка отправлена (прототип)");
+});
+$("#backBtn").addEventListener("click",()=>toast(S.draft?"Переход к заявкам — черновик сохранён":"Переход к заявкам"));
+$("#delBtn").addEventListener("click",()=>{
+  $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+    '<div class="m-top"><h2 id="mT">Удалить черновик?</h2><button class="m-x" data-x aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
+    '<p class="m-lead" style="margin:0">Черновик будет удалён без возможности восстановления. Продолжить?</p>'+
+    '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn danger" id="mDel">Удалить</button></div></div></div>';
+  const close=()=>$("#modalRoot").innerHTML="";
+  $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
+  $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
+  $("#mDel").addEventListener("click",()=>{close(); reset(); toast("Черновик удалён");});
+});
+
+function reset(){ S.draft=false; S.created=S.saved=null; S.saving=false; applyDefaults(); setSeg(); renderHead(); renderSteps(); }
+function demoDraft(){
+  applyDefaults();
+  form.elements.attract.value="Квотируемые"; form.elements.region.value="Московская обл."; form.elements.qty.value="12";
+  setQ("term","1 год"); setQ("food","Да");
+  $$(".fi").forEach(syncFi);
+  const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
+  S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30); S.saving=false;
+  setSeg(); renderHead(); renderSteps();
+}
+$$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ b.dataset.st==="draft"?demoDraft():reset(); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
+
+let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove("show"),2400); }
+
+/* ---------- меню прототипов ---------- */
+(function(){
+  const pm=document.getElementById("protoMenu"); if(!pm) return;
+  const trig=pm.querySelector(".pm-trigger"), p=pm.querySelector(".pm-pop");
+  const cl=()=>{p.hidden=true; trig.setAttribute("aria-expanded","false");};
+  const op=()=>{p.hidden=false; trig.setAttribute("aria-expanded","true");};
+  trig.addEventListener("click",e=>{e.stopPropagation(); p.hidden?op():cl();});
+  document.addEventListener("click",e=>{if(!pm.contains(e.target)) cl();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape") cl();});
+})();
+
+/* ---------- glass-навигация при скролле ---------- */
+function onScroll(){ document.body.classList.toggle("scrolled",window.scrollY>$(".harness").offsetHeight-2); renderSteps(); }
+document.documentElement.style.setProperty("--topnav-h",$(".topnav").offsetHeight+"px");
+window.addEventListener("scroll",onScroll,{passive:true});
+
+renderDrop();
+(location.hash==="#draft")?demoDraft():reset();
+</script>
+</body>
+</html>
