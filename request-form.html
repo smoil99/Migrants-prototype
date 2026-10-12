@@ -481,6 +481,34 @@
   #dupAlert .x svg{width:14px; height:14px}
   #dupAlert .sv-retry{margin-left:6px}
   .tf-card.flash{animation:flash 1.2s ease-out}
+  /* ---------- боковые карточки заявки — как на «Экране заявки» (index.html) ---------- */
+  .tf-side{align-self:stretch; min-width:0}
+  .side-cards{display:grid; gap:16px; margin-bottom:32px}
+  .scard{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px}
+  .scard h3{margin:0 0 14px; font-size:15px; font-weight:600}
+  .prog-num{font-size:13px; color:var(--muted)}
+  .prog-num b{color:#fff; font-size:15px}
+  .scard .bar{height:7px; border-radius:6px; background:rgba(255,255,255,.1); margin:10px 0 4px; overflow:hidden}
+  .scard .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--accent))}
+  .sinfo{font-size:12px; color:var(--muted); margin-top:12px}
+  .sinfo b{display:block; color:#fff; font-size:14px; font-weight:500; margin-top:2px}
+  .partner{display:flex; align-items:center; gap:10px; margin-top:12px}
+  .partner:first-of-type{margin-top:0}
+  .partner .lg{width:32px; height:32px; border-radius:8px; background:#0e2028; display:grid; place-items:center; font-size:10px; font-weight:700; color:var(--accent); flex:none}
+  .partner .lg.none{background:rgba(255,255,255,.05); color:var(--dim)}
+  .partner .pn{font-size:10.5px; color:var(--muted)}
+  .partner .pv{font-size:13px; color:#fff; font-weight:500}
+  .partner .pv.none{color:var(--dim); font-weight:400}
+  .collapse{display:flex; align-items:center; justify-content:space-between; cursor:pointer; width:100%; background:transparent; border:0; padding:0; font-family:inherit; color:inherit; text-align:left}
+  .collapse .cv{color:var(--muted); transition:transform .18s ease}
+  .collapse[aria-expanded="true"] .cv{transform:rotate(180deg)}
+  .history{display:grid; gap:10px; margin-top:14px}
+  .hrow{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .hpill{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:#fff; border:1px solid var(--line-strong); background:rgba(255,255,255,.04); padding:5px 12px; border-radius:20px}
+  .hdot{width:8px; height:8px; border-radius:50%; background:var(--accent); flex:none}
+  .hdot.draft{background:var(--st-none)}
+  .htime{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+  @media (max-width:1100px){ .side-cards{margin:8px 0 0} }
   /* тултипы шапки уходят вверх, в зону навигации: пока они открыты, шапка выше навигации */
   .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible,.tf-back:hover,.tf-back:focus-visible){z-index:40}
   /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
@@ -852,7 +880,10 @@
       </div>
     </form>
 
-    <ol class="tf-steps" id="steps"></ol>
+    <aside class="tf-side">
+      <div class="side-cards" id="sideCards" hidden></div>
+      <ol class="tf-steps" id="steps"></ol>
+    </aside>
   </div>
 </main>
 
@@ -1144,11 +1175,30 @@ function showSent(){
   clearTimeout(saveT); showDupAlert("");
   const now=new Date(), yy=String(now.getFullYear()).slice(2);
   S.sent=true; S.sentAt=now; S.ref="№"+yy+pad(now.getMonth()+1)+pad(now.getDate())+"_1"; S.save="ok"; S.bad=[];
+  renderSide();
   document.body.classList.add("sent"); S.st="sent"; setSeg();
   history.replaceState(null,"","#sent");
   renderHead(); renderSteps(); window.scrollTo({top:0});
 }
-function unsent(){ if(!S.sent) return; S.sent=false; document.body.classList.remove("sent"); $$(".kvv").forEach(n=>n.remove()); }
+function unsent(){ if(!S.sent) return; S.sent=false; document.body.classList.remove("sent"); $$(".kvv").forEach(n=>n.remove()); $("#sideCards").hidden=true; }
+const dts=d=>dmy(d)+", "+hm(d)+":"+pad(d.getSeconds());
+function renderSide(){
+  const E=form.elements, qty=+E.qty.value||0, start=fiVal(E.start);
+  const cr=S.created||S.sentAt;
+  $("#sideCards").innerHTML=
+    '<div class="scard"><h3>Прогресс найма</h3><div class="prog-num">Нанято кандидатов</div><div class="prog-num"><b>0</b> / '+qty+'</div>'+
+      '<div class="bar"><i style="width:0"></i></div><div class="sinfo"><span>Дата выхода на работу</span><b>'+(start||"Не указана")+'</b></div></div>'+
+    '<div class="scard"><h3>Партнёры</h3>'+
+      '<div class="partner"><div class="lg">ИГ</div><div><div class="pn">Работодатель</div><div class="pv">ИП Гаврилова А. В.</div></div></div>'+
+      '<div class="partner"><div class="lg none">—</div><div><div class="pn">Партнёр в РФ</div><div class="pv none">Не назначен</div></div></div>'+
+      '<div class="partner"><div class="lg none">—</div><div><div class="pn">Партнёр в Индии</div><div class="pv none">Не назначен</div></div></div></div>'+
+    '<div class="scard"><button class="collapse" id="historyToggle" type="button" aria-expanded="false" aria-controls="historyBody"><h3 style="margin:0">История статусов</h3><span class="cv">⌄</span></button>'+
+      '<div class="history" id="historyBody" hidden>'+
+        '<div class="hrow"><span class="hpill"><span class="hdot draft"></span>Черновик</span><span class="htime">'+dts(cr)+'</span></div>'+
+        '<div class="hrow"><span class="hpill"><span class="hdot"></span>Новая</span><span class="htime">'+dts(S.sentAt)+'</span></div></div></div>';
+  $("#sideCards").hidden=false;
+  $("#historyToggle").addEventListener("click",e=>{ const b=$("#historyBody"); b.hidden=!b.hidden; e.currentTarget.setAttribute("aria-expanded",String(!b.hidden)); });
+}
 
 function reset(){ unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
 /* демо-черновик + состояние индикатора сохранения из харнесса */
