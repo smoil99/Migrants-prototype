@@ -464,7 +464,7 @@
   .tf-sub{margin:8px 0 0; font-size:14px; color:var(--muted)}
   .tf-meta{margin:8px 0 0; font-size:14px; color:var(--muted); display:flex; flex-wrap:wrap; column-gap:6px; row-gap:2px}
   .tf-meta .bul{color:var(--dim)}
-  /* индикатор сохранения черновика (Figma 7366:80789 · 7366:83899 · 7366:84937 · 7366:85975 · 7379:95976 · 7380:99015) */
+  /* индикатор сохранения черновика (Figma 7366:80789 · 7366:83899 · 7366:85975 · 7379:95976 · 7380:99015) */
   .sv{display:inline-flex; align-items:center; gap:6px}
   .sv svg{width:14px; height:14px; flex:none}
   .sv.saving{color:transparent; background:linear-gradient(90deg,rgba(255,255,255,.35) 0%,#fff 45%,rgba(255,255,255,.35) 90%);
@@ -616,7 +616,6 @@
         <button data-st="offline" aria-pressed="false">Нет сети</button>
         <button data-st="field" aria-pressed="false">Ошибка в поле</button>
         <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
-        <button data-st="fields2" aria-pressed="false">Ошибки в полях · вар. 2</button>
       </div>
     </div>
   </div>
@@ -796,7 +795,7 @@
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const form=$("#form");
-const S={draft:false, created:null, saved:null, mode:"voice", rec:false, save:"ok", bad:[], tipV:1, st:"empty"};
+const S={draft:false, created:null, saved:null, mode:"voice", rec:false, save:"ok", bad:[], st:"empty"};
 const pad=n=>String(n).padStart(2,"0");
 const dmy=d=>pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear();
 const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
@@ -895,7 +894,7 @@ function saveHtml(){
     if(S.bad.length===1) return '<span class="sv warn">'+ICE+'Сохранено: '+t+', кроме поля “'+FIELDS[S.bad[0]].l+'”</span>';
     const tip='<span class="sv-info"><button type="button" aria-label="Какие поля проверить">'+ICI+'</button><span class="sv-tip" role="tooltip">Проверьте поля:<ul>'+
       S.bad.map(n=>'<li><button type="button" data-f="'+n+'">'+FIELDS[n].l+'</button></li>').join("")+'</ul></span></span>';
-    return '<span class="sv warn">'+ICE+(S.tipV===2?'Сохранено: '+t+', кроме некоторых полей:':'Сохранено: '+t+' (Проверьте некоторые поля)')+'</span>'+tip;
+    return '<span class="sv warn">'+ICE+'Сохранено: '+t+', кроме некоторых полей:'+'</span>'+tip;
   }
   return 'Сохранено: '+t;
 }
@@ -960,11 +959,11 @@ function demo(st){
   const E=form.elements;
   E.attract.value="Квотируемые"; E.region.value="Московская обл."; E.qty.value="12";
   setQ("term","1 год"); setQ("food","Да");
-  S.bad=[]; S.tipV=1;
-  if(st==="field"||st==="fields"||st==="fields2"){
+  S.bad=[];
+  if(st==="field"||st==="fields"){
     E.address.value="Московская область, городской округ Подольск, деревня Северово, территория индустриального парка «Северное Сияние», строение 7, корпус 2, помещение 14 — проход через КПП №3, затем вдоль складов логистического комплекса до административного здания, второй этаж, кабинет отдела кадров";
     S.bad=["address"];
-    if(st!=="field"){ E.salary.value="0"; S.bad.push("salary"); S.tipV=st==="fields2"?2:1; }
+    if(st==="fields"){ E.salary.value="0"; S.bad.push("salary"); }
   }
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
