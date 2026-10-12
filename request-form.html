@@ -509,6 +509,12 @@
   .hdot.draft{background:var(--st-none)}
   .htime{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
   @media (max-width:1100px){ .side-cards{margin:8px 0 0} }
+  /* «Отправлена»: без навигации по разделам; зазор между колонками = зазору между карточками (16px), карточки липнут как на «Экране заявки» */
+  body.sent .tf-steps{display:none}
+  body.sent .tf-grid{grid-template-columns:minmax(0,1fr) minmax(240px,372px); gap:16px; justify-content:normal}
+  body.sent .tf-side{align-self:start; position:sticky; top:calc(var(--stack-h,200px) + 16px)}
+  body.sent .side-cards{margin:0}
+  @media (max-width:1100px){ body.sent .tf-grid{grid-template-columns:minmax(0,1fr)} body.sent .tf-side{position:static} }
   /* тултипы шапки уходят вверх, в зону навигации: пока они открыты, шапка выше навигации */
   .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible,.tf-back:hover,.tf-back:focus-visible){z-index:40}
   /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
