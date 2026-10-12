@@ -952,7 +952,9 @@ $("#sendBtn").addEventListener("click",()=>{
   miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
   renderSteps();
   if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
-  toast("Заявка отправлена (прототип)");
+  /* всё корректно → экран готовой заявки в режиме просмотра («Экран заявки», вкладка «Обзор») */
+  const b=$("#sendBtn"); b.disabled=true; b.textContent="Отправляем…";
+  setTimeout(()=>{ location.href="index.html"; },500);
 });
 $("#backBtn").addEventListener("click",()=>toast(S.draft?"Переход к заявкам — черновик сохранён":"Переход к заявкам"));
 $("#delBtn").addEventListener("click",()=>{
