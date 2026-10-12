@@ -75,38 +75,38 @@
     transition:background .22s ease}
   body.scrolled .topnav{background:var(--glass);
     -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4)}
-  .topnav-in{max-width:1392px; margin:0 auto; height:64px; display:flex; align-items:center; gap:24px}
-  .brand-links{display:flex; gap:32px; align-items:center; min-width:0}
-  .brand-links a{display:flex; align-items:center; gap:10px; color:var(--label); font-weight:500; font-size:15px; white-space:nowrap}
+  .topnav-in{max-width:1240px; margin:0 auto; height:54px; display:flex; align-items:center; gap:26px}
+  .brand-links{display:flex; gap:22px; align-items:center; min-width:0}
+  .brand-links a{display:flex; align-items:center; gap:7px; color:var(--muted); font-weight:500; font-size:13.5px; white-space:nowrap}
   .brand-links a.active{color:#fff; font-weight:600}
-  .brand-links .ic{width:18px;height:18px;opacity:.8}
+  .brand-links .ic{width:15px;height:15px;opacity:.75}
   .who{margin-left:auto; display:flex; align-items:center; gap:12px; white-space:nowrap}
-  .who .help{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#cfd6d8;background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-  .who .help svg{width:20px;height:20px}
-  .who .nm{font-size:14px;font-weight:600;line-height:1.15}
-  .who .rl{font-size:11px;color:var(--label)}
-  .who .chev{width:16px;height:16px;color:var(--label);margin-left:18px}
+  .who .help{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#cfd6d8;background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .who .help svg{width:18px;height:18px}
+  .who .nm{font-size:13px;font-weight:600;line-height:1.15}
+  .who .rl{font-size:11px;color:var(--muted)}
+  .who .chev{width:16px;height:16px;color:var(--muted);margin-left:14px}
 
   /* ---------- контент ---------- */
-  .wrap{max-width:1392px; margin:0 auto; padding:28px clamp(16px,4vw,40px) 64px; box-sizing:content-box}
-  .crumbs{font-size:13px; color:var(--label); margin:0 0 16px}
-  .crumbs a{color:var(--label)} .crumbs a:hover{color:#fff}
+  .wrap{max-width:1240px; margin:0 auto; padding:22px clamp(16px,4vw,40px) 60px}
+  .crumbs{font-size:12.5px; color:var(--muted); margin:0 0 14px}
+  .crumbs a{color:var(--muted)} .crumbs a:hover{color:#fff}
   .crumbs b{color:#fff; font-weight:500}
   .crumbs .sep{margin:0 6px}
-  .head{display:flex; align-items:center; gap:10px 16px; flex-wrap:wrap}
-  h1{font-size:clamp(22px,3vw,32px); line-height:1.15; font-weight:600; letter-spacing:-.5px; margin:0}
-  .meta{display:flex; flex-wrap:wrap; gap:6px 26px; margin-top:16px; font-size:14px; color:var(--text-2)}
-  .meta span{display:inline-flex; align-items:center; gap:7px}
-  .meta svg{width:16px; height:16px; color:var(--label)}
+  .head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
+  h1{font-size:clamp(22px,3vw,30px); line-height:1.15; font-weight:600; letter-spacing:-.5px; margin:0; text-wrap:balance}
+  .meta{display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:12px; font-size:13px; color:var(--muted)}
+  .meta span{display:inline-flex; align-items:center; gap:6px}
+  .meta svg{width:15px; height:15px; color:var(--muted)}
 
-  /* DS «Tab» — подчёркнутые табы раздела */
-  .tabs{display:flex; gap:22px; margin-top:22px; border-bottom:1px solid var(--line-strong); overflow-x:auto; scrollbar-width:none}
+  /* DS «Tab» — как на экране «Обзор» */
+  .tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{appearance:none; border:0; background:none; cursor:pointer; position:relative; flex:none; text-decoration:none;
-    padding:10px 12px 14px; font-size:16px; line-height:24px; color:var(--label)}
-  .tab:hover{color:#fff}
-  .tab[aria-selected="true"]{color:#fff; font-weight:500}
-  .tab[aria-selected="true"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:#fff; border-radius:2px}
+    padding:0 0 12px; font-size:14px; font-weight:500; line-height:20px; color:var(--muted); transition:color .12s}
+  .tab:hover{color:#dbe6e8}
+  .tab[aria-selected="true"]{color:#fff}
+  .tab[aria-selected="true"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary)}
 
   /* glass-карточка DS: white@10%, r16, светлая обводка-блик */
   .glass{position:relative; background:var(--card); border-radius:var(--radius);
