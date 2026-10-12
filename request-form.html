@@ -1013,7 +1013,8 @@ let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
 /* ---------- glass-навигация при скролле ---------- */
 function onScroll(){ document.body.classList.toggle("scrolled",window.scrollY>$(".harness").offsetHeight-2); renderSteps(); }
 function setStackH(){
-  const t=$(".topnav").offsetHeight, h=$(".lk-header").offsetHeight;
+  /* дробная высота (zoom/DPR) округлялась вниз → щель в 1px; берём точную и заходим под бордер навигации на 1px */
+  const t=$(".topnav").getBoundingClientRect().height-1, h=$(".lk-header").getBoundingClientRect().height;
   document.documentElement.style.setProperty("--topnav-h",t+"px");
   document.documentElement.style.setProperty("--stack-h",(t+h)+"px");
 }
