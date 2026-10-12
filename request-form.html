@@ -464,7 +464,28 @@
   .tf-sub{margin:8px 0 0; font-size:14px; color:var(--muted)}
   .tf-meta{margin:8px 0 0; font-size:14px; color:var(--muted); display:flex; flex-wrap:wrap; column-gap:6px; row-gap:2px}
   .tf-meta .bul{color:var(--dim)}
-  .tf-meta .saving{color:var(--accent)}
+  /* индикатор сохранения черновика (Figma 7366:80789 · 7366:83899 · 7366:84937 · 7366:85975 · 7379:95976 · 7380:99015) */
+  .sv{display:inline-flex; align-items:center; gap:6px}
+  .sv svg{width:14px; height:14px; flex:none}
+  .sv.saving{color:transparent; background:linear-gradient(90deg,rgba(255,255,255,.35) 0%,#fff 45%,rgba(255,255,255,.35) 90%);
+    background-size:200% 100%; -webkit-background-clip:text; background-clip:text; animation:shim 1.3s linear infinite}
+  @keyframes shim{from{background-position:100% 0}to{background-position:-100% 0}}
+  .sv.err{color:var(--err)}
+  .sv.warn{color:var(--warn)}
+  .sv-retry{appearance:none; border:0; background:none; padding:0; font:inherit; color:#fff; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+  .sv-retry:hover{color:var(--accent)}
+  .sv-info{position:relative; display:inline-flex}
+  .sv-info > button{appearance:none; border:0; background:none; padding:0; color:var(--warn); cursor:pointer; display:grid; place-items:center}
+  .sv-info > button svg{width:16px; height:16px}
+  .sv-tip{position:absolute; left:50%; bottom:calc(100% + 8px); transform:translate(-50%,4px); z-index:45; min-width:150px; white-space:nowrap;
+    background:#1c2023; border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px; font-size:12px; line-height:16px; color:var(--label);
+    box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; visibility:hidden; transition:.14s}
+  .sv-tip::after{content:""; position:absolute; left:50%; top:100%; margin-left:-5px; border:5px solid transparent; border-top-color:#1c2023}
+  .sv-tip::before{content:""; position:absolute; left:0; right:0; top:100%; height:10px}
+  .sv-tip ul{margin:2px 0 0; padding:0 0 0 14px; color:#fff}
+  .sv-tip li button{appearance:none; border:0; background:none; padding:0; font:inherit; color:#fff; cursor:pointer; text-align:left}
+  .sv-tip li button:hover{text-decoration:underline}
+  .sv-info:hover .sv-tip,.sv-info:focus-within .sv-tip{opacity:1; visibility:visible; transform:translate(-50%,0)}
 
   .tf-grid{display:grid; grid-template-columns:minmax(0,956px) minmax(240px,372px); justify-content:space-between; gap:24px 48px; margin-top:24px; align-items:start}
   .tf-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px; min-width:0;
@@ -590,6 +611,12 @@
       <div class="seg" id="stateSeg" role="group" aria-label="Состояние формы">
         <button data-st="empty" aria-pressed="true">Пустая форма</button>
         <button data-st="draft" aria-pressed="false">Черновик</button>
+        <button data-st="saving" aria-pressed="false">Сохраняется</button>
+        <button data-st="error" aria-pressed="false">Не сохранено</button>
+        <button data-st="offline" aria-pressed="false">Нет сети</button>
+        <button data-st="field" aria-pressed="false">Ошибка в поле</button>
+        <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
+        <button data-st="fields2" aria-pressed="false">Ошибки в полях · вар. 2</button>
       </div>
     </div>
   </div>
@@ -769,7 +796,7 @@
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const form=$("#form");
-const S={draft:false, created:null, saved:null, mode:"voice", rec:false};
+const S={draft:false, created:null, saved:null, mode:"voice", rec:false, save:"ok", bad:[], tipV:1, st:"empty"};
 const pad=n=>String(n).padStart(2,"0");
 const dmy=d=>pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear();
 const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
@@ -795,7 +822,7 @@ $("#drop").addEventListener("click",()=>{
 function syncFi(fi){ const el=fi.querySelector("input,select,textarea"); fi.classList.toggle("has",!!el.value); }
 $$(".fi").forEach(fi=>{
   const el=fi.querySelector("input,select,textarea");
-  el.addEventListener("input",()=>{syncFi(fi); fi.classList.remove("bad"); touched();});
+  el.addEventListener("input",()=>{syncFi(fi); fi.classList.remove("bad"); S.bad=S.bad.filter(n=>n!==el.name); touched();});
   el.addEventListener("change",()=>{syncFi(fi); touched();});
   fi.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
     const min=+el.min||0, v=el.value===""?(min||0):+el.value;
@@ -834,12 +861,43 @@ function filled(n){ return n.classList.contains("q") ? !!qVal(n) : !!n.querySele
 function progress(){ const r=reqList(); return Math.round(r.filter(filled).length/r.length*100); }
 
 /* ---------- черновик: появляется при первом вводе пользователя ---------- */
+/* поля, которые сервер отклонил (400 по полю, #246): ошибка под полем, остальное сохранено */
+const FIELDS={address:{l:"Адрес работы",e:"Не больше 255 символов"}, salary:{l:"Заработная плата",e:"Значение должно быть больше 0"}};
+const ICE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>';
+const ICI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>';
 let saveT;
+function save(){
+  clearTimeout(saveT);
+  if(!navigator.onLine){ S.save="offline"; renderHead(); return; }
+  S.save="saving"; renderHead();
+  saveT=setTimeout(()=>{ S.saved=new Date(); S.save=S.bad.length?"partial":"ok"; markBad(); renderHead(); renderSteps(); },900);
+}
 function touched(){
-  if(!S.draft){ S.draft=true; S.created=new Date(); setSeg(); }
-  S.saving=true; renderHead();
-  clearTimeout(saveT); saveT=setTimeout(()=>{S.saving=false; S.saved=new Date(); renderHead(); renderSteps();},600);
-  renderSteps();
+  if(!S.draft){ S.draft=true; S.created=new Date(); }
+  if(S.save!=="offline") save();
+  S.st="draft"; setSeg(); renderSteps();
+}
+function markBad(){
+  $$(".fi").forEach(fi=>{
+    const el=fi.querySelector("input,select,textarea"), f=FIELDS[el.name]; if(!f) return;
+    let et=fi.querySelector(".et"); if(!et){ et=document.createElement("p"); et.className="et"; fi.querySelector(".box").after(et); }
+    const on=S.bad.includes(el.name);
+    fi.classList.toggle("bad",on); if(on) et.textContent=f.e;
+  });
+}
+function goField(name){ const el=form.elements[name]; el.closest(".fi").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>el.focus({preventScroll:true}),350); }
+function saveHtml(){
+  const t=hm(S.saved||S.created);
+  if(S.save==="saving") return '<span class="sv saving">Сохраняется…</span>';
+  if(S.save==="error") return '<span class="sv err">'+ICE+'Не сохранено</span> <span class="bul">•</span> <button type="button" class="sv-retry" id="retry">Повторить</button>';
+  if(S.save==="offline") return '<span class="sv err">'+ICE+'Нет сети — изменения не сохраняются</span>';
+  if(S.save==="partial"){
+    if(S.bad.length===1) return '<span class="sv warn">'+ICE+'Сохранено: '+t+', кроме поля “'+FIELDS[S.bad[0]].l+'”</span>';
+    const tip='<span class="sv-info"><button type="button" aria-label="Какие поля проверить">'+ICI+'</button><span class="sv-tip" role="tooltip">Проверьте поля:<ul>'+
+      S.bad.map(n=>'<li><button type="button" data-f="'+n+'">'+FIELDS[n].l+'</button></li>').join("")+'</ul></span></span>';
+    return '<span class="sv warn">'+ICE+(S.tipV===2?'Сохранено: '+t+', кроме некоторых полей:':'Сохранено: '+t+' (Проверьте некоторые поля)')+'</span>'+tip;
+  }
+  return 'Сохранено: '+t;
 }
 function renderHead(){
   $("#draftChip").hidden=!S.draft;
@@ -847,15 +905,20 @@ function renderHead(){
   $("#meta").hidden=!S.draft;
   $("#backTip").hidden=!S.draft;
   $("#delBtn").hidden=!S.draft;
-  setStackH();
-  if(!S.draft) return;
-  const del=new Date(S.created); del.setDate(del.getDate()+30);
-  const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),
-    S.saving?'<span class="saving">Сохраняется…</span>':"Сохранено: "+hm(S.saved||S.created)];
-  $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
+  if(S.draft){
+    const del=new Date(S.created); del.setDate(del.getDate()+30);
+    const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),saveHtml()];
+    $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
+  }
   setStackH();
 }
-function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===(S.draft?"draft":"empty"))); }
+$("#meta").addEventListener("click",e=>{
+  if(e.target.closest("#retry")) save();
+  const f=e.target.closest("[data-f]"); if(f) goField(f.dataset.f);
+});
+window.addEventListener("offline",()=>{ if(S.draft){ clearTimeout(saveT); S.save="offline"; renderHead(); } });
+window.addEventListener("online",()=>{ if(S.draft && S.save==="offline") save(); });
+function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===S.st)); }
 
 /* ---------- степпер + подсветка текущей секции ---------- */
 const SECS=$$(".tf-sec");
@@ -873,7 +936,7 @@ $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(
 /* ---------- действия ---------- */
 $("#sendBtn").addEventListener("click",()=>{
   const miss=reqList().filter(n=>!filled(n));
-  miss.forEach(n=>n.classList.add("bad"));
+  miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
   if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
   toast("Заявка отправлена (прототип)");
 });
@@ -889,17 +952,28 @@ $("#delBtn").addEventListener("click",()=>{
   $("#mDel").addEventListener("click",()=>{close(); reset(); toast("Черновик удалён");});
 });
 
-function reset(){ S.draft=false; S.created=S.saved=null; S.saving=false; applyDefaults(); setSeg(); renderHead(); renderSteps(); }
-function demoDraft(){
+function reset(){ clearTimeout(saveT); S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
+/* демо-черновик + состояние индикатора сохранения из харнесса */
+function demo(st){
+  clearTimeout(saveT);
   applyDefaults();
-  form.elements.attract.value="Квотируемые"; form.elements.region.value="Московская обл."; form.elements.qty.value="12";
+  const E=form.elements;
+  E.attract.value="Квотируемые"; E.region.value="Московская обл."; E.qty.value="12";
   setQ("term","1 год"); setQ("food","Да");
+  S.bad=[]; S.tipV=1;
+  if(st==="field"||st==="fields"||st==="fields2"){
+    E.address.value="Московская область, городской округ Подольск, деревня Северово, территория индустриального парка «Северное Сияние», строение 7, корпус 2, помещение 14 — проход через КПП №3, затем вдоль складов логистического комплекса до административного здания, второй этаж, кабинет отдела кадров";
+    S.bad=["address"];
+    if(st!=="field"){ E.salary.value="0"; S.bad.push("salary"); S.tipV=st==="fields2"?2:1; }
+  }
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
-  S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30); S.saving=false;
-  setSeg(); renderHead(); renderSteps();
+  S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline"}[st]||"partial";
+  S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
 }
-$$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ b.dataset.st==="draft"?demoDraft():reset(); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
+function go(st){ st==="empty"?reset():demo(st); }
+$$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ go(b.dataset.st); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
 
 let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove("show"),2400); }
 
@@ -925,7 +999,7 @@ setStackH(); window.addEventListener("resize",()=>{setStackH(); onScroll();});
 window.addEventListener("scroll",onScroll,{passive:true});
 
 renderDrop();
-(location.hash==="#draft")?demoDraft():reset();
+{ const h=location.hash.slice(1); go($$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
 </script>
 </body>
 </html>
