@@ -113,12 +113,14 @@
   .dup-btn{position:relative}
   .dup-btn > svg{width:16px; height:16px; flex:none}
   .dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
-  .dup-tip{position:absolute; right:0; bottom:calc(100% + 8px); z-index:40; width:max-content; max-width:300px; pointer-events:none; text-align:left;
+  .dup-tip{position:absolute; right:0; bottom:calc(100% + 8px); z-index:40; width:max-content; max-width:360px; pointer-events:none; text-align:left;
     background:#1c2023; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:6px 10px; font-size:12px; line-height:16px; font-weight:400; color:#fff;
     box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s}
   .dup-tip small{display:block; color:var(--muted); font-size:12px}
   .dup-btn:hover .dup-tip,.dup-btn:focus-visible .dup-tip{opacity:1; transform:none}
   .dup-btn.busy .dup-tip{display:none}
+  /* тултип уходит вверх, в зону навигации: пока он открыт, шапка выше навигации */
+  .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible){z-index:40}
   .dup-btn.busy{cursor:progress}
   .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:dspin .8s linear infinite}
   @keyframes dspin{to{transform:rotate(360deg)}}

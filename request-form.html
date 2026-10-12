@@ -465,7 +465,7 @@
   .dup-btn:hover{background:rgba(255,255,255,.15)}
   .dup-btn > svg{width:16px; height:16px; flex:none}
   .dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
-  .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:300px}
+  .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:360px}
   .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
   .dup-btn.busy{cursor:progress}
   .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
@@ -481,6 +481,8 @@
   #dupAlert .x svg{width:14px; height:14px}
   #dupAlert .sv-retry{margin-left:6px}
   .tf-card.flash{animation:flash 1.2s ease-out}
+  /* тултипы шапки уходят вверх, в зону навигации: пока они открыты, шапка выше навигации */
+  .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible,.tf-back:hover,.tf-back:focus-visible){z-index:40}
   /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
   .rc-ref{font-size:15px; line-height:22px; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.28); border-radius:6px; padding:0 7px; white-space:nowrap; font-variant-numeric:tabular-nums}
   .tf-chip.s-new{color:#fff; font-weight:500}
@@ -1038,10 +1040,12 @@ $("#sendBtn").addEventListener("click",()=>{
 });
 $("#backBtn").addEventListener("click",()=>{ location.href = S.draft&&!S.sent ? "requests.html#drafts" : "requests.html"; });
 $("#delBtn").addEventListener("click",()=>{
-  $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
-    '<div class="m-top"><h2 id="mT">Удалить черновик?</h2><button class="m-x" data-x aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
-    '<p class="m-lead" style="margin:0">Черновик будет удалён без возможности восстановления. Продолжить?</p>'+
-    '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn danger" id="mDel">Удалить</button></div></div></div>';
+  /* DS «Modal small» (7378:95780) */
+  $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+    '<div class="m-bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>'+
+    '<div class="m-top"><h2 id="mT">Удалить черновик?</h2></div>'+
+    '<p class="m-lead">Все поля внутри будут удалены без возможности восстановления.</p>'+
+    '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn primary" id="mDel">Удалить</button></div></div></div>';
   const close=()=>$("#modalRoot").innerHTML="";
   $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
   $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
