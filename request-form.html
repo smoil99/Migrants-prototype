@@ -464,12 +464,14 @@
     color:#fff; font:inherit; font-size:15px; font-weight:500; cursor:pointer; white-space:nowrap}
   .dup-btn:hover{background:rgba(255,255,255,.15)}
   .dup-btn > svg{width:16px; height:16px; flex:none}
+  .dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
+  .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:300px}
   .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
   .dup-btn.busy{cursor:progress}
   .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
   .dup-btn .tf-tip{left:auto; right:0}
   .dup-btn:hover .tf-tip,.dup-btn:focus-visible .tf-tip{opacity:1; transform:none}
-  @media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl{display:none} }
+  @media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl,.dup-btn .dup-i{display:none} }
   #dupAlert:not(:empty){margin-bottom:24px}
   #dupAlert .alert{align-items:center}
   #dupAlert .alert .body{color:#fff; font-weight:400}
@@ -479,6 +481,15 @@
   #dupAlert .x svg{width:14px; height:14px}
   #dupAlert .sv-retry{margin-left:6px}
   .tf-card.flash{animation:flash 1.2s ease-out}
+  /* DS «Modal small» (7323:50409): Icon bubble 60 + warning-diamond, действия по краям */
+  .modal.m-small{width:min(560px,100%); gap:24px}
+  .m-bubble{width:60px; height:60px; border-radius:50%; display:grid; place-items:center; flex:none;
+    background:linear-gradient(-37deg,rgba(240,234,7,0) 78%,rgba(240,234,7,.9) 118%),rgba(255,255,255,.10);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.2)}
+  .m-bubble img{width:32px; height:32px; display:block}
+  .m-small .m-lead{margin:0; font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
+  .m-small .m-acts{justify-content:space-between; padding-top:12px}
+  .m-small .m-acts .btn{height:46px; font-size:16px; font-weight:600; padding:0 21px}
   .tf-chip{display:inline-flex; align-items:center; gap:7px; padding:3px 11px; border-radius:var(--r-pill); background:rgba(255,255,255,.10);
     font-size:12.5px; line-height:18px; color:var(--label)}
   .tf-chip::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--st-none)}
@@ -626,6 +637,10 @@
           <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M14 17.5l1.5 1.5 3-3"/></svg>
           <span>Целевая форма заявки<small>Создание заявки · черновик при первом вводе</small></span>
         </a>
+        <a role="menuitem" href="requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>
+          <span>Список заявок<small>Статусы со счётчиками · черновики: дублировать, удалить</small></span>
+        </a>
       </div>
     </div>
     <div class="ctl">
@@ -651,14 +666,14 @@
 <nav class="topnav"><div class="topnav-in">
   <div class="brand-links">
     <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
-    <a href="#" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Заявки</span></a>
+    <a href="requests.html" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Заявки</span></a>
   </div>
   <div class="who"><span class="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg></span><div><div class="nm">ИП Гаврилова</div><div class="rl">Клиент в РФ</div></div></div>
 </div></nav>
 
 <!-- ============ ЗАЛИПАЮЩАЯ ШАПКА (как в «Экране заявки») ============ -->
 <header class="lk-header"><div class="lk-header-in">
-  <p class="tf-crumbs"><a href="#">Заявки</a> / <span>Создать заявку</span></p>
+  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span>Создать заявку</span></p>
   <div class="tf-title">
     <button class="backc tf-back" id="backBtn" aria-label="Вернуться к заявкам">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
@@ -669,7 +684,8 @@
     <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
       <span class="lbl">Дублировать</span>
-      <span class="tf-tip" id="dupTip" hidden>Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small></span>
+      <svg class="dup-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>
+      <span class="tf-tip" id="dupTip" role="tooltip"></span>
     </button>
   </div>
   <p class="tf-sub" id="sub">Заполните вручную, продиктуйте голосом или загрузите бриф для распознавания нейросетью</p>
@@ -939,7 +955,9 @@ function renderHead(){
   const db=$("#dupBtn"), blocked=S.save==="error"||S.save==="offline";
   db.hidden=!S.draft;
   db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
-  $("#dupTip").hidden=!blocked;
+  $("#dupTip").innerHTML=blocked
+    ? "Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small>"
+    : "Дубль откроется для редактирования<small>Текущий черновик заявки останется в «Черновиках»</small>";
   if(S.draft){
     const del=new Date(S.created); del.setDate(del.getDate()+30);
     const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),saveHtml()];
@@ -977,6 +995,7 @@ function renderSteps(){
     return '<li class="'+[i===cur?"on":"",st].join(" ").trim()+'"><button type="button" data-i="'+i+'"><span class="n">'+b+'</span>'+s.querySelector("h2").textContent+'</button></li>';
   }).join("");
 }
+$("#crumbList").addEventListener("click",e=>{ if(S.draft){ e.preventDefault(); location.href="requests.html#drafts"; } });
 $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) SECS[+b.dataset.i].scrollIntoView({behavior:"smooth"});});
 
 /* ---------- действия ---------- */
@@ -989,7 +1008,7 @@ $("#sendBtn").addEventListener("click",()=>{
   const b=$("#sendBtn"); b.disabled=true; b.textContent="Отправляем…";
   setTimeout(()=>{ location.href="index.html"; },500);
 });
-$("#backBtn").addEventListener("click",()=>toast(S.draft?"Переход к заявкам — черновик сохранён":"Переход к заявкам"));
+$("#backBtn").addEventListener("click",()=>{ location.href = S.draft ? "requests.html#drafts" : "requests.html"; });
 $("#delBtn").addEventListener("click",()=>{
   $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
     '<div class="m-top"><h2 id="mT">Удалить черновик?</h2><button class="m-x" data-x aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
@@ -1008,7 +1027,7 @@ function dupBusy(on){
   S.dupBusy=on; const b=$("#dupBtn");
   b.classList.toggle("busy",on);
   b.querySelector(".lbl").textContent=on?"Дублируем…":"Дублировать";
-  const ic=b.querySelector(":scope > svg, :scope > .spin");
+  const ic=b.querySelector(":scope > svg:not(.dup-i), :scope > .spin");
   if(on){ const sp=document.createElement("span"); sp.className="spin"; ic.replaceWith(sp); }
   else if(ic.classList.contains("spin")){ ic.outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; }
   renderHead();
@@ -1055,9 +1074,10 @@ $("#dupBtn").addEventListener("click",()=>{
   if(S.save==="partial"){
     const names=S.bad.map(n=>"«"+FIELDS[n].l+"»");
     const one=names.length===1;
-    $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
-      '<div class="m-top"><h2 id="mT">Дублировать заявку?</h2><button class="m-x" data-x aria-label="Закрыть">'+ICX+'</button></div>'+
-      '<p class="m-lead" style="margin:0">'+(one?"Поле "+names[0]+" не сохранено и не попадёт в дубль.":"Поля "+names.join(", ")+" не сохранены и не попадут в дубль.")+'</p>'+
+    $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+      '<div class="m-bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>'+
+      '<div class="m-top"><h2 id="mT">Дублировать заявку?</h2></div>'+
+      '<p class="m-lead">'+(one?"Поле "+names[0]+" не сохранено и не попадёт в дубль.":"Поля "+names.join(", ")+" не сохранены и не попадут в дубль.")+'</p>'+
       '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn primary" id="mDup">Дублировать</button></div></div></div>';
     const close=()=>$("#modalRoot").innerHTML="";
     $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
