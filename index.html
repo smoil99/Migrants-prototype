@@ -6,8 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
-<title>Перевод свободных полей</title>
-<meta name="description" content="Кликабельный прототип UX перевода свободнотекстовых полей заявки: роли, паттерны контрола, правка и подтверждение">
+<title>Экран заявки</title>
+<meta name="description" content="Кликабельный прототип экрана заявки: перевод свободных полей, роли, статусы, табы">
 <style>
   /* Layout: тёмный ЛК заявки — крупная левая панель с секциями + правый сайдбар; сверху панель-харнесс прототипа */
   :root{
@@ -97,10 +97,11 @@
   .meta{display:flex; flex-wrap:wrap; gap:20px; margin-top:10px; color:var(--muted); font-size:13px}
   .meta span{display:inline-flex; gap:6px; align-items:center}
   .tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line)}
-  .tabs button{appearance:none;border:0;background:0;font-family:inherit;color:var(--muted);
-    font-size:14px;font-weight:500;padding:0 0 12px;cursor:pointer;position:relative}
-  .tabs button.active{color:#fff}
-  .tabs button.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--primary)}
+  .tabs a{appearance:none;border:0;background:0;font-family:inherit;color:var(--muted);text-decoration:none;
+    font-size:14px;font-weight:500;padding:0 0 12px;cursor:pointer;position:relative;transition:color .12s}
+  .tabs a:hover{color:#dbe6e8}
+  .tabs a.active{color:#fff}
+  .tabs a.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--primary)}
 
   /* тумблер «Показать англ. версию» — в строке заголовка справа */
   .head-toggle{margin-left:auto}
@@ -278,13 +279,13 @@
     <!-- меню переключения фич -->
     <div class="proto-menu" id="protoMenu">
       <button class="pm-trigger" aria-haspopup="menu" aria-expanded="false">
-        <span class="pm-cur">Перевод свободных полей</span>
+        <span class="pm-cur">Экран заявки</span>
         <svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="pm-pop" role="menu" hidden>
         <a role="menuitem" href="index.html" aria-current="page">
           <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 12h14M5 16h9"/><path d="M15.5 4.5l4 4"/></svg>
-          <span>Перевод свободных полей<small>Роли, паттерны контрола, правка и подтверждение</small></span>
+          <span>Экран заявки<small>Перевод полей, роли, статусы, табы</small></span>
         </a>
         <a role="menuitem" href="related-requests.html">
           <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
@@ -312,8 +313,8 @@
     <div class="ctl" id="patternCtl">
       <span class="lbl">Паттерн контрола</span>
       <div class="seg" id="patternSeg" role="group" aria-label="Паттерн">
-        <button data-pat="header" aria-pressed="true">Хедер</button>
-        <button data-pat="inline" aria-pressed="false">Инлайн</button>
+        <button data-pat="header" aria-pressed="false">Хедер</button>
+        <button data-pat="inline" aria-pressed="true">Инлайн</button>
         <button data-pat="hover" aria-pressed="false">Ховер</button>
       </div>
     </div>
@@ -356,10 +357,10 @@
       <span data-i="m_city">Москва</span>
     </div>
     <div class="tabs" role="tablist">
-      <button class="active" data-i="tab_overview">Обзор</button>
-      <button data-i="tab_cand">Кандидаты</button>
-      <button data-i="tab_serv">Услуги</button>
-      <button data-i="tab_docs">Документы</button>
+      <a class="active" href="index.html" data-i="tab_overview">Обзор</a>
+      <a href="request-candidates.html" data-i="tab_cand">Кандидаты</a>
+      <a href="services.html" data-i="tab_serv">Услуги</a>
+      <a href="documents.html" data-i="tab_docs">Документы</a>
     </div>
   </div>
 </header>
@@ -507,7 +508,7 @@ const SECTIONS = [
 
 /* ---------------- Состояние ---------------- */
 let role = "client";           // client | admin | provider
-let pattern = "header";        // header | inline | hover
+let pattern = "inline";        // header | inline | hover
 let headerShowOther = false;
 let loading = false;            // идёт «подгрузка перевода» → скелетоны
 let loadTimer = null;
