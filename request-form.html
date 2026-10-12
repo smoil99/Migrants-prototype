@@ -481,6 +481,21 @@
   #dupAlert .x svg{width:14px; height:14px}
   #dupAlert .sv-retry{margin-left:6px}
   .tf-card.flash{animation:flash 1.2s ease-out}
+  /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
+  .rc-ref{font-size:15px; line-height:22px; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.28); border-radius:6px; padding:0 7px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .tf-chip.s-new{color:#fff; font-weight:500}
+  .tf-chip.s-new::before{background:var(--accent)}
+  body.sent #dupAlert,body.sent .tf-mode,body.sent #drop,body.sent .tf-foot,body.sent .tf-rows{display:none}
+  body.sent .tf-sec h2{margin-bottom:12px}
+  body.sent .tf-sec:first-of-type{padding-top:0}
+  body.sent .tf-card > div[style]{margin-top:0!important}
+  .kvv{margin:0; display:grid}
+  .kvv > div{display:grid; grid-template-columns:minmax(0,320px) minmax(0,1fr); gap:4px 24px; padding:12px 0; border-top:1px solid var(--line)}
+  .kvv > div:first-child{border-top:0}
+  .kvv dt{font-size:14px; line-height:20px; color:rgba(255,255,255,.6)}
+  .kvv dd{margin:0; font-size:15px; line-height:20px; color:#fff; white-space:pre-line; overflow-wrap:anywhere}
+  .kvv dd.none{color:var(--dim)}
+  @media (max-width:640px){ .kvv > div{grid-template-columns:1fr} }
   /* DS «Modal small» (7323:50409): Icon bubble 60 + warning-diamond, действия по краям */
   .modal.m-small{width:min(560px,100%); gap:24px}
   .m-bubble{width:60px; height:60px; border-radius:50%; display:grid; place-items:center; flex:none;
@@ -657,6 +672,7 @@
         <button data-st="submit" aria-pressed="false">Ошибки после отправки</button>
         <button data-st="dup" aria-pressed="false">Дубль создан</button>
         <button data-st="duperr" aria-pressed="false">Ошибка дублирования</button>
+        <button data-st="sent" aria-pressed="false">Отправлена</button>
       </div>
     </div>
   </div>
@@ -673,13 +689,14 @@
 
 <!-- ============ ЗАЛИПАЮЩАЯ ШАПКА (как в «Экране заявки») ============ -->
 <header class="lk-header"><div class="lk-header-in">
-  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span>Создать заявку</span></p>
+  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span id="crumbCur">Создать заявку</span></p>
   <div class="tf-title">
     <button class="backc tf-back" id="backBtn" aria-label="Вернуться к заявкам">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
       <span class="tf-tip" id="backTip" hidden>Вернуться к заявкам<small>Черновик сохранится</small></span>
     </button>
     <h1 id="title">Создать заявку</h1>
+    <span class="rc-ref" id="sentRef" hidden></span>
     <span class="tf-chip" id="draftChip" hidden>Черновик</span>
     <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
@@ -947,6 +964,17 @@ function saveHtml(){
   return 'Сохранено: '+t;
 }
 function renderHead(){
+  if(S.sent){
+    $("#draftChip").hidden=false; $("#draftChip").textContent="Новая"; $("#draftChip").classList.add("s-new");
+    $("#sub").hidden=true; $("#meta").hidden=false; $("#backTip").hidden=true; $("#delBtn").hidden=true;
+    $("#title").textContent="Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
+    const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
+    $("#dupTip").innerHTML="Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small>";
+    $("#meta").innerHTML="Отправлена: "+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
+    setStackH(); return;
+  }
+  $("#draftChip").textContent="Черновик"; $("#draftChip").classList.remove("s-new");
+  $("#title").textContent="Создать заявку"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Создать заявку";
   $("#draftChip").hidden=!S.draft;
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
@@ -979,7 +1007,7 @@ const SECS=$$(".tf-sec");
    done — заполнены все обязательные поля блока (блок без обязательных — хотя бы одно поле) */
 function secState(sec){
   if(sec.querySelector(".bad")) return "err";
-  if(!S.draft) return "";
+  if(!S.draft||S.sent) return "";
   const vis=n=>!n.closest("[hidden]");
   const req=[...sec.querySelectorAll("[data-req]")].filter(vis);
   if(req.length) return req.every(filled)?"done":"";
@@ -995,7 +1023,7 @@ function renderSteps(){
     return '<li class="'+[i===cur?"on":"",st].join(" ").trim()+'"><button type="button" data-i="'+i+'"><span class="n">'+b+'</span>'+s.querySelector("h2").textContent+'</button></li>';
   }).join("");
 }
-$("#crumbList").addEventListener("click",e=>{ if(S.draft){ e.preventDefault(); location.href="requests.html#drafts"; } });
+$("#crumbList").addEventListener("click",e=>{ if(S.draft&&!S.sent){ e.preventDefault(); location.href="requests.html#drafts"; } });
 $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) SECS[+b.dataset.i].scrollIntoView({behavior:"smooth"});});
 
 /* ---------- действия ---------- */
@@ -1004,11 +1032,11 @@ $("#sendBtn").addEventListener("click",()=>{
   miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
   renderSteps();
   if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
-  /* всё корректно → экран готовой заявки в режиме просмотра («Экран заявки», вкладка «Обзор») */
+  /* всё корректно → та же заявка в режиме просмотра (состояние «Отправлена») */
   const b=$("#sendBtn"); b.disabled=true; b.textContent="Отправляем…";
-  setTimeout(()=>{ location.href="index.html"; },500);
+  setTimeout(()=>{ b.disabled=false; b.textContent="Отправить заявку"; showSent(); toast("Заявка отправлена"); },600);
 });
-$("#backBtn").addEventListener("click",()=>{ location.href = S.draft ? "requests.html#drafts" : "requests.html"; });
+$("#backBtn").addEventListener("click",()=>{ location.href = S.draft&&!S.sent ? "requests.html#drafts" : "requests.html"; });
 $("#delBtn").addEventListener("click",()=>{
   $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
     '<div class="m-top"><h2 id="mT">Удалить черновик?</h2><button class="m-x" data-x aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'+
@@ -1054,6 +1082,7 @@ function doDup(){
 }
 /* в дубль уходит только сохранённое: значения, не принятые сервером, не переносятся; файлов, номера, истории нет */
 function finishDup(){
+  unsent();
   S.bad.forEach(n=>{ form.elements[n].value=""; });
   S.bad=[]; $$(".bad").forEach(n=>n.classList.remove("bad")); markBad();
   $$(".fi").forEach(syncFi);
@@ -1088,10 +1117,39 @@ $("#dupBtn").addEventListener("click",()=>{
   doDup();
 });
 
-function reset(){ clearTimeout(saveT); showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
+/* ---------- «Отправлена»: значения формы как список «поле — значение» по тем же 8 разделам ---------- */
+const MON=v=>{ const n=+String(v).replace(/\s/g,""); return isNaN(n)?v:n.toLocaleString("ru-RU")+" ₽"; };
+function fiVal(el){
+  if(!el.value) return "";
+  if(el.type==="date"){ const [y,m,d]=el.value.split("-"); return d+"."+m+"."+y; }
+  if(el.name==="salary") return MON(el.value);
+  return el.value;
+}
+function showSent(){
+  $$(".kvv").forEach(n=>n.remove());
+  $$(".tf-sec").forEach(sec=>{
+    const rows=[...sec.querySelectorAll(".fi,.q")].filter(n=>!n.closest("[hidden]")).map(n=>{
+      if(n.classList.contains("q")) return [n.querySelector(".qlab").childNodes[0].textContent.trim(), qVal(n)];
+      const el=n.querySelector("input,select,textarea");
+      return [n.querySelector(".pl").childNodes[0].textContent.trim(), fiVal(el)];
+    });
+    const dl=document.createElement("dl"); dl.className="kvv";
+    dl.innerHTML=rows.map(([k,v])=>'<div><dt>'+k+'</dt><dd'+(v?"":' class="none"')+'>'+(v?v.replace(/</g,"&lt;"):"Не указано")+'</dd></div>').join("");
+    sec.appendChild(dl);
+  });
+  clearTimeout(saveT); showDupAlert("");
+  const now=new Date(), yy=String(now.getFullYear()).slice(2);
+  S.sent=true; S.sentAt=now; S.ref="№"+yy+pad(now.getMonth()+1)+pad(now.getDate())+"_1"; S.save="ok"; S.bad=[];
+  document.body.classList.add("sent"); S.st="sent"; setSeg();
+  history.replaceState(null,"","#sent");
+  renderHead(); renderSteps(); window.scrollTo({top:0});
+}
+function unsent(){ if(!S.sent) return; S.sent=false; document.body.classList.remove("sent"); $$(".kvv").forEach(n=>n.remove()); }
+
+function reset(){ unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
 /* демо-черновик + состояние индикатора сохранения из харнесса */
 function demo(st){
-  clearTimeout(saveT); showDupAlert(""); S.dupFail=st==="duperr";
+  unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=st==="duperr";
   if(st==="fromreq") return fromReq();
   applyDefaults();
   const E=form.elements;
@@ -1103,20 +1161,21 @@ function demo(st){
     S.bad=["address"];
     if(st==="fields"){ E.salary.value="0"; S.bad.push("salary"); }
   }
-  if(st==="filled"||st==="submit"){
-    E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000";
+  if(st==="filled"||st==="submit"||st==="sent"){
+    E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000"; E.start.value="2026-11-16";
     setQ("probation","Нет"); setQ("commute","Компания предоставляет транспорт"); setQ("foreman","Нет"); setQ("med","Нет");
     setQ("translator","Да, на период адаптации"); setQ("interview","Онлайн"); setQ("schedule","5/2, 8 часов в день"); setQ("overtime","Нет");
     E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС";
-    if(st==="filled"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
+    if(st==="filled"||st==="sent"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
   }
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
   S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
-  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok",dup:"ok",duperr:"ok"}[st]||"partial";
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok",dup:"ok",duperr:"ok",sent:"ok"}[st]||"partial";
   S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
   if(st==="submit") setTimeout(()=>$("#sendBtn").click(),50);
   if(st==="dup") finishDup();
+  if(st==="sent") showSent();
 }
 /* дубль, созданный с экрана заявки (index.html → «Дублировать»): поля заявки «Электросварщик ручной сварки» */
 function fromReq(){
