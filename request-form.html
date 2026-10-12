@@ -555,15 +555,16 @@
   .tf-steps{position:sticky; top:calc(var(--stack-h,200px) + 16px); display:flex; flex-direction:column; gap:0; padding:0; margin:0; list-style:none}
   .tf-steps li + li{margin-top:24px; position:relative}
   .tf-steps li + li::before{content:""; position:absolute; left:19px; top:-18px; height:12px; width:1px; background:var(--line-strong)}
-  .tf-steps button{appearance:none; border:0; background:none; color:var(--muted); font:inherit; font-size:14px; line-height:20px; cursor:pointer;
+  /* DS «Stepper» (Figma 7001:50813): Default — номер; Completed — check-circle; Error — x-circle.
+     Active (блок на экране) — белые номер и подпись, без акцентного цвета на буллете; неактивные — 60% */
+  .tf-steps button{appearance:none; border:0; background:none; color:rgba(255,255,255,.6); font:inherit; font-size:14px; line-height:20px; cursor:pointer;
     display:flex; align-items:center; gap:12px; padding:0; text-align:left}
   .tf-steps button:hover{color:#fff}
-  .tf-steps .n{width:40px; height:40px; flex:none; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:500; color:#fff;
-    background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
-  .tf-steps .on button{color:#fff}
-  .tf-steps .on .n{background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
-  .tf-steps .done .n{background:var(--primary-dim); box-shadow:inset 0 0 0 1px rgba(7,187,178,.5); color:var(--primary)}
-
+  .tf-steps .n{width:40px; height:40px; flex:none; border-radius:50%; display:grid; place-items:center; font-size:16px; line-height:20px; font-weight:500;
+    color:rgba(255,255,255,.6); background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .tf-steps .n img{width:24px; height:24px; display:block}
+  .tf-steps .done .n,.tf-steps .err .n{background:rgba(255,255,255,.15)}
+  .tf-steps .on button,.tf-steps .on .n{color:#fff}
   @media (max-width:1100px){ .tf-grid{grid-template-columns:minmax(0,1fr)} .tf-steps{display:none} }
   @media (max-width:640px){
     .tf-card{padding:18px 16px} .tf-two{grid-template-columns:1fr} .tf-half{max-width:none}
@@ -616,6 +617,8 @@
         <button data-st="offline" aria-pressed="false">Нет сети</button>
         <button data-st="field" aria-pressed="false">Ошибка в поле</button>
         <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
+        <button data-st="filled" aria-pressed="false">Всё заполнено</button>
+        <button data-st="submit" aria-pressed="false">Ошибки после отправки</button>
       </div>
     </div>
   </div>
@@ -921,13 +924,24 @@ function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-presse
 
 /* ---------- степпер + подсветка текущей секции ---------- */
 const SECS=$$(".tf-sec");
+/* состояние блока: error — внутри есть поле с ошибкой (после отправки или отклонено сервером);
+   done — заполнены все обязательные поля блока (блок без обязательных — хотя бы одно поле) */
+function secState(sec){
+  if(sec.querySelector(".bad")) return "err";
+  if(!S.draft) return "";
+  const vis=n=>!n.closest("[hidden]");
+  const req=[...sec.querySelectorAll("[data-req]")].filter(vis);
+  if(req.length) return req.every(filled)?"done":"";
+  const any=[...sec.querySelectorAll(".fi,.q")].filter(vis).filter(n=>!n.dataset.def).some(filled);
+  return any?"done":"";
+}
 function renderSteps(){
   const y=window.scrollY+window.innerHeight*.3;
   let cur=0; SECS.forEach((s,i)=>{ if(s.getBoundingClientRect().top+window.scrollY<=y) cur=i; });
   $("#steps").innerHTML=SECS.map((s,i)=>{
-    const req=[...s.querySelectorAll("[data-req]")].filter(n=>!n.closest("[hidden]"));
-    const done=S.draft && req.length && req.every(filled);
-    return '<li class="'+(i===cur?"on":"")+(done?" done":"")+'"><button type="button" data-i="'+i+'"><span class="n">'+(i+1)+'</span>'+s.querySelector("h2").textContent+'</button></li>';
+    const st=secState(s);
+    const b=st==="done"?'<img src="icons/check-circle-fill.svg" width="24" height="24" alt="Заполнено">':st==="err"?'<img src="icons/x-circle-fill.svg" width="24" height="24" alt="Есть ошибки">':(i+1);
+    return '<li class="'+[i===cur?"on":"",st].join(" ").trim()+'"><button type="button" data-i="'+i+'"><span class="n">'+b+'</span>'+s.querySelector("h2").textContent+'</button></li>';
   }).join("");
 }
 $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) SECS[+b.dataset.i].scrollIntoView({behavior:"smooth"});});
@@ -936,6 +950,7 @@ $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(
 $("#sendBtn").addEventListener("click",()=>{
   const miss=reqList().filter(n=>!filled(n));
   miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
+  renderSteps();
   if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
   toast("Заявка отправлена (прототип)");
 });
@@ -965,11 +980,19 @@ function demo(st){
     S.bad=["address"];
     if(st==="fields"){ E.salary.value="0"; S.bad.push("salary"); }
   }
+  if(st==="filled"||st==="submit"){
+    E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000";
+    setQ("probation","Нет"); setQ("commute","Компания предоставляет транспорт"); setQ("foreman","Нет"); setQ("med","Нет");
+    setQ("translator","Да, на период адаптации"); setQ("interview","Онлайн"); setQ("schedule","5/2, 8 часов в день"); setQ("overtime","Нет");
+    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС";
+    if(st==="filled"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
+  }
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
   S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
-  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline"}[st]||"partial";
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok"}[st]||"partial";
   S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
+  if(st==="submit") setTimeout(()=>$("#sendBtn").click(),50);
 }
 function go(st){ st==="empty"?reset():demo(st); }
 $$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ go(b.dataset.st); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
