@@ -105,6 +105,17 @@
 
   /* тумблер «Показать англ. версию» — в строке заголовка справа */
   .head-toggle{margin-left:auto}
+  /* «Дублировать» — вторичная кнопка DS справа в строке заголовка; при видимом тумблере — после него */
+  .dup-btn{appearance:none; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 18px;
+    border:0; border-radius:32px; background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
+    color:#fff; font-family:inherit; font-size:15px; font-weight:500; cursor:pointer; white-space:nowrap}
+  .dup-btn:hover{background:rgba(255,255,255,.15)}
+  .dup-btn > svg{width:16px; height:16px; flex:none}
+  .dup-btn.busy{cursor:progress}
+  .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:dspin .8s linear infinite}
+  @keyframes dspin{to{transform:rotate(360deg)}}
+  .head-toggle:not([hidden]) ~ .dup-btn{margin-left:0}
+  @media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl{display:none} }
   @media (max-width:560px){ .head-toggle{margin-left:0} }
   .switch{display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none}
   .switch .sw-lbl{font-size:13px; font-weight:500; color:#dbeaec; white-space:nowrap}
@@ -345,6 +356,10 @@
         <span class="sw-lbl" id="headerToggleLbl">Показать англ. версию</span>
         <span class="sw-box"><input type="checkbox" id="headerToggle"><span class="track"></span><span class="knob"></span></span>
       </label>
+      <button type="button" class="dup-btn" id="dupBtn" aria-label="Дублировать заявку">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+        <span class="lbl">Дублировать</span>
+      </button>
     </div>
     <div class="meta">
       <span data-i="m_grade">Разряд 5–6</span>
@@ -538,6 +553,8 @@ function render(){
   const isConsumer = role!=="admin";
 
   // тумблер языка в строке заголовка (только header-паттерн у потребителя)
+  // «Дублировать» — клиенту и администратору; у провайдера нет права создавать заявки
+  document.getElementById("dupBtn").hidden = role==="provider";
   const tw = document.getElementById("headToggleWrap");
   const showToggle = isConsumer && pattern==="header";
   tw.hidden = !showToggle;
@@ -687,6 +704,18 @@ function onScroll(){
 }
 window.addEventListener("scroll", onScroll, {passive:true});
 window.addEventListener("resize", onScroll);
+
+/* «Дублировать»: создаётся независимый черновик и сразу открывается (request-form.html#fromreq) */
+document.getElementById("dupBtn").addEventListener("click", e=>{
+  const b=e.currentTarget; if(b.classList.contains("busy")) return;
+  b.classList.add("busy"); b.querySelector(".lbl").textContent="Дублируем…";
+  const sp=document.createElement("span"); sp.className="spin"; b.querySelector("svg").replaceWith(sp);
+  setTimeout(()=>{ location.href="request-form.html#fromreq"; },700);
+});
+/* возврат «Назад» из bfcache — снять состояние загрузки */
+window.addEventListener("pageshow",()=>{ const b=document.getElementById("dupBtn"); if(!b.classList.contains("busy")) return;
+  b.classList.remove("busy"); b.querySelector(".lbl").textContent="Дублировать";
+  b.querySelector(".spin").outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; });
 
 /* раскрытие «Истории статусов» */
 (function(){

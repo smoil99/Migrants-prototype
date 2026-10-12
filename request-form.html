@@ -458,6 +458,27 @@
     box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s; text-align:left; font-weight:400}
   .tf-tip small{display:block; color:var(--muted); font-size:12px}
   .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
+  /* «Дублировать» — вторичная кнопка DS справа в строке заголовка (слот «Экспорт» шапки 6783:33804) */
+  .dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 18px;
+    border:0; border-radius:var(--r-pill); background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
+    color:#fff; font:inherit; font-size:15px; font-weight:500; cursor:pointer; white-space:nowrap}
+  .dup-btn:hover{background:rgba(255,255,255,.15)}
+  .dup-btn > svg{width:16px; height:16px; flex:none}
+  .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
+  .dup-btn.busy{cursor:progress}
+  .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
+  .dup-btn .tf-tip{left:auto; right:0}
+  .dup-btn:hover .tf-tip,.dup-btn:focus-visible .tf-tip{opacity:1; transform:none}
+  @media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl{display:none} }
+  #dupAlert:not(:empty){margin-bottom:24px}
+  #dupAlert .alert{align-items:center}
+  #dupAlert .alert .body{color:#fff; font-weight:400}
+  #dupAlert .alert .body b{font-weight:600}
+  #dupAlert .x{appearance:none; border:0; background:none; color:inherit; opacity:.7; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex:none}
+  #dupAlert .x:hover{opacity:1; background:rgba(255,255,255,.08)}
+  #dupAlert .x svg{width:14px; height:14px}
+  #dupAlert .sv-retry{margin-left:6px}
+  .tf-card.flash{animation:flash 1.2s ease-out}
   .tf-chip{display:inline-flex; align-items:center; gap:7px; padding:3px 11px; border-radius:var(--r-pill); background:rgba(255,255,255,.10);
     font-size:12.5px; line-height:18px; color:var(--label)}
   .tf-chip::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--st-none)}
@@ -619,6 +640,8 @@
         <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
         <button data-st="filled" aria-pressed="false">Всё заполнено</button>
         <button data-st="submit" aria-pressed="false">Ошибки после отправки</button>
+        <button data-st="dup" aria-pressed="false">Дубль создан</button>
+        <button data-st="duperr" aria-pressed="false">Ошибка дублирования</button>
       </div>
     </div>
   </div>
@@ -643,6 +666,11 @@
     </button>
     <h1 id="title">Создать заявку</h1>
     <span class="tf-chip" id="draftChip" hidden>Черновик</span>
+    <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+      <span class="lbl">Дублировать</span>
+      <span class="tf-tip" id="dupTip" hidden>Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small></span>
+    </button>
   </div>
   <p class="tf-sub" id="sub">Заполните вручную, продиктуйте голосом или загрузите бриф для распознавания нейросетью</p>
   <p class="tf-meta" id="meta" hidden></p>
@@ -652,6 +680,7 @@
 
   <div class="tf-grid">
     <form class="tf-card" id="form" novalidate autocomplete="off">
+      <div id="dupAlert" aria-live="polite"></div>
       <div class="tf-mode" role="tablist">
         <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать голосом</button>
         <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить бриф</button>
@@ -907,6 +936,10 @@ function renderHead(){
   $("#meta").hidden=!S.draft;
   $("#backTip").hidden=!S.draft;
   $("#delBtn").hidden=!S.draft;
+  const db=$("#dupBtn"), blocked=S.save==="error"||S.save==="offline";
+  db.hidden=!S.draft;
+  db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
+  $("#dupTip").hidden=!blocked;
   if(S.draft){
     const del=new Date(S.created); del.setDate(del.getDate()+30);
     const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),saveHtml()];
@@ -968,10 +1001,78 @@ $("#delBtn").addEventListener("click",()=>{
   $("#mDel").addEventListener("click",()=>{close(); reset(); toast("Черновик удалён");});
 });
 
-function reset(){ clearTimeout(saveT); S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
+/* ---------- дублирование заявки: новый независимый черновик из СОХРАНЁННОГО состояния (BRD US-019 §4.1.4–6) ---------- */
+const DUP_LBL='<span class="lbl">Дублировать</span>';
+const ICX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function dupBusy(on){
+  S.dupBusy=on; const b=$("#dupBtn");
+  b.classList.toggle("busy",on);
+  b.querySelector(".lbl").textContent=on?"Дублируем…":"Дублировать";
+  const ic=b.querySelector(":scope > svg, :scope > .spin");
+  if(on){ const sp=document.createElement("span"); sp.className="spin"; ic.replaceWith(sp); }
+  else if(ic.classList.contains("spin")){ ic.outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; }
+  renderHead();
+}
+function showDupAlert(kind){
+  $("#dupAlert").innerHTML = kind==="ok"
+    ? '<div class="alert info" role="status">'+ICI+'<div class="body"><b>Это дубль заявки.</b> Проверьте все условия перед отправкой. Вложения не скопированы.</div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : kind==="err"
+    ? '<div class="alert err" role="alert">'+ICE+'<div class="body">Не удалось создать дубль. Исходная заявка не изменилась. <button type="button" class="sv-retry" id="dupRetry">Повторить</button></div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : "";
+  setStackH();
+}
+$("#dupAlert").addEventListener("click",e=>{
+  if(e.target.closest(".x")) showDupAlert("");
+  if(e.target.closest("#dupRetry")){ S.dupFail=false; showDupAlert(""); doDup(); }
+});
+function doDup(){
+  dupBusy(true); showDupAlert("");
+  setTimeout(()=>{
+    dupBusy(false);
+    if(S.dupFail){ showDupAlert("err"); window.scrollTo({top:0,behavior:"smooth"}); return; }
+    finishDup();
+  },700);
+}
+/* в дубль уходит только сохранённое: значения, не принятые сервером, не переносятся; файлов, номера, истории нет */
+function finishDup(){
+  S.bad.forEach(n=>{ form.elements[n].value=""; });
+  S.bad=[]; $$(".bad").forEach(n=>n.classList.remove("bad")); markBad();
+  $$(".fi").forEach(syncFi);
+  S.draft=true; S.created=new Date(); S.saved=new Date(); S.save="ok"; S.st="dup";
+  showDupAlert("ok"); setSeg(); renderHead(); renderSteps();
+  history.replaceState(null,"","#dup");
+  window.scrollTo({top:0});
+  const c=$(".tf-card"); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+}
+$("#dupBtn").addEventListener("click",()=>{
+  if(S.dupBusy) return;
+  if(S.save==="error"||S.save==="offline"){ toast("Сначала сохраните изменения — дубль создаётся из сохранённой заявки"); return; }
+  if(S.save==="saving"){   // ждём окончания автосохранения и продолжаем сами
+    dupBusy(true);
+    const w=setInterval(()=>{ if(S.save==="saving") return; clearInterval(w); dupBusy(false); $("#dupBtn").click(); },150);
+    return;
+  }
+  if(S.save==="partial"){
+    const names=S.bad.map(n=>"«"+FIELDS[n].l+"»");
+    const one=names.length===1;
+    $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+      '<div class="m-top"><h2 id="mT">Дублировать заявку?</h2><button class="m-x" data-x aria-label="Закрыть">'+ICX+'</button></div>'+
+      '<p class="m-lead" style="margin:0">'+(one?"Поле "+names[0]+" не сохранено и не попадёт в дубль.":"Поля "+names.join(", ")+" не сохранены и не попадут в дубль.")+'</p>'+
+      '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn primary" id="mDup">Дублировать</button></div></div></div>';
+    const close=()=>$("#modalRoot").innerHTML="";
+    $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
+    $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
+    $("#mDup").addEventListener("click",()=>{close(); doDup();});
+    return;
+  }
+  doDup();
+});
+
+function reset(){ clearTimeout(saveT); showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
 /* демо-черновик + состояние индикатора сохранения из харнесса */
 function demo(st){
-  clearTimeout(saveT);
+  clearTimeout(saveT); showDupAlert(""); S.dupFail=st==="duperr";
+  if(st==="fromreq") return fromReq();
   applyDefaults();
   const E=form.elements;
   E.attract.value="Квотируемые"; E.region.value="Московская обл."; E.qty.value="12";
@@ -992,9 +1093,24 @@ function demo(st){
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
   S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
-  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok"}[st]||"partial";
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok",dup:"ok",duperr:"ok"}[st]||"partial";
   S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
   if(st==="submit") setTimeout(()=>$("#sendBtn").click(),50);
+  if(st==="dup") finishDup();
+}
+/* дубль, созданный с экрана заявки (index.html → «Дублировать»): поля заявки «Электросварщик ручной сварки» */
+function fromReq(){
+  applyDefaults();
+  const E=form.elements, v={attract:"Квотируемые",region:"Москва",address:"Москва, Пресненская набережная, 4",qty:"100",grade:"От 5 разряда и выше",
+    start:"2026-04-01",salary:"150000",ageFrom:"25",ageTo:"40",extra:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
+    duties:"Сварка особо сложных конструкций, эксплуатируемых в экстремальных условиях (газо- и нефтепроводы, узлы летательных аппаратов)",
+    reqs:"Опыт работы с разнородными металлами, допуск к работе на высоте"};
+  Object.entries(v).forEach(([k,x])=>E[k].value=x);
+  [["term","Другой срок"],["probation","Да"],["food","Другое"],["housing","Общежитие"],["commute","Другое"],["foreman","Да"],["med","Да"],
+   ["tickets","Да"],["airport","Другое"],["translator","Да, на период адаптации"],["gender","Мужской"],["age","Диапазон возраста"],
+   ["interview","Онлайн"],["schedule","Сменный график"],["overtime","Да"]].forEach(([n,x])=>setQ(n,x));
+  syncAge(); S.bad=[];
+  finishDup();
 }
 function go(st){ st==="empty"?reset():demo(st); }
 $$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ go(b.dataset.st); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
@@ -1024,7 +1140,7 @@ setStackH(); window.addEventListener("resize",()=>{setStackH(); onScroll();});
 window.addEventListener("scroll",onScroll,{passive:true});
 
 renderDrop();
-{ const h=location.hash.slice(1); go($$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
+{ const h=location.hash.slice(1); go(h==="fromreq"||$$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
 </script>
 </body>
 </html>
