@@ -521,6 +521,9 @@
   .rc-ref{font-size:15px; line-height:22px; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.28); border-radius:6px; padding:0 7px; white-space:nowrap; font-variant-numeric:tabular-nums}
   .tf-chip.s-new{color:#fff; font-weight:500}
   .tf-chip.s-new::before{background:var(--accent)}
+  .tf-chip.s-work,.tf-chip.s-done,.tf-chip.s-cancel{color:#fff; font-weight:500}
+  .tf-chip.s-work::before{background:var(--st-work)} .tf-chip.s-done::before{background:var(--st-done)} .tf-chip.s-cancel::before{background:var(--st-none)}
+  .hdot.s-work{background:var(--st-work)} .hdot.s-done{background:var(--st-done)} .hdot.s-cancel{background:var(--st-none)}
   body.sent #dupAlert,body.sent .tf-mode,body.sent #drop,body.sent .tf-foot,body.sent .tf-rows{display:none}
   body.sent .tf-sec h2{margin-bottom:12px}
   body.sent .tf-sec:first-of-type{padding-top:0}
@@ -1004,7 +1007,7 @@ function saveHtml(){
 }
 function renderHead(){
   if(S.sent){
-    $("#draftChip").hidden=false; $("#draftChip").textContent="Новая"; $("#draftChip").classList.add("s-new");
+    $("#draftChip").hidden=false; $("#draftChip").textContent=STL[S.status]; $("#draftChip").className="tf-chip s-"+S.status;
     $("#sub").hidden=true; $("#meta").hidden=false; $("#backTip").hidden=true; $("#delBtn").hidden=true;
     $("#title").textContent="Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
     const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
@@ -1012,7 +1015,7 @@ function renderHead(){
     $("#meta").innerHTML="Отправлена: "+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
     setStackH(); return;
   }
-  $("#draftChip").textContent="Черновик"; $("#draftChip").classList.remove("s-new");
+  $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
   $("#title").textContent="Создать заявку"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Создать заявку";
   $("#draftChip").hidden=!S.draft;
   $("#sub").hidden=S.draft;
@@ -1166,7 +1169,7 @@ function fiVal(el){
   if(el.name==="salary") return MON(el.value);
   return el.value;
 }
-function showSent(){
+function showSent(o={}){
   $$(".kvv").forEach(n=>n.remove());
   $$(".tf-sec").forEach(sec=>{
     const rows=[...sec.querySelectorAll(".fi,.q")].filter(n=>!n.closest("[hidden]")).map(n=>{
@@ -1180,10 +1183,11 @@ function showSent(){
   });
   clearTimeout(saveT); showDupAlert("");
   const now=new Date(), yy=String(now.getFullYear()).slice(2);
-  S.sent=true; S.sentAt=now; S.ref="№"+yy+pad(now.getMonth()+1)+pad(now.getDate())+"_1"; S.save="ok"; S.bad=[];
+  S.sent=true; S.sentAt=o.sentAt||now; S.ref=o.ref||("№"+yy+pad(now.getMonth()+1)+pad(now.getDate())+"_1"); S.save="ok"; S.bad=[];
+  S.status=o.st||"new"; S.hired=o.hired||0; S.partners=o.partners||null; S.hist=o.hist||[]; if(o.created) S.created=o.created;
   renderSide();
   document.body.classList.add("sent"); S.st="sent"; setSeg();
-  history.replaceState(null,"","#sent");
+  history.replaceState(null,"","#"+(o.id?"req="+o.id:"sent"));
   renderHead(); renderSteps(); window.scrollTo({top:0});
 }
 function unsent(){ if(!S.sent) return; S.sent=false; document.body.classList.remove("sent"); $$(".kvv").forEach(n=>n.remove()); $("#sideCards").hidden=true; }
@@ -1192,16 +1196,18 @@ function renderSide(){
   const E=form.elements, qty=+E.qty.value||0, start=fiVal(E.start);
   const cr=S.created||S.sentAt;
   $("#sideCards").innerHTML=
-    '<div class="scard"><h3>Прогресс найма</h3><div class="prog-num">Нанято кандидатов</div><div class="prog-num"><b>0</b> / '+qty+'</div>'+
-      '<div class="bar"><i style="width:0"></i></div><div class="sinfo"><span>Дата выхода на работу</span><b>'+(start||"Не указана")+'</b></div></div>'+
+    '<div class="scard"><h3>Прогресс найма</h3><div class="prog-num">Нанято кандидатов</div><div class="prog-num"><b>'+S.hired+'</b> / '+qty+'</div>'+
+      '<div class="bar"><i style="width:'+(qty?Math.round(S.hired/qty*100):0)+'%"></i></div><div class="sinfo"><span>Дата выхода на работу</span><b>'+(start||"Не указана")+'</b></div></div>'+
     '<div class="scard"><h3>Партнёры</h3>'+
       '<div class="partner"><div class="lg">ИГ</div><div><div class="pn">Работодатель</div><div class="pv">ИП Гаврилова А. В.</div></div></div>'+
-      '<div class="partner"><div class="lg none">—</div><div><div class="pn">Партнёр в РФ</div><div class="pv none">Не назначен</div></div></div>'+
-      '<div class="partner"><div class="lg none">—</div><div><div class="pn">Партнёр в Индии</div><div class="pv none">Не назначен</div></div></div></div>'+
+      [["Партнёр в РФ",S.partners&&S.partners[0]],["Партнёр в Индии",S.partners&&S.partners[1]]].map(([r,n])=>n
+        ?'<div class="partner"><div class="lg">'+n.replace(/[«»"]/g,"").split(/\s+/).filter(w=>!/^(ООО|Inc\.)$/.test(w)).map(w=>w[0]).join("").slice(0,2).toUpperCase()+'</div><div><div class="pn">'+r+'</div><div class="pv">'+n+'</div></div></div>'
+        :'<div class="partner"><div class="lg none">—</div><div><div class="pn">'+r+'</div><div class="pv none">Не назначен</div></div></div>').join("")+'</div>'+
     '<div class="scard"><button class="collapse" id="historyToggle" type="button" aria-expanded="false" aria-controls="historyBody"><h3 style="margin:0">История статусов</h3><span class="cv">⌄</span></button>'+
       '<div class="history" id="historyBody" hidden>'+
         '<div class="hrow"><span class="hpill"><span class="hdot draft"></span>Черновик</span><span class="htime">'+dts(cr)+'</span></div>'+
-        '<div class="hrow"><span class="hpill"><span class="hdot"></span>Новая</span><span class="htime">'+dts(S.sentAt)+'</span></div></div></div>';
+        '<div class="hrow"><span class="hpill"><span class="hdot"></span>Новая</span><span class="htime">'+dts(S.sentAt)+'</span></div>'+
+        S.hist.map(([st,d])=>'<div class="hrow"><span class="hpill"><span class="hdot s-'+st+'"></span>'+STL[st]+'</span><span class="htime">'+dts(d)+'</span></div>').join("")+'</div></div>';
   $("#sideCards").hidden=false;
   $("#historyToggle").addEventListener("click",e=>{ const b=$("#historyBody"); b.hidden=!b.hidden; e.currentTarget.setAttribute("aria-expanded",String(!b.hidden)); });
 }
@@ -1238,7 +1244,8 @@ function demo(st){
   if(st==="sent") showSent();
 }
 /* дубль, созданный с экрана заявки (index.html → «Дублировать»): поля заявки «Электросварщик ручной сварки» */
-function fromReq(){
+function fromReq(){ fillWelder(); finishDup(); }
+function fillWelder(){
   applyDefaults();
   const E=form.elements, v={attract:"Квотируемые",region:"Москва",address:"Москва, Пресненская набережная, 4",qty:"100",grade:"От 5 разряда и выше",
     start:"2026-04-01",salary:"150000",ageFrom:"25",ageTo:"40",extra:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
@@ -1249,7 +1256,29 @@ function fromReq(){
    ["tickets","Да"],["airport","Другое"],["translator","Да, на период адаптации"],["gender","Мужской"],["age","Диапазон возраста"],
    ["interview","Онлайн"],["schedule","Сменный график"],["overtime","Да"]].forEach(([n,x])=>setQ(n,x));
   syncAge(); S.bad=[];
-  finishDup();
+}
+/* ---------- открытие отправленной заявки из списка (requests.html → #req=ID): та же форма в режиме просмотра ---------- */
+const STL={new:"Новая",work:"В работе",done:"Завершена",cancel:"Отменена"};
+const D=(s,h=10,m=0)=>{ const [d,mo,y]=s.split("."); return new Date(+y,+mo-1,+d,h,m,12); };
+const REQS={
+  1:{st:"new",ref:"№12345_1",cr:"01.10.2026",reg:"Кабардино-Балкарская Республика",start:"2026-10-10",qty:6,hired:2,grade:"123-й квалификационный разряд"},
+  2:{st:"new",ref:"№12345_2",cr:"01.10.2026",reg:"Москва",start:"2026-10-10",qty:6,hired:0,grade:"2-й квалификационный разряд"},
+  3:{st:"work",ref:"№12290_1",cr:"12.03.2026",welder:true,hired:15,qty:25,partners:["ООО Ромашка","Reliance Inc."],hist:[["work","14.03.2026"]]},
+  4:{st:"done",ref:"№11874_1",cr:"02.02.2026",reg:"Московская обл.",start:"2026-03-01",qty:10,hired:10,grade:"3-й квалификационный разряд",partners:["ООО Ромашка","Reliance Inc."],hist:[["work","04.02.2026"],["done","30.04.2026"]]},
+  5:{st:"cancel",ref:"№11802_1",cr:"20.01.2026",reg:"Республика Татарстан",start:"2026-02-15",qty:8,hired:0,grade:"4-й квалификационный разряд",hist:[["cancel","27.01.2026"]]}
+};
+function openReq(id){
+  const r=REQS[id]; if(!r) return go("empty");
+  if(r.welder){ fillWelder(); form.elements.qty.value=String(r.qty); }
+  else{
+    demo("filled"); const E=form.elements;
+    if(![...E.region.options].some(o=>o.value===r.reg)) E.region.add(new Option(r.reg,r.reg));
+    E.region.value=r.reg; E.start.value=r.start; E.qty.value=String(r.qty); E.grade.value=r.grade;
+  }
+  $$(".fi").forEach(syncFi);
+  const cr=D(r.cr,9,40);
+  S.draft=true; S.created=cr;
+  showSent({id, st:r.st, ref:r.ref, created:cr, sentAt:D(r.cr,10,5), hired:r.hired, partners:r.partners, hist:(r.hist||[]).map(([st,d])=>[st,D(d,11,30)])});
 }
 function go(st){ st==="empty"?reset():demo(st); }
 $$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ go(b.dataset.st); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
@@ -1279,7 +1308,7 @@ setStackH(); window.addEventListener("resize",()=>{setStackH(); onScroll();});
 window.addEventListener("scroll",onScroll,{passive:true});
 
 renderDrop();
-{ const h=location.hash.slice(1); go(h==="fromreq"||$$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
+{ const h=location.hash.slice(1); if(/^req=\d+$/.test(h)) openReq(+h.slice(4)); else go(h==="fromreq"||$$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
 </script>
 </body>
 </html>

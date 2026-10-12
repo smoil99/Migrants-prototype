@@ -630,7 +630,8 @@ function render(){
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest(".rtab"); if(!b) return; tab=b.dataset.k; history.replaceState(null,"","#"+tab); closeMenu(); render();});
 
 /* ---------- открытие карточки ---------- */
-const openItem=it=>{ location.href = it.st==="draft" ? "request-form.html#draft" : (it.href||"index.html"); };
+/* заявка открывается в «Целевой форме заявки»: черновик — для редактирования, отправленная — в режиме просмотра */
+const openItem=it=>{ location.href = it.st==="draft" ? "request-form.html#draft" : "request-form.html#req="+it.id; };
 $("#list").addEventListener("click",e=>{
   const k=e.target.closest(".kebab"); const c=e.target.closest(".rc"); if(!c) return;
   const it=ITEMS.find(i=>i.id==c.dataset.id);
