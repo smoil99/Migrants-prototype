@@ -100,7 +100,7 @@
   .meta svg{width:15px; height:15px; color:var(--muted)}
 
   /* DS «Tab» — как на экране «Обзор» */
-  .tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+  .tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line)}
   .tabs::-webkit-scrollbar{display:none}
   .tab{appearance:none; border:0; background:none; cursor:pointer; position:relative; flex:none; text-decoration:none;
     padding:0 0 12px; font-size:14px; font-weight:500; line-height:20px; color:var(--muted); transition:color .12s}
@@ -286,7 +286,6 @@
         </a>
       </div>
     </div>
-    <p class="hint">Кликните строку или листайте <b>↑ ↓</b> — справа меняется превью кандидата. Карточки статусов и «Статусы» фильтруют таблицу. <button class="hlink" id="reset">Сбросить</button></p>
   </div>
 </div>
 
@@ -544,7 +543,7 @@ $("#pipeline").addEventListener("click",e=>{
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){cl(); closeSheet();}});
 })();
 document.querySelectorAll(".tab[data-soon]").forEach(t=>t.addEventListener("click",()=>toast("Вкладка «"+t.textContent+"» в прототипе не реализована")));
-$("#reset").addEventListener("click",()=>{reset(); toast("Данные сброшены");});
+var _r=$("#reset"); if(_r) _r.addEventListener("click",()=>{reset(); toast("Данные сброшены");});
 
 /* ================= меню прототипов ================= */
 (function(){

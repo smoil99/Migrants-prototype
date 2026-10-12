@@ -310,15 +310,6 @@
         <button data-role="provider" aria-pressed="false">Провайдер · EN</button>
       </div>
     </div>
-    <div class="ctl" id="patternCtl">
-      <span class="lbl">Паттерн контрола</span>
-      <div class="seg" id="patternSeg" role="group" aria-label="Паттерн">
-        <button data-pat="header" aria-pressed="false">Хедер</button>
-        <button data-pat="inline" aria-pressed="true">Инлайн</button>
-        <button data-pat="hover" aria-pressed="false">Ховер</button>
-      </div>
-    </div>
-    <p class="hint" id="hint"></p>
   </div>
 </div>
 
@@ -541,19 +532,6 @@ function render(){
   document.querySelectorAll("#roleSeg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.role===role));
   document.querySelectorAll("#patternSeg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.pat===pattern));
   const isConsumer = role!=="admin";
-  document.getElementById("patternCtl").style.display = isConsumer ? "" : "none";
-
-  // подсказка
-  const hints = {
-    "admin": "<b>Админ РРУ:</b> у каждого свободного поля рядом показаны оригинал и перевод — только просмотр, как в требованиях. Правки и подтверждения перевода здесь нет.",
-    "client-header": "<b>Клиент · хедер:</b> тумблер справа от заголовка переключает весь бланк на английскую версию (что видит провайдер). Минимум шума.",
-    "client-inline": "<b>Клиент · инлайн:</b> у переведённых полей (профиль кандидата) — иконка 文A с тултипом «Переведено ИИ»; клик показывает оригинал. У исходных RU-полей иконки нет.",
-    "client-hover": "<b>Клиент · ховер:</b> та же иконка перевода, но видна только при наведении на строку → на тач недоступна. Показано, почему это хуже.",
-    "provider-header": "<b>Провайдер · хедер:</b> тумблер справа от заголовка показывает оригинал (RU) поверх английского перевода.",
-    "provider-inline": "<b>Провайдер · инлайн:</b> у переведённых полей (поля заявки) — иконка 文A с тултипом; клик показывает оригинал (RU). У исходных EN-полей иконки нет.",
-    "provider-hover": "<b>Провайдер · ховер:</b> та же иконка перевода видна только по наведению — на тач недоступна.",
-  };
-  document.getElementById("hint").innerHTML = role==="admin" ? hints.admin : hints[role+"-"+pattern];
 
   // тумблер языка в строке заголовка (только header-паттерн у потребителя)
   const tw = document.getElementById("headToggleWrap");

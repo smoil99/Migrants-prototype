@@ -223,7 +223,6 @@
         <button data-mode="pop" aria-pressed="false">+ popover (сверх спека)</button>
       </div>
     </div>
-    <p class="hint" id="hint"></p>
   </div>
 </div>
 
@@ -490,11 +489,11 @@ document.querySelectorAll("#modeSeg button").forEach(function(b){
   b.addEventListener("click",function(){
     mode=b.dataset.mode; closePop();
     document.querySelectorAll("#modeSeg button").forEach(function(x){ x.setAttribute("aria-pressed", x===b); });
-    hint.innerHTML=HINTS[mode];
+    if(hint) hint.innerHTML=HINTS[mode];
     if(currentView==="list") renderList();
   });
 });
-hint.innerHTML=HINTS.spec;
+if(hint) hint.innerHTML=HINTS.spec;
 
 /* ================= меню прототипов ================= */
 (function(){

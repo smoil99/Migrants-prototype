@@ -493,7 +493,6 @@
         <button data-scen="faults" aria-pressed="false">Сбои</button>
       </div>
     </div>
-    <p class="hint" id="hint"></p>
   </div>
 </div>
 
@@ -1198,7 +1197,7 @@ function setRole(role){
 }
 function setScen(k){
   document.querySelectorAll("#scenSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.scen===k));
-  $("#hint").innerHTML=HINTS[k];
+  var _h=$("#hint"); if(_h) _h.innerHTML=HINTS[k];
 }
 function runScenario(k){
   closeModal();
