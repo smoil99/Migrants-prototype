@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
+<title>Импорт кандидатов</title>
+<meta name="description" content="Прототип массового импорта кандидатов из файла (T-65, DESIGN-US-001) по макетам Figma 3217:333: загрузка, сопоставление колонок, прогресс, результат, разбор записей в drawer">
+<style>
+  /* ЛК партнёра Индии → заявка → вкладка «Candidates» → импорт из файла (Figma 3217:333, без секции «Claude») */
+  :root{
+    color-scheme: dark;
+    --bg:#181C1F;
+    --panel-solid:#26292C;
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14); --row-line:rgba(255,255,255,.2);
+    --text:#ffffff; --label:rgba(255,255,255,.6); --dim:rgba(255,255,255,.35);
+    --muted:#8A9092; --muted2:#6E767A;
+    --primary:#07BBB2; --primary-dim:rgba(7,187,178,.14);
+    --accent:#61C7D6; --accent-dim:rgba(97,199,214,.10);
+    /* DS «Text» (статус, 1178:522) */
+    --st-pending:#F5CD06; --st-review:#61C7D6; --st-done:#00E887; --st-error:#FF6674; --st-none:#808C99;
+    --warn-bg:rgba(245,205,6,.10); --err-bg:rgba(255,102,116,.10); --ok-bg:rgba(0,232,135,.10);
+    --glass:rgba(24,28,31,.62);
+    --pane:rgba(46,50,54,.78);
+    --pane-solid:#2a2d30;
+    --f: "Commissioner", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--f); color:var(--text);
+    background:url("bg.webp") top center / cover no-repeat, var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.45;
+  }
+  body.locked{overflow:hidden}
+  a{color:var(--primary); text-decoration:none}
+  button,input,select{font-family:inherit}
+  [hidden]{display:none!important}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  img.ic{display:block; flex:none}
+
+  /* ---------- харнесс прототипа ---------- */
+  .harness{background:rgba(20,23,26,.94); border-bottom:1px solid var(--line); padding:10px clamp(16px,4vw,40px)}
+  .harness-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; max-width:1392px; margin:0 auto}
+  .harness .tag{font-size:10px; letter-spacing:.14em; font-weight:600; color:var(--primary);
+    border:1px solid rgba(7,187,178,.5); border-radius:5px; padding:3px 8px; text-transform:uppercase}
+  .ctl{display:flex; align-items:center; gap:9px; min-width:0; flex-wrap:wrap}
+  .ctl > span.lbl{font-size:11px; color:var(--muted); letter-spacing:.04em; white-space:nowrap}
+  .seg{display:inline-flex; flex-wrap:wrap; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:3px}
+  .seg button{appearance:none; border:0; background:transparent; color:var(--muted);
+    font-size:12.5px; font-weight:500; padding:6px 11px; border-radius:6px; cursor:pointer; white-space:nowrap; transition:.12s}
+  .seg button:hover{color:#fff}
+  .seg button[aria-pressed="true"]{background:var(--primary); color:#04231f; font-weight:600}
+  .hint{font-size:11.5px; color:var(--muted2); margin:0; flex:1 1 280px; min-width:0}
+
+  /* ---------- меню переключения прототипов (общее для страниц) ---------- */
+  .proto-menu{position:relative; flex:none}
+  .pm-trigger{appearance:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:#fff;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:6px 11px}
+  .pm-trigger:hover{border-color:var(--line-strong)}
+  .pm-chev{width:13px;height:13px;color:var(--muted); transition:transform .15s}
+  .pm-trigger[aria-expanded="true"] .pm-chev{transform:rotate(180deg)}
+  .pm-pop{position:absolute; top:calc(100% + 8px); left:0; z-index:60; min-width:290px;
+    background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px}
+  .pm-pop a{display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:8px; color:#fff; font-size:13px; font-weight:500}
+  .pm-pop a:hover{background:rgba(255,255,255,.06)}
+  .pm-pop a .pm-ic{width:16px;height:16px;color:var(--muted);flex:none;margin-top:1px}
+  .pm-pop a small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px;line-height:1.35}
+  .pm-pop a[aria-current="page"]{background:var(--primary-dim)}
+  .pm-pop a[aria-current="page"] .pm-ic{color:var(--primary)}
+
+  /* ---------- верхняя навигация ЛК ---------- */
+  .topnav{position:sticky; top:0; z-index:35; background:transparent; border-bottom:1px solid var(--line);
+    padding:0 clamp(16px,4vw,40px); transition:background .22s ease}
+  body.scrolled .topnav{background:var(--glass); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4)}
+  .topnav-in{max-width:1392px; margin:0 auto; height:64px; display:flex; align-items:center; gap:26px}
+  .brand-links{display:flex; gap:40px; align-items:center; min-width:0}
+  .brand-links a{display:flex; align-items:center; gap:10px; color:var(--label); font-weight:500; font-size:14px; white-space:nowrap}
+  .brand-links a.active{color:#fff; font-weight:600}
+  .brand-links .ic{width:18px;height:18px;opacity:.85}
+  .who{margin-left:auto; display:flex; align-items:center; gap:12px; white-space:nowrap}
+  .who .help{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .who .help svg{width:20px;height:20px}
+  .who .nm{font-size:14px;font-weight:600;line-height:1.2}
+  .who .rl{font-size:12px;color:var(--label)}
+  .who .chev{width:16px;height:16px;color:#fff;margin-left:16px}
+
+  /* ---------- контент (Content Container 1392) ---------- */
+  .wrap{max-width:calc(1392px + 2 * clamp(16px,4vw,40px)); margin:0 auto; padding:28px clamp(16px,4vw,40px) 72px;
+    display:flex; flex-direction:column; gap:24px}
+  .crumbs{display:flex; gap:8px; font-size:14px; color:var(--label); margin:0}
+  .crumbs b{color:#fff; font-weight:500}
+  .phead{display:flex; align-items:flex-start; justify-content:space-between; gap:16px 20px; flex-wrap:wrap; margin-top:-8px}
+  .ttl{display:flex; align-items:center; gap:16px; flex-wrap:wrap; min-width:0}
+  h1{font-size:clamp(24px,3vw,32px); font-weight:600; letter-spacing:-.16px; line-height:1.2; margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:6px 24px; padding-top:8px; font-size:14px}
+  .meta span{display:inline-flex; align-items:center; gap:4px}
+  .acts{display:flex; gap:12px; flex-wrap:wrap}
+
+  /* DS Tab (1297:6945): белое подчёркивание */
+  .tabs{display:flex; gap:32px; border-bottom:1px solid rgba(255,255,255,.1); margin-top:-8px; overflow-x:auto; scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{appearance:none; border:0; background:none; cursor:pointer; position:relative; flex:none; color:var(--label);
+    padding:10px 12px; font-size:16px; line-height:24px; letter-spacing:-.15px; margin-bottom:4px}
+  .tab:hover{color:#fff}
+  .tab[aria-selected="true"]{color:#fff}
+  .tab[aria-selected="true"]::after{content:""; position:absolute; left:0; right:0; bottom:-5px; height:2px; background:#fff}
+
+  /* KPI-карточки */
+  .pipeline{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px}
+  .kpi{background:rgba(255,255,255,.10); border-radius:16px; padding:4px; height:138px; display:flex; flex-direction:column;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), inset 0 1px 0 rgba(255,255,255,.14)}
+  .kpi .t{padding:20px; font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .kpi .n{margin-top:auto; padding:16px 20px; font-size:30px; font-weight:500; letter-spacing:-.6px; line-height:1}
+
+  .sec-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .sec-head h2{margin:0; font-size:24px; font-weight:600; letter-spacing:-.12px; white-space:pre}
+  .sec-head h2 span{color:var(--label)}
+  .selbtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--label); font-size:16px; line-height:20px;
+    display:inline-flex; align-items:center; gap:6px; padding:8px 12px 8px 14px; border-radius:12px}
+  .selbtn b{color:#fff; font-weight:600}
+
+  /* ---------- примитивы DS ---------- */
+  .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    height:46px; padding:0 21px; border:0; border-radius:32px; font-size:16px; font-weight:600; color:#fff; white-space:nowrap;
+    background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), inset 0 1px 0 rgba(255,255,255,.12);
+    transition:background .12s, filter .12s}
+  .btn:hover{background:rgba(255,255,255,.15)}
+  .btn.primary{background:var(--primary); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.22)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.sm{height:32px; font-weight:500}
+  .btn:disabled,.btn[aria-disabled="true"]{background:rgba(255,255,255,.06); color:var(--dim); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); cursor:not-allowed; filter:none}
+  .btn.primary:disabled{background:rgba(7,187,178,.35); color:rgba(255,255,255,.55)}
+  .lnk{appearance:none; border:0; background:none; cursor:pointer; padding:0; color:#fff; font-size:16px; font-weight:500; line-height:20px;
+    border-bottom:1px solid #fff; white-space:nowrap}
+  .lnk:hover{color:var(--accent); border-color:var(--accent)}
+  .ibtn{appearance:none; cursor:pointer; flex:none; width:40px; height:40px; border-radius:50%; border:0; display:grid; place-items:center; padding:0;
+    background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14), inset 0 1px 0 rgba(255,255,255,.12); transition:background .12s}
+  .ibtn:hover{background:rgba(255,255,255,.16)}
+  .ibtn[aria-disabled="true"]{background:rgba(255,255,255,.06); cursor:default}
+
+  /* DS «Text» — статус-чип */
+  .status{display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:32px; white-space:nowrap;
+    background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);
+    font-size:14px; line-height:20px; font-weight:500; color:#fff}
+  .status .dot{width:8px; height:8px; border-radius:50%; flex:none; background:var(--st-none)}
+  .status.off{color:var(--dim); font-weight:400}
+  .d-pending{background:var(--st-pending)!important} .d-review{background:var(--st-review)!important}
+  .d-done{background:var(--st-done)!important} .d-error{background:var(--st-error)!important}
+  .inf{display:inline-grid; place-items:center; margin:-2px -3px -2px 0; border-radius:50%; cursor:help}
+  .inf img{width:16px; height:16px; opacity:.85}
+
+  /* Alert DS */
+  .alert{display:flex; gap:10px; align-items:flex-start; border-radius:12px; padding:16px; font-size:14px; font-weight:500; line-height:20px}
+  .alert img{width:20px; height:20px; flex:none}
+  .alert.warn{background:var(--warn-bg); color:var(--st-pending)}
+  .alert.err{background:var(--err-bg); color:var(--st-error)}
+  .alert.ok{background:var(--ok-bg); color:var(--st-done)}
+  .alert.info{background:var(--accent-dim); color:var(--accent)}
+
+  /* Icon bubble — аватар-инициалы */
+  .ava{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:500;
+    background:radial-gradient(120% 90% at 100% 100%, rgba(0,194,113,.38), rgba(0,194,113,0) 55%), rgba(255,255,255,.10);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.2)}
+  .tag6{display:inline-flex; border:1px solid rgba(255,255,255,.3); border-radius:6px; padding:3px 8px; font-size:16px; line-height:1.2; white-space:nowrap}
+
+  /* тултип (DS Tooltip): data-tip на любом элементе */
+  [data-tip]{position:relative}
+  [data-tip]:hover::after,[data-tip]:focus-visible::after{content:attr(data-tip); position:absolute; z-index:20; pointer-events:none;
+    bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); width:max-content; max-width:240px; white-space:normal; text-align:left;
+    background:rgba(40,43,46,.97); color:rgba(255,255,255,.8); font-size:12px; font-weight:400; line-height:16px; letter-spacing:0;
+    padding:6px 8px; border-radius:6px; box-shadow:0 10px 26px -8px rgba(0,0,0,.65)}
+  [data-tip].tip-l:hover::after,[data-tip].tip-l:focus-visible::after{left:0; transform:none}
+
+  /* ---------- таблица кандидатов страницы ---------- */
+  .tscroll{overflow-x:auto; margin:0 -4px; padding:0 4px}
+  .ctable{min-width:1260px}
+  .ct-row{display:flex; align-items:center; gap:20px; padding:14px 20px}
+  .ct-head{padding:16px 20px 14px; font-size:16px; line-height:22px}
+  .ct-body .ct-row{border-bottom:1px solid var(--row-line); min-height:68px}
+  .c1{flex:0 0 250px; display:flex; align-items:center; gap:12px; min-width:0}
+  .c2{flex:0 0 400px; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .c3{flex:0 0 110px; display:flex; justify-content:center}
+  .c4{flex:0 0 200px}
+  .c5{flex:0 0 210px; display:flex; flex-direction:column; gap:6px}
+  .c6{flex:1 1 0; display:flex; justify-content:flex-end}
+  .nm{display:block; font-size:16px; line-height:20px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .sub{display:block; font-size:14px; line-height:18px; color:var(--label); font-variant-numeric:tabular-nums; white-space:nowrap}
+  .svc{display:flex; justify-content:space-between; font-size:16px}
+  .svc span{color:var(--label)} .svc b{font-weight:500}
+  .bar{height:6px; border-radius:999px; background:rgba(255,255,255,.10); overflow:hidden}
+  .bar i{display:block; height:100%; border-radius:999px; background:#11D5CB; transition:width .2s}
+
+  /* ---------- Import widget ---------- */
+  .iw{background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.12); border-radius:16px; padding:20px;
+    display:flex; flex-direction:column; gap:16px}
+  .iw.slim{padding:16px 20px}
+  .iw-file{display:flex; align-items:center; gap:12px; min-height:46px}
+  .iw-file b{display:block; font-size:16px; font-weight:500; line-height:20px; overflow-wrap:anywhere}
+  .iw-file small{display:block; margin-top:4px; font-size:14px; color:var(--label)}
+  .iw-div{height:1px; background:rgba(255,255,255,.10); border-radius:4px}
+  .iw-acts{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .iw-acts .l{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap}
+  .iw-stats{font-size:16px; line-height:22px}
+  .iw-stats b{font-weight:600}
+  .iw-stats .sep{margin:0 8px}
+  .iw-sub{margin-top:4px; font-size:14px; color:var(--label); overflow-wrap:anywhere}
+  /* загрузка файла (5935:21038) */
+  .up-row{display:grid; grid-template-columns:20px minmax(0,1fr) auto; column-gap:12px; row-gap:8px; align-items:center}
+  .up-row .lab{font-size:14px; color:var(--label); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .up-row .lab b{color:#fff; font-weight:500}
+  .up-row .pc{font-size:14px; color:var(--label); font-variant-numeric:tabular-nums}
+  .up-row .bar{grid-column:2 / 4}
+  /* прогресс импорта (Import loading 6002:90291) */
+  .pg{display:flex; flex-direction:column; gap:16px}
+  .pg-top{display:flex; align-items:center; gap:12px}
+  .spin{width:40px; height:39px; flex:none; animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pg-top .t{flex:1; min-width:0}
+  .pg-top .t b{display:block; font-size:16px; font-weight:500; line-height:20px}
+  .pg-top .t .r{display:flex; justify-content:space-between; gap:12px; margin-top:2px; font-size:14px; color:var(--label)}
+  .pg-top .t .r strong{font-weight:600}
+  .pg-top .t .r .pc{font-size:16px; font-weight:500}
+  .pg-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:14px; color:var(--label)}
+
+  /* ---------- слои: модалки, drawer, диалоги ---------- */
+  .layer{position:fixed; inset:0; z-index:80}
+  .layer.l2{z-index:85} .layer.l3{z-index:90}
+  .scrim{position:absolute; inset:0; background:rgba(3,5,6,.72); animation:fade .14s ease-out}
+  @keyframes fade{from{opacity:0}}
+  .pane{position:relative; background:var(--pane); -webkit-backdrop-filter:blur(30px) saturate(1.25); backdrop-filter:blur(30px) saturate(1.25);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12), inset 0 1px 0 rgba(255,255,255,.14), 0 30px 80px -20px rgba(0,0,0,.75);
+    border-radius:20px; color:#fff}
+  .host{position:absolute; inset:0; overflow:auto; display:flex; padding:24px 16px}
+  /* Modal small (2174:*) */
+  .msm{margin:auto; width:min(560px,100%); padding:32px; display:flex; flex-direction:column; gap:24px}
+  .msm.wide{width:min(916px,100%)}
+  .msm-top{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .msm h2{margin:0; font-size:24px; line-height:32px; font-weight:600}
+  .msm p{margin:0; font-size:16px; line-height:22px; color:var(--label)}
+  .msm-acts{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; flex-wrap:wrap}
+  .msm-acts.end{justify-content:flex-end}
+  .xbtn{width:40px; height:40px}
+  .bubble{width:60px; height:60px; border-radius:50%; display:grid; place-items:center; flex:none;
+    background:linear-gradient(-37deg,rgba(240,234,7,0) 78%,rgba(240,234,7,.9) 118%),rgba(255,255,255,.10);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.2)}
+  .bubble.err{background:linear-gradient(-37deg,rgba(255,102,116,0) 78%,rgba(255,102,116,.9) 118%),rgba(255,255,255,.10)}
+  .bubble.ok{background:linear-gradient(-37deg,rgba(0,194,113,0) 78%,rgba(0,194,113,.9) 118%),rgba(255,255,255,.10)}
+  .bubble img{width:32px; height:32px}
+  /* загрузка файла: dropzone + пример колонок */
+  .drop{appearance:none; width:100%; cursor:pointer; color:#fff; background:transparent; border:2px dashed rgba(255,255,255,.12); border-radius:16px;
+    padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; transition:border-color .12s, background .12s}
+  .drop:hover,.drop.over{border-color:rgba(7,187,178,.7); background:rgba(7,187,178,.06)}
+  .drop .ibtn{pointer-events:none}
+  .drop b{display:block; font-size:16px; font-weight:500; line-height:20px}
+  .drop small{display:block; margin-top:4px; font-size:14px; color:var(--label); line-height:1.25}
+  .ex-cap{font-size:12px; color:var(--label); margin:0 0 16px}
+  .ex-scroll{overflow-x:auto}
+  .ex{min-width:760px; border:1px solid rgba(255,255,255,.12); border-bottom:0; border-radius:12px 12px 0 0; overflow:hidden}
+  .ex-r{display:flex}
+  .ex-r > span{flex:1 1 0; min-width:0; text-align:center; padding:8px 12px; font-size:14px; white-space:nowrap; border-right:1px solid rgba(255,255,255,.10)}
+  .ex-r > span:last-child{border-right:0}
+  .ex-r > span.g{flex:0 0 80px}
+  .ex-r.h > span{color:var(--label); font-weight:500; line-height:20px}
+  .ex-r.h{border-bottom:1px solid rgba(255,255,255,.12)}
+  .ex-r.v > span{color:var(--dim); padding:10px 12px 8px; height:45px}
+  /* Modal large (2163:*) */
+  .mlg{margin:auto; width:min(1392px,100%); height:calc(100dvh - 48px); padding:28px 28px 24px; display:flex; flex-direction:column; gap:24px}
+  .mlg-h{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+  .mlg-h h2{margin:0; font-size:clamp(24px,3vw,32px); line-height:1.25; font-weight:600; letter-spacing:-.16px}
+  .mlg-c{flex:1 1 auto; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:24px; margin:0 -8px; padding:0 8px}
+  .mlg-f{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:4px}
+  .mlg-f.end{justify-content:flex-end}
+  /* таблица сопоставления */
+  .mt{min-width:1080px}
+  .mt-r{display:flex; align-items:center; gap:24px; padding:16px 20px; border-bottom:1px solid var(--row-line)}
+  .mt-r.h{padding:16px 20px 14px; border:0; font-size:16px; line-height:20px}
+  .m1{flex:0 0 340px} .m2{flex:0 0 40px; display:flex; justify-content:center} .m3{flex:0 0 220px; display:flex; gap:6px; font-size:16px; font-weight:500; line-height:20px}
+  .m3 i{font-style:normal; color:#FF6673; font-size:14px; line-height:1}
+  .m4{flex:1 1 0; min-width:0; display:flex; gap:8px; overflow:hidden}
+  .m5{flex:0 0 86px; display:flex; justify-content:center}
+  .mt-r.h .m5{flex:0 0 auto; min-width:86px}
+  .smp{flex:none; border:1px solid rgba(255,255,255,.2); border-radius:6px; padding:3px 8px; font-size:16px; line-height:1.2; color:var(--label); white-space:nowrap}
+  /* select/input (Dropdown / Text field dynamic input) */
+  .sel,.inp{appearance:none; -webkit-appearance:none; width:100%; height:46px; border-radius:12px; border:1px solid transparent; outline:none;
+    background-color:rgba(255,255,255,.10); color:#fff; font-size:16px; line-height:22px; padding:12px 14px; transition:border-color .12s}
+  .sel{padding-right:38px; cursor:pointer; background-image:url("icons/import/chevron-down.svg"); background-repeat:no-repeat; background-position:right 14px center; background-size:16px}
+  .sel option{background:#26292C; color:#fff}
+  .sel:hover,.inp:hover{border-color:rgba(255,255,255,.14)}
+  .sel:focus,.inp:focus{border-color:var(--primary)}
+  .sel.ph{background-color:rgba(255,255,255,.06); color:var(--dim)}
+  .sel:disabled{background-color:rgba(255,255,255,.06); color:var(--dim); cursor:default; background-image:url("icons/import/chevron-disabled.svg"); border-color:transparent}
+  .inp::placeholder{color:var(--dim)}
+  /* чекбокс DS 16px */
+  .cbx{appearance:none; border:0; padding:0; width:16px; height:16px; border-radius:4px; display:grid; place-items:center; cursor:pointer; background:rgba(255,255,255,.10)}
+  .cbx[aria-checked="true"]{background:var(--primary)}
+  .cbx.req{background:rgba(255,255,255,.06); cursor:default}
+  .cbx img{width:16px; height:16px}
+  /* фильтры и табы деталей */
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chipf{appearance:none; cursor:pointer; color:#fff; height:36px; padding:6px 12px; border-radius:32px; border:1px solid transparent;
+    background:rgba(255,255,255,.10); font-size:16px; line-height:22px; white-space:nowrap}
+  .chipf:hover{background:rgba(255,255,255,.14)}
+  .chipf[aria-pressed="true"]{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+  .dtabs{display:flex; gap:32px; border-bottom:1px solid rgba(255,255,255,.1); flex:none}
+  .dtabs .tab{margin-bottom:4px}
+  /* таблица деталей импорта */
+  .rt{min-width:980px}
+  .rt-r{display:flex; align-items:center; gap:24px; padding:16px 20px; border-bottom:1px solid var(--row-line); font-size:16px; line-height:22px}
+  .rt-r.h{padding:16px 20px 14px; border:0; line-height:20px}
+  .r1{flex:0 0 30px; font-variant-numeric:tabular-nums} .r2{flex:1 1 0; min-width:0; display:flex; align-items:center; gap:12px}
+  .r2 b{font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .r3{flex:0 0 130px; white-space:nowrap; font-variant-numeric:tabular-nums} .r4{flex:1 1 0; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .r5{flex:0 0 280px} .r6{flex:0 0 110px; display:flex; justify-content:center}
+  .rt-r.h .r6{justify-content:center}
+  .r6 .btn{width:100%}
+  .r6 .lnk{display:block; width:100%; text-align:center}
+  .empty{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:40px 16px}
+  .empty .bubble{width:48px; height:48px}
+  .empty .bubble img{width:24px; height:24px}
+  .empty h3{margin:12px 0 0; font-size:20px; font-weight:600}
+  .empty p{margin:0; font-size:16px; line-height:22px; color:var(--label); max-width:240px}
+
+  /* ---------- Right-side drawer ---------- */
+  .host.dr{padding:24px; justify-content:flex-end; overflow:hidden}
+  .drw{width:min(800px,100%); height:100%; padding:32px 28px 28px; display:flex; flex-direction:column; gap:24px; animation:slide .18s ease-out}
+  @keyframes slide{from{transform:translateX(24px); opacity:0}}
+  .drw-h{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+  .drw-h .t{display:flex; align-items:flex-end; gap:8px 16px; flex-wrap:wrap; min-width:0}
+  .drw-h h2{margin:0; font-size:24px; font-weight:600; letter-spacing:-.12px; line-height:1.25}
+  .drw-h h2 span{color:var(--label)}
+  .drw-b{flex:1 1 auto; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:24px; margin:-8px -8px 0; padding:8px 8px 0}
+  .drw-b .lead{margin:0; font-size:16px; line-height:22px; color:var(--label)}
+  .drw-f{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:4px; flex-wrap:wrap}
+  .drw-f .nav,.drw-f .r{display:flex; gap:12px; flex-wrap:wrap}
+  /* форма T-14 в drawer */
+  .frm{display:flex; flex-direction:column; gap:24px}
+  .frow{display:flex; gap:16px}
+  .frow > .fld{flex:1 1 0; min-width:0}
+  .frow > .fld.half{flex:0 0 calc(50% - 8px)}
+  .fld{position:relative; display:flex; flex-direction:column; gap:8px}
+  .fl{position:absolute; left:12px; top:-8px; z-index:1; padding:0 2px; border-radius:3px; background:var(--pane-solid);
+    font-size:14px; line-height:16px; color:var(--label); pointer-events:none; white-space:nowrap; transition:top .12s, font-size .12s, color .12s}
+  .fl i{font-style:normal; color:var(--st-error); margin-left:2px}
+  /* пустое текстовое поле без фокуса: подпись — как плейсхолдер внутри */
+  .fld.txt .inp:placeholder-shown:not(:focus) ~ .fl{top:12px; left:14px; padding:0; background:none; font-size:16px; line-height:22px; color:var(--dim)}
+  .fld.dis .fl{color:var(--dim)}
+  .fld.bad .inp,.fld.bad .sel{border-color:var(--st-error)}
+  .cap{font-size:12px; color:var(--label)}
+  .cap.err{color:var(--st-error)}
+  .inp.wico{padding-right:40px}
+  .fico{position:absolute; right:14px; top:15px; width:16px; height:16px; pointer-events:none}
+  .clr{appearance:none; position:absolute; right:10px; top:11px; width:24px; height:24px; border:0; border-radius:50%; padding:0; background:transparent; cursor:pointer; display:grid; place-items:center}
+  .clr:hover{background:rgba(255,255,255,.1)}
+  /* сравнение / просмотр */
+  .cmp h3,.dv h3{margin:0 0 12px; font-size:20px; font-weight:500; letter-spacing:-.1px}
+  .cmp-r{display:flex; gap:16px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.1); font-size:14px; line-height:1.3}
+  .cmp-r.h{color:var(--label); font-weight:500; line-height:20px}
+  .cmp-r > :first-child{flex:0 0 120px; color:var(--label)}
+  .cmp-r > :not(:first-child){flex:1 1 0; min-width:0; overflow-wrap:anywhere}
+  .hl{display:flex; align-items:center; gap:4px; color:var(--st-pending)}
+  .hl.red{color:var(--st-error)}
+  .hl img{width:16px; height:16px; flex:none}
+  .dv{padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,.1)}
+  .dv:last-child{border-bottom:0}
+  .dv-r{display:flex; gap:16px; padding:6px 0; font-size:14px; line-height:17px}
+  .dv-r dt{flex:0 0 264px; color:var(--label)}
+  .dv-r dd{margin:0; font-weight:500; overflow-wrap:anywhere}
+  .dv dl{margin:0}
+
+  /* ---------- toast ---------- */
+  #toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:99; transform:translate(-50%,16px);
+    background:var(--panel-solid); border:1px solid var(--line-strong); color:#fff; border-radius:12px; padding:11px 16px;
+    font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; max-width:calc(100vw - 32px)}
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+
+  @media (max-width:1100px){ .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:640px){
+    .pipeline{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
+    .kpi{height:112px} .kpi .t{padding:14px 16px} .kpi .n{padding:12px 16px; font-size:26px}
+    .brand-links{gap:20px} .who .nm,.who .rl,.who .chev{display:none}
+    .acts{width:100%} .acts .btn{flex:1 1 0}
+    .frow{flex-direction:column; gap:24px} .frow > .fld.half{flex-basis:auto}
+    .host{padding:16px 12px} .host.dr{padding:12px}
+    .msm{padding:24px 20px} .mlg{padding:20px 16px 16px; height:calc(100dvh - 32px)} .drw{padding:24px 18px 18px}
+    .dv-r dt{flex-basis:44%}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+<!-- ============ ХАРНЕСС ПРОТОТИПА ============ -->
+<div class="harness">
+  <div class="harness-row">
+    <span class="tag">Прототип</span>
+    <div class="proto-menu" id="protoMenu">
+      <button class="pm-trigger" aria-haspopup="menu" aria-expanded="false">
+        <span class="pm-cur">Импорт кандидатов</span>
+        <svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="pm-pop" role="menu" hidden>
+        <a role="menuitem" href="index.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 12h14M5 16h9"/><path d="M15.5 4.5l4 4"/></svg>
+          <span>Экран заявки<small>Перевод полей, роли, статусы, табы</small></span>
+        </a>
+        <a role="menuitem" href="related-requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+          <span>Связанные заявки<small>Колонка «2 + всего N» · карточка · экран заявки (T-03 §3)</small></span>
+        </a>
+        <a role="menuitem" href="request-groups.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>
+          <span>Группа заявок<small>Создание, дублирование заявки и группы, единая отправка (#215)</small></span>
+        </a>
+        <a role="menuitem" href="request-candidates.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><rect x="15" y="5" width="7" height="9" rx="1.5"/></svg>
+          <span>Кандидаты заявки<small>Таблица кандидатов · превью карточки справа</small></span>
+        </a>
+        <a role="menuitem" href="candidate-import.html" aria-current="page">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5L12 11l2.5 2.5"/></svg>
+          <span>Импорт кандидатов<small>Из файла: сопоставление колонок, результат, разбор записей (T-65)</small></span>
+        </a>
+        <a role="menuitem" href="request-form.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M14 17.5l1.5 1.5 3-3"/></svg>
+          <span>Целевая форма заявки<small>Создание заявки · черновик при первом вводе</small></span>
+        </a>
+        <a role="menuitem" href="requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>
+          <span>Список заявок<small>Статусы со счётчиками · черновики: дублировать, удалить</small></span>
+        </a>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Сценарий</span>
+      <div class="seg" id="scenSeg" role="group" aria-label="Сценарий">
+        <button data-scen="start">Старт</button>
+        <button data-scen="upload">Выбор файла</button>
+        <button data-scen="mapping">Сопоставление</button>
+        <button data-scen="progress">Импорт идёт</button>
+        <button data-scen="attention">Требуют внимания</button>
+        <button data-scen="details">Детали</button>
+        <button data-scen="success">Успешно</button>
+        <button data-scen="failed">Ошибка файла</button>
+        <button data-scen="upload-error">Ошибка загрузки</button>
+        <button data-scen="done">Всё разобрано</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Drawer</span>
+      <div class="seg" id="drSeg" role="group" aria-label="Drawer">
+        <button data-scen="invalid">Invalid</button>
+        <button data-scen="duplicate">Возможный дубль</button>
+        <button data-scen="issues">Черновик с замечаниями</button>
+        <button data-scen="exact">Дубль по Aadhaar</button>
+        <button data-scen="already">Уже импортирован</button>
+        <button data-scen="draft">Черновик</button>
+        <button data-scen="dirty">Несохранённые</button>
+        <button data-scen="save-error">Сбой сохранения</button>
+        <button data-scen="gone">Запись недоступна</button>
+      </div>
+    </div>
+    <p class="hint">Подойдёт любой .csv/.xlsx — чтение файла имитируется. Файл больше 10 МБ или другого формата покажет ошибку загрузки.</p>
+  </div>
+</div>
+
+<!-- ============ НАВИГАЦИЯ ЛК партнёра Индии ============ -->
+<nav class="topnav"><div class="topnav-in">
+  <div class="brand-links">
+    <a href="#" data-act="nyi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="#" class="active" data-act="nyi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Requests</span></a>
+  </div>
+  <div class="who"><span class="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg></span><div><div class="nm">SP Gavrilova</div><div class="rl">Partner (Provider)</div></div>
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+</div></nav>
+
+<main class="wrap">
+  <p class="crumbs"><span>Requests</span><span>/</span><b>Manual Arc Welder</b></p>
+  <div class="phead">
+    <div>
+      <div class="ttl"><h1>Manual Arc Welder</h1><span class="status"><span class="dot d-review"></span>In Progress</span></div>
+      <div class="meta">
+        <span><img class="ic" src="icons/import/meta-grade.svg" width="20" height="20" alt="">Grade: 5th</span>
+        <span><img class="ic" src="icons/import/meta-qty.svg" width="20" height="20" alt="">Quantity: 25 ppl.</span>
+        <span><img class="ic" src="icons/import/meta-loc.svg" width="20" height="20" alt="">Moscow</span>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="btn" data-act="import"><img class="ic" src="icons/import/upload.svg" width="16" height="16" alt="">Import from file</button>
+      <button class="btn primary" data-act="nyi"><img class="ic" src="icons/import/add.svg" width="16" height="16" alt="">Add new</button>
+    </div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="false" data-act="nyi">Overview</button>
+    <button class="tab" role="tab" aria-selected="true">Candidates</button>
+    <button class="tab" role="tab" aria-selected="false" data-act="nyi">Services</button>
+    <button class="tab" role="tab" aria-selected="false" data-act="nyi">Documents</button>
+  </div>
+  <div class="pipeline">
+    <div class="kpi"><div class="t">Completed</div><div class="n">6</div></div>
+    <div class="kpi"><div class="t">Pending</div><div class="n">15</div></div>
+    <div class="kpi"><div class="t">Under Review</div><div class="n">34</div></div>
+    <div class="kpi"><div class="t">Rejected</div><div class="n">14</div></div>
+    <div class="kpi"><div class="t">Cancelled</div><div class="n">3</div></div>
+  </div>
+  <div class="sec-head">
+    <h2 id="candTitle">Candidates  <span>72</span></h2>
+    <button class="selbtn" data-act="nyi">Statuses: <b>All</b><img class="ic" src="icons/import/chevron-down.svg" width="16" height="16" alt=""></button>
+  </div>
+  <section id="importSlot" aria-live="polite" hidden></section>
+  <div class="tscroll"><div class="ctable" role="table" aria-label="Candidates">
+    <div class="ct-row ct-head" role="row">
+      <div class="c1">Candidate</div><div class="c2" style="font-size:16px">Profession</div><div class="c3">Grade</div><div class="c4">Status</div><div class="c5">Services</div><div class="c6"></div>
+    </div>
+    <div class="ct-body" id="ctBody"></div>
+  </div></div>
+</main>
+
+<input type="file" id="fileIn" accept=".csv,.xlsx,.docx,.pdf" hidden>
+<div class="layer" id="lyMain" hidden><div class="scrim"></div><div class="host" id="hostMain"></div></div>
+<div class="layer l2" id="lyDrawer" hidden><div class="scrim"></div><div class="host dr" id="hostDrawer"></div></div>
+<div class="layer l3" id="lyDialog" hidden><div class="scrim"></div><div class="host" id="hostDialog"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ================= утилиты ================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const I=(n,s=16,a="")=>'<img class="ic" src="icons/import/'+n+'.svg" width="'+s+'" height="'+s+'" alt="'+a+'">';
+const p2=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date(); return p2(d.getDate())+"."+p2(d.getMonth()+1)+"."+d.getFullYear();};
+const clock=()=>{const d=new Date(); return p2(d.getHours())+":"+p2(d.getMinutes());};
+const fmtSize=b=>b>=1048576?String(Math.round(b/1048576*10)/10)+" MB":Math.max(1,Math.round(b/1024))+" KB";
+const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const digits=s=>String(s||"").replace(/\D/g,"");
+const fmtAad=s=>{const d=digits(s).slice(0,12); return d.replace(/(\d{4})(?=\d)/g,"$1 ");};
+function toast(m){const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2800);}
+
+const MAX_SIZE=10*1024*1024, EXT=["csv","xlsx","docx","pdf"], TOTAL=72, BASE_COUNT=72;
+
+/* ================= данные страницы (Figma 5935:20645) ================= */
+const BASE=[
+  {n:"Rajesh Kumar", a:"4827 6193 5041", p:"Manual Arc Welder (105558)", st:"draft"},
+  {n:"Amit Sharma", a:"7291 4056 1832", p:"Steel & Reinforced Concrete Installer (112045)", st:"review"},
+  {n:"Vikram Patel", a:"3105 8927 6640", p:"Universal Lathe Operator (103254)", st:"pending"},
+  {n:"Sunil Yadav", a:"9842 1730 5529", p:"Maintenance Fitter (118732)", st:"done"},
+  {n:"Deepak Verma", a:"2067 4381 9973", p:"Mason (101890)", st:"rejected"},
+  {n:"Manoj Singh", a:"5518 3402 7864", p:"Crane Operator (109463)", st:"done"}
+];
+const PAGE_ST={draft:["Draft",""],review:["Under Review","d-review"],pending:["Pending","d-pending"],done:["Completed","d-done"],rejected:["Rejected","d-error"]};
+
+/* существующие кандидаты заявки — для сравнения дублей */
+const EXIST={
+  rajesh:{name:"Rajesh Kumar", dob:"14.03.1991", aad:"4827 6193 5041", prof:"Manual Arc Welder (105558)", grade:"5", phone:"+91 98765 43210", email:"kumarrajesh@gmail.com"},
+  vikram:{name:"Vikram Patel", dob:"07.09.1999", aad:"3105 8927 6640", prof:"Universal Lathe Operator (103254)", grade:"5", phone:"+91 91234 56780", email:"vikram.patel@gmail.com"},
+  neha:{name:"Neha Gupta", dob:"19.05.1993", aad:"4410 2398 7765", prof:"Electric Gas Welder (105580)", grade:"4", phone:"+91 98111 20456", email:"neha.gupta@gmail.com"}
+};
+const PROFS=["Manual Arc Welder (105558)","Electric Gas Welder (105580)","CNC Machine Operator (222401)","Diesel Mechanic (440703)","Electrician (741301)","Plumber (862201)","Fitter (671202)","Mason (101890)","Crane Operator (109463)","Concrete Worker (112045)"];
+
+/* ================= результат импорта: 72 строки файла ================= */
+function rng(seed){return ()=>{seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296;};}
+const FN=["Aarav","Vivaan","Aditya","Sai","Reyansh","Ishaan","Rohan","Kabir","Ananya","Diya","Meera","Kavya","Pooja","Ritu","Suresh","Mahesh","Ganesh","Ramesh","Dinesh","Lokesh","Naveen","Pradeep","Sanjay","Vijay","Ajay","Manish","Nitin","Rahul","Harish","Mukesh","Gopal","Imran","Farhan","Tarun","Varun","Yash"];
+const LN=["Sharma","Verma","Gupta","Singh","Kumar","Yadav","Patel","Reddy","Nair","Iyer","Rao","Das","Joshi","Mishra","Chauhan","Pandey","Menon","Pillai","Bose","Khan"];
+function generic(no,r){
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const first=pick(FN), last=pick(LN), d=1+Math.floor(r()*28), m=1+Math.floor(r()*12), y=1975+Math.floor(r()*28);
+  let a=""; for(let i=0;i<12;i++) a+=String(i===0?2+Math.floor(r()*7):Math.floor(r()*10));
+  return {no, first, last, aad:fmtAad(a), prof:pick(PROFS), grade:String(3+Math.floor(r()*4)), dob:p2(d)+"."+p2(m)+"."+y,
+    gender:r()<.85?"Male":"Female", phone:"+91 9"+String(Math.floor(r()*1e4)).padStart(4,"0")+" "+String(Math.floor(r()*1e5)).padStart(5,"0"),
+    email:(first+"."+last).toLowerCase()+"@gmail.com", tExp:String(2+Math.floor(r()*14)), sExp:String(1+Math.floor(r()*8)), st:"draft"};
+}
+/* особые строки: номера строк в файле разнесены, как в реальном файле */
+function specials(){
+  return [
+    {no:1, first:"Vikram", last:"Singh", aad:"3456 7890 1234", prof:"Plumber (862201)", grade:"5", dob:"11.02.1990", gender:"Male", phone:"+91 98450 11223", email:"vikram.singh@gmail.com", tExp:"10", sExp:"4", st:"draft"},
+    {no:2, first:"Anil", last:"Mehta", aad:"5678 1234 9012", prof:"Electrician (741301)", grade:"4", dob:"02.08.1987", gender:"Male", phone:"+91 97400 55120", email:"anil.mehta@gmail.com", tExp:"12", sExp:"7", st:"draft"},
+    {no:3, first:"Deepa", last:"Nair", aad:"7788 9900 1122", prof:"Crane Operator (109463)", grade:"5", dob:"25.12.1992", gender:"Female", phone:"+91 99860 40017", email:"deepa.nair@gmail.com", tExp:"8", sExp:"5", st:"draft"},
+    {no:4, first:"Rajesh", last:"Kumar", aad:"6120 4471 3398", prof:"Manual Arc Welder (105558)", grade:"5", dob:"14.03.1991", gender:"Male", phone:"+91 98765 43210", email:"kumarrajesh@gmail.com", tExp:"9", sExp:"6", st:"possible", match:EXIST.rajesh},
+    {no:9, first:"Priya", last:"Patel", aad:"", aadSrc:"9876 5432 109", prof:"CNC Machine Operator (222401)", grade:"4", dob:"22.06.1994", gender:"Female", phone:"+91 99001 23456", email:"priya.patel@gmail.com", tExp:"6", sExp:"3", st:"invalid", bad:["aad"]},
+    {no:12, first:"Neha", last:"Gupta", aad:"4410 2398 7765", prof:"Electric Gas Welder (105580)", grade:"4", dob:"19.05.1993", gender:"Female", phone:"+91 98111 20456", email:"neha.gupta@gmail.com", st:"already", match:EXIST.neha},
+    {no:17, first:"Sunita", last:"Devi", aad:"7890 1234 5678", prof:"Plumber (862201)", grade:"4", dob:"", gender:"Female", phone:"+91 98765 43210", email:"sunita.devi@gmail.com", tExp:"7", sExp:"2", st:"issue", attn:true, bad:["dob"], probSkipped:true},
+    {no:26, first:"Ravi", last:"Shankar", aad:"3105 8927 6640", prof:"Manual Arc Welder (105558)", grade:"5", dob:"14.03.1991", gender:"Male", phone:"+91 93300 81234", email:"ravi.shankar@gmail.com", st:"exact", match:EXIST.vikram},
+    {no:33, first:"Arjun", last:"Reddy", aad:"2345 6789 0123", prof:"Fitter (671202)", grade:"5", dob:"03.11.1988", gender:"Male", phone:"+91 90080 70060", email:"arjun.reddy@gmail.com", tExp:"11", sExp:"9", st:"issue", attn:true, bad:["gender"]},
+    {no:48, first:"Kiran", last:"Rao", aad:"6655 4433 2211", prof:"Mason (101890)", grade:"3", dob:"30.01.1996", gender:"Male", phone:"", email:"kiran.rao@gmail.com", tExp:"4", sExp:"4", st:"issue", attn:false, bad:["phone"]}
+  ];
+}
+function buildRows(kind){
+  const r=rng(11), rows=[];
+  for(let no=1; no<=TOTAL; no++) rows.push(generic(no,r));
+  const sp=specials().filter(s=>kind==="issues"||s.st==="draft");
+  sp.forEach(s=>{rows[s.no-1]=Object.assign({},s);});
+  rows.forEach(x=>{x.attn=!!(x.st==="invalid"||x.st==="possible"||(x.st==="issue"&&x.attn)); x.id="r"+x.no;});
+  return rows;
+}
+const fullName=r=>(r.first+" "+(r.last||"")).trim();
+const isCreated=r=>r.st==="draft"||r.st==="issue";
+function counts(rows){
+  return {found:rows.length, created:rows.filter(isCreated).length, already:rows.filter(r=>r.st==="already").length,
+    dups:rows.filter(r=>r.st==="possible"||r.st==="exact"||r.st==="skipped").length, errors:rows.filter(r=>r.st==="invalid").length,
+    attn:rows.filter(r=>r.attn).length};
+}
+
+/* категории результата строки (Figma 5855:40890 / 5988:55145) */
+const CAT={
+  invalid:{l:"Invalid data", d:"d-error", tip:"Incorrect format of some field(s) found", act:"Edit"},
+  possible:{l:"Possible duplicate", d:"d-error", tip:"A match based on full name and date of birth with an existing candidate", act:"Compare"},
+  issue:{l:"Added as draft with issues", d:"d-pending", tip:"Recommendation to check the details", act:"Check"},
+  draft:{l:"Added as draft", d:"d-done"},
+  exact:{l:"Aadhaar duplicate", off:1},
+  already:{l:"Already imported", off:1},
+  skipped:{l:"Skipped as duplicate", off:1}
+};
+function chip(r,withInfo){
+  const c=CAT[r.st];
+  const info=(withInfo&&c.tip)?'<span class="inf" tabindex="0" data-tip="'+esc(c.tip)+'">'+I("info-16",16,"")+'</span>':'';
+  return '<span class="status'+(c.off?' off':'')+'"><span class="dot '+(c.d||'')+'"></span>'+c.l+info+'</span>';
+}
+
+/* ================= состояние ================= */
+const S={cand:BASE_COUNT, job:null, rows:[], dt:null, dr:null, failNext:false, timer:null, map:null};
+const MAP_COLS=["aadhaar_no","Содержание","profession","grade","phone_no","birth","email","notes"];
+function freshMap(){
+  return [
+    {attr:"Aadhaar", req:true, col:"aadhaar_no", s:["4827 6193 5041","7291 4056 1832","1234 5678 9012"], on:true},
+    {attr:"Full name", col:"Содержание", s:["Rajesh Kumar","Amit Sharma","Vikram Patel"], on:true},
+    {attr:"Profession", col:"profession", s:["Manual Arc Welder","Electric Gas Welder","TIG Welder"], on:true},
+    {attr:"Grade", col:"grade", s:["5","4","3"], on:true},
+    {attr:"Phone", col:"phone_no", s:["+91 98765 43210","+91 12345 67890","+91 09876 54321"], on:true},
+    {attr:"Date of birth", col:"", s:["07/09/1999","01/12/2000","15/10/1995"], on:true}
+  ];
+}
+
+/* ================= страница ================= */
+function renderPage(){
+  $("#candTitle").innerHTML='Candidates  <span>'+S.cand+'</span>';
+  $("#ctBody").innerHTML=BASE.map(c=>{
+    const st=PAGE_ST[c.st];
+    return '<div class="ct-row" role="row"><div class="c1"><span class="ava">'+initials(c.n)+'</span><div style="min-width:0"><span class="nm">'+esc(c.n)+'</span><span class="sub">'+c.a+'</span></div></div>'+
+      '<div class="c2">'+esc(c.p)+'</div><div class="c3"><span class="tag6">5</span></div>'+
+      '<div class="c4"><span class="status'+(c.st==="draft"?" off":"")+'"><span class="dot '+st[1]+'"></span>'+st[0]+'</span></div>'+
+      '<div class="c5"><div class="svc"><span>0 of 6</span><b>0%</b></div><div class="bar"><i style="width:0"></i></div></div>'+
+      '<div class="c6"><button class="ibtn" data-act="nyi" aria-label="Open candidate">'+I("arrow-right",24)+'</button></div></div>';
+  }).join("");
+}
+
+/* ================= Import widget ================= */
+function statsLine(c){
+  const s='<span class="sep">·</span>';
+  return '<div class="iw-stats">Found records: <b>'+c.found+'</b>'+s+'Created as draft: <b>'+c.created+'</b>'+s+'Already imported: <b>'+c.already+'</b>'+s+'Duplicates: <b>'+c.dups+'</b>'+s+'Data error: <b>'+c.errors+'</b></div>';
+}
+function fileRow(f){
+  return '<div class="iw-file">'+I("file",24)+'<div><b>'+esc(f.name)+'</b><small>'+fmtSize(f.size)+' • '+f.date+'</small></div></div>';
+}
+function renderWidget(){
+  const j=S.job, slot=$("#importSlot");
+  if(!j||j.closed){slot.hidden=true; slot.innerHTML=""; return;}
+  slot.hidden=false;
+  let h="";
+  if(j.phase==="uploading"){
+    h='<div class="iw slim"><div class="up-row">'+I("file",20)+'<span class="lab">File uploading: <b>'+esc(j.file.name)+'</b></span><span class="pc" id="upPc">'+j.pct+'%</span>'+
+      '<div class="bar"><i id="upBar" style="width:'+j.pct+'%"></i></div></div></div>';
+  } else if(j.phase==="mapping"){
+    h='<div class="iw"><div class="alert warn">'+I("alert-warn",20)+'<span>To start import process, please review found mismatches for column headers ('+S.map.length+').</span></div>'+
+      fileRow(j.file)+'<div class="iw-div"></div><div class="iw-acts"><div class="l"><button class="btn sm primary" data-act="map-open">Review mismatches</button></div>'+
+      '<button class="btn sm" data-act="imp-cancel">Cancel import</button></div></div>';
+  } else if(j.phase==="progress"){
+    const pc=Math.round(j.done/TOTAL*100);
+    h='<div class="iw slim"><div class="pg"><div class="pg-top"><img class="spin" src="icons/import/loading-circle.svg" width="40" height="39" alt="">'+
+      '<div class="t"><b>'+esc(j.file.name)+'</b><div class="r"><span>Candidates imported: <strong id="pgN">'+j.done+' of '+TOTAL+'</strong></span><span class="pc" id="pgPc">'+pc+'%</span></div></div></div>'+
+      '<div class="bar"><i id="pgBar" style="width:'+pc+'%"></i></div>'+
+      '<div class="pg-foot"><span>You can leave the page — the import will continue in the background mode.</span><button class="btn sm" data-act="imp-cancel">Cancel import</button></div></div></div>';
+  } else if(j.phase==="result"){
+    const c=counts(S.rows);
+    const al=c.attn>0?'<div class="alert warn">'+I("alert-warn",20)+'<span>Import completed with issues. Actions required for '+c.attn+' record(s).</span></div>'
+      :(j.outcome==="success"?'<div class="alert ok">'+I("alert-success",20)+'<span>Import completed successfully.</span></div>'
+      :'<div class="alert ok">'+I("alert-success",20)+'<span>Import completed. All records that required action have been reviewed.</span></div>');
+    h='<div class="iw">'+al+'<div>'+statsLine(c)+'<div class="iw-sub">'+esc(j.file.name)+' · '+j.file.date+' • '+j.time+'</div></div><div class="iw-div"></div>'+
+      '<div class="iw-acts"><div class="l"><button class="btn sm'+(c.attn>0?' primary':'')+'" data-act="details">View details</button><button class="lnk" data-act="upload-again">Upload another file</button></div>'+
+      '<button class="btn sm" data-act="w-close">Close</button></div></div>';
+  } else if(j.phase==="failed"){
+    h='<div class="iw"><div class="alert err">'+I("alert-error",20)+'<span>The file is corrupted or does not match the expected format. Please check the file and try again.</span></div>'+
+      '<div>'+statsLine({found:TOTAL,created:0,already:0,dups:0,errors:0})+'<div class="iw-sub">'+esc(j.file.name)+' · '+j.file.date+' • '+j.time+'</div></div><div class="iw-div"></div>'+
+      '<div class="iw-acts"><div class="l"><button class="btn sm" disabled>View details</button><button class="lnk" data-act="upload-again">Upload another file</button></div>'+
+      '<button class="btn sm" data-act="w-close">Close</button></div></div>';
+  } else if(j.phase==="cancelled"){
+    h='<div class="iw"><div class="alert info">'+I("alert-info",20)+'<span>Import cancelled. Candidates created before cancellation have been saved.</span></div>'+
+      '<div><div class="iw-stats">Processed: <b>'+j.done+' of '+TOTAL+'</b><span class="sep">·</span>Created as draft: <b>'+j.created+'</b></div><div class="iw-sub">'+esc(j.file.name)+' · '+j.file.date+' • '+j.time+'</div></div><div class="iw-div"></div>'+
+      '<div class="iw-acts"><div class="l"><button class="btn sm" disabled>View details</button><button class="lnk" data-act="upload-again">Upload another file</button></div>'+
+      '<button class="btn sm" data-act="w-close">Close</button></div></div>';
+  } else if(j.phase==="upload-error"){
+    h='<div class="iw"><div class="alert err">'+I("alert-error",20)+'<span>'+esc(j.err)+'</span></div>'+fileRow(j.file)+'<div class="iw-div"></div>'+
+      '<div class="iw-acts"><div class="l"><button class="btn sm primary" data-act="upload-again">Upload another file</button></div><button class="btn sm" data-act="w-close">Cancel import</button></div></div>';
+  }
+  slot.innerHTML=h;
+}
+
+/* ================= ход импорта (имитация) ================= */
+function stopTimer(){clearInterval(S.timer); S.timer=null;}
+function demoFile(){return {name:"Candidates.xlsx", size:5*1048576, date:today()};}
+function startUpload(file){
+  stopTimer(); S.rows=[]; S.map=freshMap();
+  S.job={phase:"uploading", file, pct:0}; renderWidget();
+  S.timer=setInterval(()=>{
+    const j=S.job; j.pct=Math.min(100,j.pct+7);
+    const pc=$("#upPc"), b=$("#upBar"); if(pc) pc.textContent=j.pct+"%"; if(b) b.style.width=j.pct+"%";
+    if(j.pct>=100){stopTimer(); setTimeout(()=>{if(S.job===j){j.phase="mapping"; renderWidget();}},250);}
+  },90);
+}
+function startProgress(from){
+  stopTimer(); const j=S.job; j.phase="progress"; j.done=from||0; renderWidget(); runProgress();
+}
+function runProgress(){
+  stopTimer();
+  S.timer=setInterval(()=>{
+    const j=S.job; if(!j||j.phase!=="progress"){stopTimer(); return;}
+    j.done=Math.min(TOTAL,j.done+1); const pc=Math.round(j.done/TOTAL*100);
+    const n=$("#pgN"), p=$("#pgPc"), b=$("#pgBar"); if(n) n.textContent=j.done+" of "+TOTAL; if(p) p.textContent=pc+"%"; if(b) b.style.width=pc+"%";
+    if(j.done>=TOTAL){stopTimer(); setTimeout(()=>finishImport("issues"),300);}
+  },55);
+}
+function finishImport(outcome){
+  const j=S.job; if(!j) return;
+  S.rows=buildRows(outcome); j.phase="result"; j.outcome=outcome; j.time=clock(); j.closed=false;
+  S.cand+=counts(S.rows).created; renderPage(); renderWidget();
+}
+
+/* новая загрузка: при неразрешённых строках — подтверждение, что прежний результат станет недоступен (Design §2) */
+function requestUpload(){
+  const j=S.job;
+  if(j&&["uploading","mapping","progress"].includes(j.phase)){
+    toast("An import is already in progress for this request.");
+    $("#importSlot").scrollIntoView({behavior:"smooth",block:"center"}); return;
+  }
+  const go=()=>{closeLayer("drawer"); closeLayer("main"); openUpload();};
+  const unresolved=(j&&j.phase==="result")?S.rows.filter(r=>r.st==="invalid"||r.st==="possible").length:0;
+  if(unresolved) dialog({icon:"warn", title:"Upload a new file?",
+    text:"The current import result will no longer be available, and "+unresolved+" record(s) with data errors or possible duplicates will not be created. Candidates that have already been created will stay in the request.",
+    sec:"Cancel", pri:"Upload new file", onPri:go});
+  else go();
+}
+function cancelImport(){
+  const j=S.job; if(!j) return;
+  const wasProgress=j.phase==="progress"; if(wasProgress) stopTimer();
+  dialog({icon:"warn", title:"Cancel import process?", text:"Remaining records will not be processed, candidates that have already been created will be saved.",
+    sec:"Continue import", pri:"Cancel import",
+    onSec:()=>{if(wasProgress&&S.job===j) runProgress();},
+    onPri:()=>{
+      if(j.phase==="mapping"){S.job=null; closeLayer("main"); renderWidget(); toast("Import cancelled"); return;}
+      const rows=buildRows("issues").slice(0,j.done); j.created=rows.filter(isCreated).length;
+      S.cand+=j.created; j.phase="cancelled"; j.time=clock(); renderPage(); renderWidget();
+    }});
+}
+
+/* ================= слои ================= */
+const LAYERS={main:["#lyMain","#hostMain"], drawer:["#lyDrawer","#hostDrawer"], dialog:["#lyDialog","#hostDialog"]};
+function showLayer(k,html){
+  const [ly,host]=LAYERS[k]; $(host).innerHTML=html; $(ly).hidden=false; document.body.classList.add("locked");
+}
+function closeLayer(k){
+  const [ly,host]=LAYERS[k]; $(ly).hidden=true; $(host).innerHTML="";
+  if(k==="main") S.dt=null; if(k==="drawer") S.dr=null;
+  if(Object.values(LAYERS).every(([l])=>$(l).hidden)) document.body.classList.remove("locked");
+}
+const isOpen=k=>!$(LAYERS[k][0]).hidden;
+const xBtn=act=>'<button class="ibtn xbtn" data-act="'+act+'" aria-label="Close">'+I("close-24",24)+'</button>';
+
+/* Modal small: подтверждения и ошибки (DS 2174:*) */
+let DLG=null;
+function dialog(o){
+  DLG=o;
+  const ic=o.icon==="err"?'<div class="bubble err"><img src="icons/x-circle-fill.svg" width="32" height="32" alt=""></div>'
+    :'<div class="bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>';
+  showLayer("dialog",'<div class="pane msm" role="alertdialog" aria-modal="true" aria-labelledby="dlgT">'+ic+'<h2 id="dlgT">'+esc(o.title)+'</h2>'+(o.text?'<p>'+esc(o.text)+'</p>':'')+
+    '<div class="msm-acts'+(o.sec?'':' end')+'">'+(o.sec?'<button class="btn" data-act="dlg-sec">'+esc(o.sec)+'</button>':'')+'<button class="btn primary" data-act="dlg-pri">'+esc(o.pri)+'</button></div></div>');
+  const b=$("#hostDialog [data-act='dlg-pri']"); b&&b.focus();
+}
+function dlgDone(which){const o=DLG; DLG=null; closeLayer("dialog"); if(!o) return; const f=which==="pri"?o.onPri:o.onSec; f&&f();}
+
+/* ================= модалка загрузки файла (5998:57914) ================= */
+function openUpload(){
+  showLayer("main",'<div class="pane msm wide" role="dialog" aria-modal="true" aria-labelledby="upT"><div class="msm-top"><h2 id="upT">Import candidates from file</h2>'+
+    '<button class="ibtn xbtn" data-act="up-close" aria-label="Close">'+I("close-20",20)+'</button></div>'+
+    '<button class="drop" id="drop" data-act="pick"><span class="ibtn">'+I("upload-24",24)+'</span><span><b>Drag&amp;drop or select a file</b>'+
+    '<small>CSV, XLSX, DOCX or PDF with one table.<br>Scanned PDFs and text summaries are not supported. Max. size: 10 MB</small></span></button>'+
+    '<div><p class="ex-cap">Example of columns within a file:</p><div class="ex-scroll"><div class="ex">'+
+    '<div class="ex-r h"><span>Full name</span><span>Aadhaar number</span><span>Profession</span><span class="g">Grade</span><span>Date of birth</span><span>Phone</span></div>'+
+    '<div class="ex-r v"><span>Rajesh Kumar</span><span>1234 5678 9012</span><span>Arc Welder</span><span class="g">5</span><span>07.09.1999</span><span>+91 12345 67890</span></div>'+
+    '</div></div></div></div>');
+  const d=$("#drop");
+  d.addEventListener("dragover",e=>{e.preventDefault(); d.classList.add("over");});
+  d.addEventListener("dragleave",()=>d.classList.remove("over"));
+  d.addEventListener("drop",e=>{e.preventDefault(); d.classList.remove("over"); const f=e.dataTransfer.files&&e.dataTransfer.files[0]; if(f) onFile(f);});
+  d.focus();
+}
+function onFile(f){
+  closeLayer("main"); stopTimer(); S.rows=[];
+  const ext=(f.name.split(".").pop()||"").toLowerCase(), file={name:f.name, size:f.size, date:today()};
+  if(!EXT.includes(ext)){S.job={phase:"upload-error", file, err:"Unsupported file format. Upload a CSV, XLSX, DOCX or PDF file with one table."}; renderWidget(); return;}
+  if(f.size>MAX_SIZE){S.job={phase:"upload-error", file, err:"File size exceeds the allowed limit (10 MB)"}; renderWidget(); return;}
+  startUpload(file);
+}
+
+/* ================= сопоставление колонок (5935:22880) ================= */
+function openMapping(){ showLayer("main",'<div class="pane mlg" role="dialog" aria-modal="true" aria-labelledby="mpT" id="mapPane"></div>'); renderMapping(); }
+function renderMapping(){
+  const rows=S.map.map((m,i)=>{
+    const opts='<option value="" disabled'+(m.col?'':' selected')+' hidden>Required value was not found</option>'+MAP_COLS.map(c=>'<option'+(c===m.col?' selected':'')+'>'+esc(c)+'</option>').join("");
+    let cb="";
+    if(m.col){
+      cb=m.req?'<span class="cbx req" role="checkbox" aria-checked="true" aria-disabled="true" aria-label="Import '+m.attr+'" data-tip="Field is required">'+I("cb-disabled",16)+'</span>'
+        :'<button class="cbx" role="checkbox" aria-checked="'+m.on+'" aria-label="Import '+m.attr+'" data-act="map-cb" data-i="'+i+'" data-tip="'+(m.on?'Mark as non-import':'Mark for import')+'">'+(m.on?I("cb-checked",16):'')+'</button>';
+    }
+    return '<div class="mt-r"><div class="m1"><select class="sel'+(m.col?'':' ph')+'" data-map="'+i+'" aria-label="Column for '+m.attr+'">'+opts+'</select></div>'+
+      '<div class="m2">'+I("arrow-right-20",20)+'</div><div class="m3">'+m.attr+(m.req?'<i>*</i>':'')+'</div>'+
+      '<div class="m4">'+m.s.map(v=>'<span class="smp">'+esc(v)+'</span>').join("")+'</div><div class="m5">'+cb+'</div></div>';
+  }).join("");
+  $("#mapPane").innerHTML='<div class="mlg-h"><h2 id="mpT">Review fields mismatches</h2>'+xBtn("map-close")+'</div>'+
+    '<div class="mlg-c"><div class="alert info" style="flex:none">'+I("alert-info",20)+'<span>Please, review found mismatches for column headers. Fields marked with an asterisk (*) are required for import.</span></div>'+
+    '<div style="overflow-x:auto; flex:none"><div class="mt"><div class="mt-r h"><div class="m1">Column header from file</div><div class="m2"></div><div class="m3" style="font-weight:400">System attribute</div><div class="m4">Sample values from file</div><div class="m5">Import field</div></div>'+rows+'</div></div></div>'+
+    '<div class="mlg-f"><button class="btn" data-act="map-close">Cancel</button><button class="btn primary" data-act="map-start">Start</button></div>';
+}
+
+/* ================= детали импорта (5855:41080) ================= */
+function openDetails(tab){ S.dt={tab:tab||(counts(S.rows).attn>0?"attn":"ok"), f:"all"}; showLayer("main",'<div class="pane mlg" role="dialog" aria-modal="true" aria-labelledby="dtT" id="dtPane"></div>'); renderDetails(); }
+function tabRows(t){return S.rows.filter(r=>t==="attn"?r.attn:!r.attn).sort((a,b)=>a.no-b.no);}
+const ORDER={attn:["invalid","possible","issue"], ok:["draft","issue","exact","already","skipped"]};
+function renderDetails(){
+  if(!S.dt||!$("#dtPane")) return;
+  const c=counts(S.rows), t=S.dt.tab, all=tabRows(t);
+  const cats=ORDER[t].map(k=>[k,all.filter(r=>r.st===k).length]).filter(x=>x[1]>0);
+  if(S.dt.f!=="all"&&!cats.some(x=>x[0]===S.dt.f)) S.dt.f="all";
+  const list=S.dt.f==="all"?all:all.filter(r=>r.st===S.dt.f);
+  const okN=S.rows.length-c.attn;
+  const al=c.attn>0?'<div class="alert warn" style="flex:none">'+I("alert-warn",20)+'<span>Import completed with issues. Actions required for '+c.attn+' record(s).</span></div>':'';
+  let body;
+  if(t==="attn"&&!all.length){
+    body='<div class="empty"><div class="bubble ok"><img src="icons/check-circle-fill.svg" width="24" height="24" alt=""></div><h3>All done!</h3><p>You\'ve reviewed all records that required attention.</p></div>';
+  } else {
+    body='<div class="chips" style="flex:none" role="group" aria-label="Filter">'+
+      '<button class="chipf" data-act="dt-f" data-f="all" aria-pressed="'+(S.dt.f==="all")+'">All ('+all.length+')</button>'+
+      cats.map(([k,n])=>'<button class="chipf" data-act="dt-f" data-f="'+k+'" aria-pressed="'+(S.dt.f===k)+'">'+CAT[k].l+' · '+n+'</button>').join("")+'</div>'+
+      '<div style="overflow-x:auto; flex:none"><div class="rt" role="table"><div class="rt-r h" role="row"><div class="r1">№</div><div class="r2">Candidate</div><div class="r3">Aadhaar</div><div class="r4">Profession</div><div class="r5">Result</div><div class="r6">Action</div></div>'+
+      list.map(r=>'<div class="rt-r" role="row"><div class="r1">'+r.no+'</div><div class="r2"><span class="ava">'+initials(fullName(r))+'</span><b>'+esc(fullName(r))+'</b></div>'+
+        '<div class="r3">'+(r.aad||r.aadSrc||"—")+'</div><div class="r4">'+esc(r.prof)+'</div><div class="r5">'+chip(r,t==="attn")+'</div>'+
+        '<div class="r6">'+(t==="attn"?'<button class="btn sm" data-act="dt-open" data-id="'+r.id+'">'+CAT[r.st].act+'</button>':'<button class="lnk" data-act="dt-open" data-id="'+r.id+'">View</button>')+'</div></div>').join("")+
+      '</div></div>';
+  }
+  const done=t==="attn"&&!all.length;
+  $("#dtPane").innerHTML='<div class="mlg-h"><h2 id="dtT">Import details</h2>'+xBtn("dt-close")+'</div><div class="mlg-c">'+al+
+    '<div class="dtabs" role="tablist"><button class="tab" role="tab" data-act="dt-tab" data-t="attn" aria-selected="'+(t==="attn")+'">Actions required ('+c.attn+')</button>'+
+    '<button class="tab" role="tab" data-act="dt-tab" data-t="ok" aria-selected="'+(t==="ok")+'">No issues ('+okN+')</button></div>'+body+'</div>'+
+    (done?'<div class="mlg-f end"><button class="btn primary" data-act="dt-close">Close</button></div>':'<div class="mlg-f"><button class="btn" data-act="dt-close">Cancel</button></div>');
+}
+
+/* ================= drawer записи (Right-side drawer 5994:*) ================= */
+const R=id=>S.rows.find(r=>r.id===id);
+function openDrawer(id,ids){
+  S.dr={ids:ids.slice(), id, form:null, init:null, err:{}, tried:false, saving:false};
+  showLayer("drawer",'<div class="pane drw" role="dialog" aria-modal="true" aria-labelledby="drT" id="drPane"></div>');
+  renderDrawer(true);
+}
+const FIELD_NAME={aad:"Aadhaar number", dob:"Date of Birth", gender:"Gender", phone:"Phone"};
+function formFor(r){return {first:r.first, last:r.last||"", prof:r.prof, gender:r.gender, dob:r.dob||"", doc:"Aadhaar", aad:r.aad||"", phone:r.phone||"", email:r.email||""};}
+function drawerKind(r){
+  if(r.st==="invalid"||r.st==="issue") return "form";
+  if(r.st==="possible") return "compare";
+  return r.st; // draft | exact | already | skipped
+}
+function renderDrawer(focus){
+  const d=S.dr; if(!d) return; const r=R(d.id), pos=d.ids.indexOf(d.id), kind=drawerKind(r);
+  if(kind==="form"&&!d.form){d.form=formFor(r); d.init=JSON.stringify(d.form); d.err={}; if(r.st==="invalid") d.err=validate(true);}
+  const title=r.st==="exact"?"Exact duplicate found":esc(fullName(r));
+  const head='<div class="drw-h"><div class="t"><h2 id="drT">'+title+' <span>('+(pos+1)+' of '+d.ids.length+')</span></h2>'+chip(r,true)+'</div>'+
+    '<button class="ibtn xbtn" data-act="dr-close" aria-label="Close">'+I("close-20",20)+'</button></div>';
+  const lead='<p class="lead">'+(r.st==="exact"?esc(fullName(r))+' · '+esc(r.prof):(r.aad||r.aadSrc||"No Aadhaar")+' · '+esc(r.prof))+'</p>';
+  let body="", right="";
+  if(kind==="form"){
+    const miss=(r.bad||[]).map(k=>FIELD_NAME[k]).join(", ");
+    const txt=r.st==="invalid"?"Record not created. These field(s) not recognized: "+miss+". Data below has been transferred from the file — check it and add required field(s) before saving, or upload another file for import."
+      :(r.bad||[]).includes("gender")?"Record created not completely. These field(s) not recognized: Gender. “Male” was set by default — check it and save."
+      :r.attn?"Record created not completely. These field(s) not recognized: "+miss+". Please, fill in manually."
+      :"Record created. These field(s) not recognized: "+miss+". You can fill them in manually.";
+    body=lead+'<div class="alert warn">'+I("alert-warn",20)+'<span>'+txt+'</span></div>'+formHtml();
+    right=(r.st==="invalid"?'<button class="btn" data-act="dr-import">'+I("upload",16)+'Import correct file</button>':'')+
+      '<button class="btn primary" data-act="dr-save"'+(d.saving?' disabled':'')+'>Save</button>';
+  } else if(kind==="compare"||r.st==="skipped"){
+    const al=r.st==="skipped"?'<div class="alert info">'+I("alert-info",20)+'<span>Candidate was skipped for this import as duplicate.</span></div>'
+      :'<div class="alert warn">'+I("alert-warn",20)+'<span>Record not created. Please, decide whether this is a duplicate of an existing candidate. Matches are highlighted in the table below.</span></div>';
+    body=lead+al+compareHtml(r,"Fields comparison from file and existing candidate",{name:1,dob:1});
+    if(kind==="compare") right='<button class="btn" data-act="dr-skip">'+I("x-16",16)+'Skip for import (it is duplicate)</button><button class="btn primary" data-act="dr-add">'+I("add",16)+'Add candidate (not duplicate)</button>';
+  } else if(r.st==="exact"){
+    body=lead+'<div class="alert err">'+I("alert-error",20)+'<span>Candidate can\'t be added because the same Aadhaar is already used in the system.</span></div>'+
+      compareHtml(r,"Compare fields from file and existing candidate",{aad:"red"},["name","dob","aad","prof","grade"]);
+  } else if(r.st==="already"){
+    body=lead+'<div class="alert info">'+I("alert-info",20)+'<span>Candidate was already imported.</span></div>'+
+      compareHtml(r,"Fields comparison from file and existing candidate",{name:1,dob:1,aad:1,prof:1,grade:1,phone:1,email:1});
+  } else { // draft
+    const al=r.via?"Candidate added successfully. Status changed to “Draft”.":"Candidate was imported successfully.";
+    body=lead+'<div class="alert ok">'+I("alert-success",20)+'<span>'+al+'</span></div>'+viewHtml(r);
+  }
+  const prevOn=pos>0, nextOn=pos<d.ids.length-1;
+  const nav='<div class="nav"><button class="ibtn tip-l" data-act="dr-prev" aria-label="Previous candidate" aria-disabled="'+!prevOn+'" data-tip="'+(prevOn?"Go to previous candidate":"No more records to review")+'">'+I(prevOn?"arrow-left":"arrow-left-dis",24)+'</button>'+
+    '<button class="ibtn" data-act="dr-next" aria-label="Next candidate" aria-disabled="'+!nextOn+'" data-tip="'+(nextOn?"Go to next candidate":"No more records to review")+'"'+(nextOn?'':' style="opacity:.5"')+'>'+I("arrow-right",24)+'</button></div>';
+  $("#drPane").innerHTML=head+'<div class="drw-b">'+body+'</div><div class="drw-f">'+nav+'<div class="r">'+right+'</div></div>';
+  if(kind==="form") bindForm();
+  if(focus){
+    const f=kind==="form"&&r.st==="invalid"?$("#drPane [data-k='aad']"):$("#drPane [data-act='dr-close']");
+    f&&f.focus({preventScroll:true});
+  }
+}
+function viewHtml(r){
+  const sec=(t,rows)=>'<section class="dv"><h3>'+t+'</h3><dl>'+rows.filter(x=>x[1]).map(x=>'<div class="dv-r"><dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd></div>').join("")+'</dl></section>';
+  return sec("General Information",[["Full name",fullName(r)],["Date of birth",r.dob],["Gender",r.gender],["Aadhaar Number",r.aad]])+
+    sec("Professional Data",[["Profession",r.prof],["Grade",r.grade?r.grade+"th":""],["Total Experience, years",r.tExp],["Specialty Experience, years",r.sExp]])+
+    sec("Contacts",[["Phone",r.phone],["Email",r.email]]);
+}
+function compareHtml(r,title,hl,keys){
+  const m=r.match||{}, file={name:fullName(r), dob:r.dob, aad:r.aad, prof:r.prof, grade:r.grade, phone:r.phone, email:r.email};
+  const L={name:"Full name", dob:"Date of birth", aad:"Aadhaar", prof:"Profession", grade:"Grade", phone:"Phone", email:"Email"};
+  keys=keys||["name","dob","aad","prof","grade","phone","email"];
+  return '<section class="cmp"><h3>'+title+'</h3><div class="cmp-r h"><span>Field</span><span>From file</span><span>From existing candidate</span></div>'+
+    keys.map(k=>{
+      const v=esc(file[k]||"—"), h=hl[k];
+      const fv=h==="red"?'<span class="hl red">'+I("alert-error",16)+v+'</span>':h?'<span class="hl">'+I("attention",16)+v+'</span>':'<span>'+v+'</span>';
+      return '<div class="cmp-r"><span>'+L[k]+'</span>'+fv+'<span>'+esc(m[k]||"—")+'</span></div>';
+    }).join("")+'</section>';
+}
+
+/* форма T-14 в drawer */
+function formHtml(){
+  const d=S.dr, f=d.form, e=d.err;
+  const txt=(k,l,req,ph,extra)=>'<div class="fld txt'+(e[k]?' bad':'')+'"><input class="inp'+(extra&&extra.clr&&f[k]?' wico':'')+'" data-k="'+k+'" id="f-'+k+'" value="'+esc(f[k])+'" placeholder="'+(ph||' ')+'" autocomplete="off"'+
+    (e[k]?' aria-invalid="true" aria-describedby="e-'+k+'"':'')+(extra&&extra.mode?' inputmode="'+extra.mode+'"':'')+'>'+
+    '<label class="fl" for="f-'+k+'">'+l+(req?'<i>*</i>':'')+'</label>'+
+    (extra&&extra.clr&&f[k]?'<button class="clr" type="button" data-act="dr-clear" data-k="'+k+'" aria-label="Clear">'+I("x-16",16)+'</button>':'')+
+    (e[k]?'<span class="cap err" id="e-'+k+'" role="alert">'+e[k]+'</span>':(extra&&extra.hint&&f[k]?'<span class="cap">'+extra.hint+'</span>':''))+'</div>';
+  const sel=(k,l,req,opts,dis)=>'<div class="fld'+(dis?' dis':'')+(e[k]?' bad':'')+'"><select class="sel" data-k="'+k+'" id="f-'+k+'"'+(dis?' disabled':'')+'>'+
+    opts.map(o=>'<option'+(o===f[k]?' selected':'')+'>'+esc(o)+'</option>').join("")+'</select><label class="fl" for="f-'+k+'">'+l+(req?'<i>*</i>':'')+'</label></div>';
+  const dob='<div class="fld half'+(e.dob?' bad':'')+'"><input class="inp wico" data-k="dob" id="f-dob" value="'+esc(f.dob)+'" placeholder="DD.MM.YYYY" inputmode="numeric" autocomplete="off"'+(e.dob?' aria-invalid="true" aria-describedby="e-dob"':'')+'>'+
+    '<label class="fl" for="f-dob">Date of birth<i>*</i></label><img class="fico" src="icons/import/calendar.svg" width="16" height="16" alt="">'+
+    (e.dob?'<span class="cap err" id="e-dob" role="alert">'+e.dob+'</span>':'')+'</div>';
+  const profs=PROFS.includes(f.prof)?PROFS:[f.prof].concat(PROFS);
+  return '<div class="frm" id="frm">'+
+    '<div class="frow">'+txt("first","First name",1)+txt("last","Last name",0)+'</div>'+
+    '<div class="frow">'+sel("prof","Profession",0,profs)+sel("gender","Gender",1,["Male","Female"])+'</div>'+
+    '<div class="frow">'+dob+'</div>'+
+    '<div class="frow">'+sel("doc","Document",0,["Aadhaar"],1)+txt("aad","Aadhaar number",1,"",{clr:1,hint:"Exactly 12 digits",mode:"numeric"})+'</div>'+
+    '<div class="frow">'+txt("phone","Phone",0,"",{mode:"tel"})+txt("email","Email",0,"",{mode:"email"})+'</div></div>';
+}
+function bindForm(scope){
+  $$("[data-k]",scope||$("#frm")).forEach(el=>{
+    const k=el.dataset.k;
+    el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{
+      let v=el.value;
+      if(k==="aad"){const pos=el.selectionStart, before=el.value.length; v=fmtAad(v); el.value=v; const np=Math.max(0,pos+(v.length-before)); try{el.setSelectionRange(np,np);}catch(_){}}
+      if(k==="dob"){const dd=digits(v).slice(0,8); v=dd.length>4?dd.slice(0,2)+"."+dd.slice(2,4)+"."+dd.slice(4):dd.length>2?dd.slice(0,2)+"."+dd.slice(2):dd; el.value=v;}
+      S.dr.form[k]=v;
+      let again=false;
+      if(S.dr.err[k]&&!validate()[k]){delete S.dr.err[k]; again=true;}
+      /* у Aadhaar при пустом/заполненном значении меняются крестик очистки и подсказка */
+      if(k==="aad"&&!!el.parentNode.querySelector(".clr")!==!!v) again=true;
+      if(again) rerenderField(k);
+    });
+  });
+}
+function rerenderField(k){
+  const el=$("#f-"+k); if(!el) return; const pos=el.selectionStart;
+  const tmp=document.createElement("div"); tmp.innerHTML=formHtml();
+  const nf=tmp.querySelector("#f-"+k).closest(".fld"); el.closest(".fld").replaceWith(nf);
+  bindForm(nf); const n=$("#f-"+k); n.focus(); try{n.setSelectionRange(pos,pos);}catch(_){}
+}
+const isDirty=()=>!!(S.dr&&S.dr.form&&JSON.stringify(S.dr.form)!==S.dr.init);
+function existingAadhaars(selfId){
+  return BASE.map(c=>digits(c.a)).concat(S.rows.filter(r=>r.id!==selfId&&(isCreated(r)||r.st==="already")).map(r=>digits(r.aad)));
+}
+function validate(onlyAad){
+  const f=S.dr.form, e={}, r=R(S.dr.id), a=digits(f.aad);
+  if(!a) e.aad="Specify the Aadhaar number"; else if(a.length!==12) e.aad="Exactly 12 digits";
+  else if(existingAadhaars(r.id).includes(a)) e.aad="A candidate with this Aadhaar already exists in this request";
+  if(onlyAad) return e;
+  if(!f.first.trim()) e.first="Specify the first name";
+  const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(f.dob);
+  if(!f.dob) e.dob="Specify the date of birth";
+  else if(!m) e.dob="Enter the date in DD.MM.YYYY format";
+  else { const dt=new Date(+m[3],+m[2]-1,+m[1]);
+    if(dt.getDate()!==+m[1]||dt.getMonth()!==+m[2]-1) e.dob="Enter the date in DD.MM.YYYY format";
+    else if(+m[3]<1900) e.dob="Date of birth can't be earlier than 01.01.1900";
+    else if(dt>new Date()) e.dob="Date of birth can't be in the future"; }
+  return e;
+}
+function save(){
+  const d=S.dr; const e=validate(); d.err=e;
+  if(Object.keys(e).length){renderDrawer(); const k=["first","dob","aad"].find(x=>e[x]); k&&$("#f-"+k).focus(); return;}
+  d.saving=true; renderDrawer();
+  setTimeout(()=>{
+    if(S.dr!==d) return; d.saving=false;
+    if(S.failNext){S.failNext=false; renderDrawer();
+      dialog({icon:"err", title:"Couldn't save changes", text:"Something went wrong while saving. Your changes were not saved.", sec:"Cancel", pri:"Try again", onPri:save}); return;}
+    const r=R(d.id), f=d.form, wasProb=r.probSkipped;
+    Object.assign(r,{first:f.first.trim(), last:f.last.trim(), prof:f.prof, gender:f.gender, dob:f.dob, aad:fmtAad(f.aad), phone:f.phone, email:f.email,
+      st:"draft", attn:false, via:"saved", bad:[]});
+    d.form=null; d.err={}; renderDrawer(); renderDetails(); renderWidget();
+    if(wasProb) dialog({icon:"warn", title:"Review required", text:"This candidate has been saved, but name and date of birth matches with existing candidates have not been checked yet. Please review manually.", pri:"Got it"});
+  },450);
+}
+/* переход внутри фиксированной сессии / закрытие — с подтверждением потери правок */
+function guard(fn){
+  if(isDirty()) dialog({icon:"warn", title:"Discard changes?", text:"You have unsaved changes. If you leave now, they will be lost.", sec:"Keep editing", pri:"Discard",
+    onPri:fn, onSec:()=>{const f=$("#frm .inp, #frm .sel:not(:disabled)"); f&&f.focus();}});
+  else fn();
+}
+function step(delta){
+  const d=S.dr; const i=d.ids.indexOf(d.id)+delta; if(i<0||i>=d.ids.length) return;
+  guard(()=>{d.id=d.ids[i]; d.form=null; d.err={}; renderDrawer(true);});
+}
+function resolveDuplicate(skip){
+  const r=R(S.dr.id);
+  const fn=()=>{r.st=skip?"skipped":"draft"; r.attn=false; if(!skip) r.via="added"; renderDrawer(); renderDetails(); renderWidget();
+    toast(skip?"Record skipped as duplicate":"Candidate added as draft");};
+  if(skip) dialog({icon:"warn", title:"Skip this record?", text:"The record will not be imported. Corrections made for it will be discarded.", sec:"Keep reviewing", pri:"Skip record", onPri:fn});
+  else dialog({icon:"warn", title:"Add as a new candidate?", text:"A new draft candidate will be created. Aadhaar will be checked once again before creation.", sec:"Keep reviewing", pri:"Add candidate", onPri:fn});
+}
+
+/* ================= делегирование кликов ================= */
+document.addEventListener("click",e=>{
+  const sc=e.target.closest("[data-scen]"); if(sc){runScenario(sc.dataset.scen); return;}
+  const t=e.target.closest("[data-act]"); if(!t) return;
+  const a=t.dataset.act;
+  if(t.getAttribute("aria-disabled")==="true") return;
+  switch(a){
+    case "nyi": e.preventDefault(); toast("Not included in this prototype"); break;
+    case "import": case "upload-again": requestUpload(); break;
+    case "pick": $("#fileIn").click(); break;
+    case "up-close": closeLayer("main"); break;
+    case "map-open": openMapping(); break;
+    case "map-close": closeLayer("main"); break;
+    case "map-cb": {const m=S.map[+t.dataset.i]; m.on=!m.on; renderMapping(); const b=$('[data-act="map-cb"][data-i="'+t.dataset.i+'"]'); b&&b.focus(); break;}
+    case "map-start": closeLayer("main"); startProgress(0); break;
+    case "imp-cancel": cancelImport(); break;
+    case "details": openDetails(); break;
+    case "w-close": if(S.job){ if(S.job.phase==="upload-error") S.job=null; else S.job.closed=true; } renderWidget(); break;
+    case "dt-close": closeLayer("main"); break;
+    case "dt-tab": S.dt.tab=t.dataset.t; S.dt.f="all"; renderDetails(); break;
+    case "dt-f": S.dt.f=t.dataset.f; renderDetails(); break;
+    case "dt-open": {
+      const id=t.dataset.id, all=tabRows(S.dt.tab), list=S.dt.f==="all"?all:all.filter(r=>r.st===S.dt.f);
+      openDrawer(id, S.dt.tab==="attn"?tabRows("attn").map(r=>r.id):list.map(r=>r.id)); break;
+    }
+    case "dr-close": guard(()=>{closeLayer("drawer"); renderDetails();}); break;
+    case "dr-prev": step(-1); break;
+    case "dr-next": step(1); break;
+    case "dr-save": save(); break;
+    case "dr-clear": S.dr.form[t.dataset.k]=""; rerenderField(t.dataset.k); break;
+    case "dr-import": guard(()=>{ if(isDirty()){S.dr.form=null; renderDrawer();} requestUpload(); }); break;
+    case "dr-skip": resolveDuplicate(true); break;
+    case "dr-add": resolveDuplicate(false); break;
+    case "dlg-pri": dlgDone("pri"); break;
+    case "dlg-sec": dlgDone("sec"); break;
+  }
+});
+document.addEventListener("change",e=>{
+  const s=e.target.closest("[data-map]"); if(!s) return;
+  const m=S.map[+s.dataset.map]; m.col=s.value; renderMapping(); const n=$('[data-map="'+s.dataset.map+'"]'); n&&n.focus();
+});
+$("#fileIn").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) onFile(f);});
+/* клик по затемнению и Esc закрывают верхний слой (Esc в диалоге = «Keep editing» / отмена) */
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape") return;
+  if(isOpen("dialog")){dlgDone("sec"); return;}
+  if(isOpen("drawer")){guard(()=>{closeLayer("drawer"); renderDetails();}); return;}
+  if(isOpen("main")) closeLayer("main");
+});
+$("#lyDrawer").addEventListener("click",e=>{ if(e.target.id==="hostDrawer") guard(()=>{closeLayer("drawer"); renderDetails();}); });
+$("#lyMain").addEventListener("click",e=>{ if(e.target.id==="hostMain"&&!$("#mapPane")) closeLayer("main"); });
+
+/* ================= сценарии харнесса (#якорь) ================= */
+function reset(){
+  stopTimer(); DLG=null; ["dialog","drawer","main"].forEach(closeLayer);
+  S.cand=BASE_COUNT; S.job=null; S.rows=[]; S.failNext=false; S.map=freshMap();
+}
+function withResult(kind){
+  reset(); S.job={phase:"result", file:demoFile(), outcome:kind, time:clock()};
+  S.rows=buildRows(kind); S.cand+=counts(S.rows).created;
+}
+const ATTN_IDS=()=>tabRows("attn").map(r=>r.id);
+const OK_IDS=()=>tabRows("ok").map(r=>r.id);
+const SCEN={
+  start(){reset();},
+  upload(){reset(); openUpload();},
+  mapping(){reset(); S.job={phase:"mapping", file:demoFile()};},
+  progress(){reset(); S.job={phase:"progress", file:demoFile(), done:11}; renderWidget(); runProgress();},
+  attention(){withResult("issues");},
+  details(){withResult("issues"); openDetails("attn");},
+  success(){withResult("success");},
+  failed(){reset(); S.job={phase:"failed", file:Object.assign(demoFile(),{name:"candidates_batch_march.xlsx"}), time:clock()};},
+  "upload-error"(){reset(); S.job={phase:"upload-error", file:Object.assign(demoFile(),{size:24*1048576}), err:"File size exceeds the allowed limit (10 MB)"};},
+  done(){withResult("issues"); S.rows.filter(r=>r.attn).forEach(r=>{ if(r.st==="possible") r.st="skipped"; else {r.st="draft"; r.via="saved"; if(!r.aad) r.aad="9876 5432 1098"; if(!r.dob) r.dob="18.07.1995";} r.attn=false; }); openDetails("attn");},
+  invalid(){withResult("issues"); openDetails("attn"); openDrawer("r9",ATTN_IDS());},
+  duplicate(){withResult("issues"); openDetails("attn"); openDrawer("r4",ATTN_IDS());},
+  issues(){withResult("issues"); openDetails("attn"); openDrawer("r17",ATTN_IDS());},
+  exact(){withResult("issues"); openDetails("ok"); openDrawer("r26",OK_IDS());},
+  already(){withResult("issues"); openDetails("ok"); openDrawer("r12",OK_IDS());},
+  draft(){withResult("issues"); openDetails("ok"); openDrawer("r1",OK_IDS());},
+  dirty(){withResult("issues"); openDetails("attn"); openDrawer("r9",ATTN_IDS()); S.dr.form.aad="9876 5432 1098"; S.dr.err={}; renderDrawer(); $("[data-act='dr-next']").click();},
+  "save-error"(){withResult("issues"); openDetails("attn"); openDrawer("r9",ATTN_IDS()); S.dr.form.aad="9876 5432 1098"; S.dr.err={}; renderDrawer(); S.failNext=true; save();},
+  gone(){withResult("issues"); openDetails("attn"); openDrawer("r4",ATTN_IDS());
+    dialog({icon:"warn", title:"This record is no longer available", text:"Someone else has already handled this record. The list has been refreshed", pri:"Got it",
+      onPri:()=>{const r=R("r4"); r.st="skipped"; r.attn=false; closeLayer("drawer"); renderDetails(); renderWidget();}});}
+};
+function runScenario(k){
+  if(!SCEN[k]) k="start";
+  $$("#scenSeg button, #drSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.scen===k));
+  SCEN[k](); renderPage(); renderWidget();
+  if(location.hash.slice(1)!==k) history.replaceState(null,"","#"+k);
+}
+
+/* ================= меню прототипов ================= */
+(function(){
+  const pm=document.getElementById("protoMenu"); if(!pm) return;
+  const trig=pm.querySelector(".pm-trigger"), p=pm.querySelector(".pm-pop");
+  const cl=()=>{p.hidden=true; trig.setAttribute("aria-expanded","false");};
+  const op=()=>{p.hidden=false; trig.setAttribute("aria-expanded","true");};
+  trig.addEventListener("click",e=>{e.stopPropagation(); p.hidden?op():cl();});
+  document.addEventListener("click",e=>{if(!pm.contains(e.target)) cl();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape") cl();});
+})();
+function onScroll(){ document.body.classList.toggle("scrolled",window.scrollY>$(".harness").offsetHeight-2); }
+window.addEventListener("scroll",onScroll,{passive:true});
+
+runScenario((location.hash||"").slice(1)||"start");
+</script>
+</body>
+</html>
