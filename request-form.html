@@ -481,6 +481,9 @@
   #dupAlert .x svg{width:14px; height:14px}
   #dupAlert .sv-retry{margin-left:6px}
   .tf-card.flash{animation:flash 1.2s ease-out}
+  #delBtn{position:relative}
+  #delBtn .del-tip{left:0}
+  #delBtn:hover .del-tip,#delBtn:focus-visible .del-tip{opacity:1; transform:none}
   /* ---------- боковые карточки заявки — как на «Экране заявки» (index.html) ---------- */
   .tf-side{align-self:stretch; min-width:0}
   .side-cards{display:grid; gap:16px; margin-bottom:32px}
@@ -883,7 +886,7 @@
       </div>
 
       <div class="tf-foot">
-        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик</button>
+        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик<span class="tf-tip del-tip" role="tooltip">Удалить черновик без восстановления<small>Вы вернетесь в список заявок</small></span></button>
         <span class="sp"></span>
         <button type="button" class="btn primary" id="sendBtn">Отправить заявку</button>
       </div>
@@ -1089,7 +1092,8 @@ $("#delBtn").addEventListener("click",()=>{
   const close=()=>$("#modalRoot").innerHTML="";
   $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
   $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
-  $("#mDel").addEventListener("click",()=>{close(); reset(); toast("Черновик удалён");});
+  /* после удаления — в список заявок (вкладка «Черновики»), там же тост «Черновик удалён» */
+  $("#mDel").addEventListener("click",()=>{ close(); try{ sessionStorage.setItem("toast","Черновик удалён"); }catch(e){} location.href="requests.html#drafts"; });
 });
 
 /* ---------- дублирование заявки: новый независимый черновик из СОХРАНЁННОГО состояния (BRD US-019 §4.1.4–6) ---------- */

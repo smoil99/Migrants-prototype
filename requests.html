@@ -696,6 +696,7 @@ let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
 function onScroll(){ document.body.classList.toggle("scrolled",window.scrollY>$(".harness").offsetHeight-2); }
 window.addEventListener("scroll",onScroll,{passive:true});
 render();
+try{ const t=sessionStorage.getItem("toast"); if(t){ sessionStorage.removeItem("toast"); toast(t); } }catch(e){}
 </script>
 </body>
 </html>
