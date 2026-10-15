@@ -468,7 +468,7 @@
   .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:360px}
   .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
   .dup-btn.busy{cursor:progress}
-  .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:#fff; animation:spin .8s linear infinite}
+  .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--primary); animation:spin .8s linear infinite}
   .dup-btn .tf-tip{left:auto; right:0}
   .dup-btn:hover .tf-tip,.dup-btn:focus-visible .tf-tip{opacity:1; transform:none}
   @media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl,.dup-btn .dup-i{display:none} }
@@ -1107,7 +1107,7 @@ const ICX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 function dupBusy(on){
   S.dupBusy=on; const b=$("#dupBtn");
   b.classList.toggle("busy",on);
-  b.querySelector(".lbl").textContent=on?"Дублируем…":"Дублировать";
+  b.querySelector(".lbl").textContent=on?"Дублирование…":"Дублировать";
   const ic=b.querySelector(":scope > svg:not(.dup-i), :scope > .spin");
   if(on){ const sp=document.createElement("span"); sp.className="spin"; ic.replaceWith(sp); }
   else if(ic.classList.contains("spin")){ ic.outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; }
