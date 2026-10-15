@@ -980,11 +980,14 @@ const FIELDS={address:{l:"Адрес работы",e:"Не больше 255 си
 const ICE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>';
 const ICI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>';
 let saveT;
+/* последнее состояние, подтверждённое сервером: из него создаётся дубль (T-84 §5, BR-02) */
+function snap(){ const els={}; [...form.elements].forEach(el=>{ if(el.name) els[el.name]=el.value; }); const q={}; $$(".q[data-name]").forEach(n=>q[n.dataset.name]=qVal(n)); return {els,q}; }
+function restoreSnap(sn){ if(!sn) return; Object.entries(sn.els).forEach(([k,v])=>{ if(form.elements[k]) form.elements[k].value=v; }); Object.entries(sn.q).forEach(([k,v])=>setQ(k,v)); syncAge(); $$(".fi").forEach(syncFi); }
 function save(){
   clearTimeout(saveT);
   if(!navigator.onLine){ S.save="offline"; renderHead(); return; }
   S.save="saving"; renderHead();
-  saveT=setTimeout(()=>{ S.saved=new Date(); S.save=S.bad.length?"partial":"ok"; markBad(); renderHead(); renderSteps(); },900);
+  saveT=setTimeout(()=>{ S.saved=new Date(); S.save=S.bad.length?"partial":"ok"; const prev=S.snap; S.snap=snap(); if(prev) S.bad.forEach(n=>{ S.snap.els[n]=prev.els[n]; }); markBad(); renderHead(); renderSteps(); },900);
 }
 function touched(){
   if(!S.draft){ S.draft=true; S.created=new Date(); }
@@ -1030,7 +1033,7 @@ function renderHead(){
   $("#meta").hidden=!S.draft;
   $("#backTip").hidden=!S.draft;
   $("#delBtn").hidden=!S.draft;
-  const db=$("#dupBtn"), blocked=S.save==="error"||S.save==="offline";
+  const db=$("#dupBtn"), blocked=false;
   db.hidden=!S.draft;
   db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
   $("#dupTip").innerHTML=blocked
@@ -1116,6 +1119,8 @@ function dupBusy(on){
 function showDupAlert(kind){
   $("#dupAlert").innerHTML = kind==="ok"
     ? '<div class="alert info" role="status">'+ICI+'<div class="body"><b>Это дубль заявки.</b> Проверьте все условия перед отправкой. Вложения не скопированы.</div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : kind==="warn"
+    ? '<div class="alert warn" role="status">'+ICE+'<div class="body">Не удалось сохранить последние изменения в исходной заявке. Дубликат создан по последнему сохранённому состоянию.</div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
     : kind==="err"
     ? '<div class="alert err" role="alert">'+ICE+'<div class="body">Не удалось создать дубль. Исходная заявка не изменилась. <button type="button" class="sv-retry" id="dupRetry">Повторить</button></div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
     : "";
@@ -1127,44 +1132,32 @@ $("#dupAlert").addEventListener("click",e=>{
 });
 function doDup(){
   dupBusy(true); showDupAlert("");
+  /* сохранить правки не удалось (ошибка сервера или отказ по полю) — команда всё равно уходит, копия из последнего сохранённого */
+  const stale = S.save==="error" || S.save==="partial";
   setTimeout(()=>{
     dupBusy(false);
-    if(S.dupFail){ showDupAlert("err"); window.scrollTo({top:0,behavior:"smooth"}); return; }
-    finishDup();
+    /* нет сети — команда копирования тоже не проходит: ошибка с «Повторить» */
+    if(S.dupFail || !navigator.onLine || S.save==="offline"){ showDupAlert("err"); window.scrollTo({top:0,behavior:"smooth"}); return; }
+    if(stale) restoreSnap(S.snap);
+    finishDup(stale);
   },700);
 }
 /* в дубль уходит только сохранённое: значения, не принятые сервером, не переносятся; файлов, номера, истории нет */
-function finishDup(){
+function finishDup(stale){
   unsent();
-  S.bad.forEach(n=>{ form.elements[n].value=""; });
   S.bad=[]; $$(".bad").forEach(n=>n.classList.remove("bad")); markBad();
   $$(".fi").forEach(syncFi);
   S.draft=true; S.created=new Date(); S.saved=new Date(); S.save="ok"; S.st="dup";
-  showDupAlert("ok"); setSeg(); renderHead(); renderSteps();
+  showDupAlert(stale?"warn":"ok"); S.snap=snap(); setSeg(); renderHead(); renderSteps();
   history.replaceState(null,"","#dup");
   window.scrollTo({top:0});
   const c=$(".tf-card"); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
 }
 $("#dupBtn").addEventListener("click",()=>{
   if(S.dupBusy) return;
-  if(S.save==="error"||S.save==="offline"){ toast("Сначала сохраните изменения — дубль создаётся из сохранённой заявки"); return; }
   if(S.save==="saving"){   // ждём окончания автосохранения и продолжаем сами
     dupBusy(true);
     const w=setInterval(()=>{ if(S.save==="saving") return; clearInterval(w); dupBusy(false); $("#dupBtn").click(); },150);
-    return;
-  }
-  if(S.save==="partial"){
-    const names=S.bad.map(n=>"«"+FIELDS[n].l+"»");
-    const one=names.length===1;
-    $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
-      '<div class="m-bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>'+
-      '<div class="m-top"><h2 id="mT">Дублировать заявку?</h2></div>'+
-      '<p class="m-lead">'+(one?"Поле "+names[0]+" не сохранено и не попадёт в дубль.":"Поля "+names.join(", ")+" не сохранены и не попадут в дубль.")+'</p>'+
-      '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn primary" id="mDup">Дублировать</button></div></div></div>';
-    const close=()=>$("#modalRoot").innerHTML="";
-    $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
-    $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
-    $("#mDup").addEventListener("click",()=>{close(); doDup();});
     return;
   }
   doDup();
@@ -1235,7 +1228,7 @@ function renderSide(){
   $("#historyToggle").addEventListener("click",e=>{ const b=$("#historyBody"); b.hidden=!b.hidden; e.currentTarget.setAttribute("aria-expanded",String(!b.hidden)); });
 }
 
-function reset(){ unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
+function reset(){ unsent(); clearTimeout(saveT); S.snap=null; showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
 /* демо-черновик + состояние индикатора сохранения из харнесса */
 function demo(st){
   unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=st==="duperr";
@@ -1245,6 +1238,9 @@ function demo(st){
   E.attract.value="Квотируемые"; E.region.value="Московская обл."; E.qty.value="12";
   setQ("term","1 год"); setQ("food","Да");
   S.bad=[];
+  if(st==="field"||st==="fields"){ E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; if(st==="fields") E.salary.value="95000"; }
+  S.snap=snap();
+  if(st==="error"||st==="offline") E.qty.value="15";   // правка после последнего сохранения
   if(st==="field"||st==="fields"){
     E.address.value="Московская область, городской округ Подольск, деревня Северово, территория индустриального парка «Северное Сияние», строение 7, корпус 2, помещение 14 — проход через КПП №3, затем вдоль складов логистического комплекса до административного здания, второй этаж, кабинет отдела кадров";
     S.bad=["address"];
