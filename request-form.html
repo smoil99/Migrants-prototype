@@ -740,13 +740,13 @@
 
 <!-- ============ ЗАЛИПАЮЩАЯ ШАПКА (как в «Экране заявки») ============ -->
 <header class="lk-header"><div class="lk-header-in">
-  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span id="crumbCur">Создать заявку</span></p>
+  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span id="crumbCur">Новая заявка</span></p>
   <div class="tf-title">
     <button class="backc tf-back" id="backBtn" aria-label="Вернуться к заявкам">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
       <span class="tf-tip" id="backTip" hidden>Вернуться к заявкам<small>Черновик сохранится</small></span>
     </button>
-    <h1 id="title">Создать заявку</h1>
+    <h1 id="title">Новая заявка</h1>
     <span class="rc-ref" id="sentRef" hidden></span>
     <span class="tf-chip" id="draftChip" hidden>Черновик</span>
     <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
@@ -756,7 +756,7 @@
       <span class="tf-tip" id="dupTip" role="tooltip"></span>
     </button>
   </div>
-  <p class="tf-sub" id="sub">Заполните вручную, продиктуйте голосом или загрузите бриф для распознавания нейросетью</p>
+  <p class="tf-sub" id="sub">Заполните вручную, продиктуйте или загрузите бриф — нейросеть заполнит поля за вас</p>
   <p class="tf-meta" id="meta" hidden></p>
 </div></header>
 
@@ -840,7 +840,7 @@
           <div class="tf-rows">
             <div class="q" data-req data-name="food"><p class="qlab">Компания организует питание?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
-            <div class="fi" data-req data-show="food:Другое"><div class="box"><input name="foodOther"><span class="pl">Как будет организовано питание?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="food:Другое"><div class="box"><input name="foodOther"><span class="pl">Как будет организовано питание?<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Укажите формат, сумму компенсации, кто оплачивает и другие условия</p></div>
             <div class="q" data-req data-name="housing"><p class="qlab">Проживание сотрудников<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Общежитие</button><button type="button" class="chipb">Хостел</button><button type="button" class="chipb">Другое жильё</button><button type="button" class="chipb">Компания не предоставляет жильё</button></div>
               <p class="et">Обязательное поле</p><p class="ht" data-show="housing:Общежитие|Хостел">Предоставляемое жильё должно иметь статус жилого помещения.</p></div>
@@ -857,12 +857,12 @@
         <section class="tf-sec" id="s5">
           <h2>Организация работ и медицина</h2>
           <div class="tf-rows">
+            <div class="fi"><div class="box"><input name="med"><span class="pl">Требуется расширенный медосмотр?</span></div></div>
             <div class="q" data-req data-name="foreman"><p class="qlab">Нужен ли бригадир?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
             <div class="fi" data-req data-show="foreman:Да"><div class="box"><input name="foremanCount" type="number" min="1" inputmode="numeric"><span class="pl">Количество сотрудников на одного бригадира<i>*</i></span><span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
             <div class="q" data-req data-name="foremanHow" data-show="foreman:Да"><p class="qlab">Как будет выбран бригадир?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Назначим одного из сотрудников</button><button type="button" class="chipb">Откроем отдельную вакансию</button></div><p class="et">Обязательное поле</p></div>
-            <div class="fi"><div class="box"><input name="med"><span class="pl">Требуется расширенный медосмотр?</span></div></div>
           </div>
         </section>
 
@@ -877,16 +877,16 @@
             <div class="fi" data-req data-show="airport:Другое"><div class="box"><input name="airportOther"><span class="pl">Свой вариант встречи<i>*</i></span></div><p class="et">Обязательное поле</p></div>
             <div class="q" data-req data-name="translator"><p class="qlab">Нужен ли переводчик?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да, в штат</button><button type="button" class="chipb">Да, на период адаптации</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
-            <div class="fi" data-req data-show="translator:Другое"><div class="box"><input name="translatorOther"><span class="pl">Какое сопровождение переводчика нужно?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="translator:Другое"><div class="box"><input name="translatorOther"><span class="pl">Какое сопровождение переводчика нужно?<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Укажите формат (на объекте, онлайн), период, языки и другие условия</p></div>
           </div>
         </section>
 
         <section class="tf-sec" id="s7">
           <h2>Профиль вакансии и кандидата</h2>
           <div class="tf-rows">
-            <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Предпочтительный пол специалистов</p>
+            <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Пол специалистов</p>
               <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
-              <p class="ht" data-show="gender:Мужской|Женский">Указывайте предпочтение только при наличии объективных требований, связанных с характером работы.</p></div>
+              <p class="ht" data-show="gender:Мужской|Женский">Указывайте пол только при наличии объективных требований, связанных с характером работы</p></div>
             <div class="tf-two">
               <div class="fi" data-req data-def="18"><div class="box"><input name="ageFrom" type="number" min="18" inputmode="numeric"><span class="pl">Возраст от, лет<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
@@ -922,7 +922,8 @@
         </section>
 
         <div class="tf-general">
-          <div class="fi"><div class="box"><textarea name="extra" rows="3"></textarea><span class="pl">Дополнительная информация</span></div></div>
+          <div class="fi"><div class="box"><textarea name="extra" rows="3"></textarea><span class="pl">Дополнительная информация</span></div>
+            <p class="ht">Укажите пожелания и уточнения, которых нет в других полях: маршрут прибытия, особые условия, сроки и т. д.</p></div>
         </div>
       </div>
 
@@ -1074,7 +1075,7 @@ function renderHead(){
     setStackH(); return;
   }
   $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
-  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Создать заявку"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Создать заявку";
+  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Новая заявка"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Новая заявка";
   $("#draftChip").hidden=!S.draft;
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
