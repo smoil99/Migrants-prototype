@@ -961,8 +961,8 @@ function renderDrop(){
   const v=S.mode==="voice";
   $("#drop").classList.toggle("rec",v&&S.rec);
   $("#dropIc").innerHTML=v?MIC:UP;
-  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовать"):"Нажмите, чтобы загрузить бриф";
-  $("#dropS").textContent=v?"":"Нейросеть распознает бриф и заполнит поля формы";
+  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовать"):"Нажмите, чтобы прикрепить файл";
+  $("#dropS").textContent=v?"Нейросеть распознает голос и заполнит поля формы":"Загрузите документ или изображение с текстом брифа";
 }
 $$(".tf-mode .rtab").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode; S.rec=false; renderDrop();}));
 $("#drop").addEventListener("click",()=>{
