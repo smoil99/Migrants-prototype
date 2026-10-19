@@ -792,6 +792,11 @@
         <section class="tf-sec" id="s2">
           <h2>Потребность в специалистах</h2>
           <div class="tf-rows">
+            <div class="fi" data-req data-show="attract:Квотируемые|Неквотируемые|Высококвалифицированные (ВКС)|Территория опережающего развития (ТОР)|Не знаю" id="profFi"><div class="box"><input name="prof" list="profList" autocomplete="off"><span class="pl">Профессия<i>*</i></span></div>
+              <p class="et">Обязательное поле</p>
+              <p class="ht" id="profManual" hidden>Введено вручную. Профессию проверит и подберёт менеджер из справочника перед началом работы</p></div>
+            <datalist id="profList"></datalist>
+            <div class="fi" data-show="attract:Квотируемые"><div class="box"><input name="occ" readonly tabindex="-1"><span class="pl">Занятие (привязано к профессии)</span></div></div>
             <div class="fi" data-req><div class="box">
               <select name="region"><option value=""></option><option>Москва</option><option>Московская обл.</option><option>Ленинградская обл.</option><option>Республика Татарстан</option><option>Свердловская обл.</option><option>Краснодарский край</option></select>
               <span class="pl">Регион работы<i>*</i></span>
@@ -811,8 +816,8 @@
               <div class="chips"><button type="button" class="chipb">6 месяцев</button><button type="button" class="chipb">1 год</button><button type="button" class="chipb">2 года</button><button type="button" class="chipb">Другой срок</button></div><p class="et">Обязательное поле</p></div>
             <div class="fi tf-half" data-req data-show="term:Другой срок"><div class="box"><input name="termOther" type="number" min="1" inputmode="numeric"><span class="pl">Другой срок<i>*</i></span><span class="end pe unit">мес.</span></div>
               <p class="et">Обязательное поле</p><p class="ht">Укажите срок в месяцах.</p></div>
-            <div class="fi tf-half"><div class="box"><input name="start" type="date"><span class="pl">Планируемая дата выхода на работу</span>
-              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg></span></div>
+            <div class="fi tf-half" data-req><div class="box"><input name="start" type="date"><span class="pl">Планируемая дата выхода на работу<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg></span></div><p class="et">Обязательное поле</p>
 </div>
           </div>
         </section>
@@ -825,6 +830,8 @@
               <p class="ht" data-show="attract:Высококвалифицированные (ВКС)">Для данного способа привлечения действуют ограничения по минимальному размеру заработной платы.</p></div>
             <div class="q" data-name="probation"><p class="qlab">Предусмотрен ли испытательный срок?</p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+            <div class="fi tf-half" data-show="probation:Да"><div class="box"><input name="probSalary" inputmode="numeric"><span class="pl">Зарплата на испытательном сроке, ₽</span></div>
+              <p class="ht">В рублях за месяц до вычета НДФЛ.</p></div>
           </div>
         </section>
 
@@ -833,6 +840,7 @@
           <div class="tf-rows">
             <div class="q" data-req data-name="food"><p class="qlab">Компания организует питание?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="food:Другое"><div class="box"><input name="foodOther"><span class="pl">Как будет организовано питание?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
             <div class="q" data-req data-name="housing"><p class="qlab">Проживание сотрудников<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Общежитие</button><button type="button" class="chipb">Хостел</button><button type="button" class="chipb">Другое жильё</button><button type="button" class="chipb">Компания не предоставляет жильё</button></div>
               <p class="et">Обязательное поле</p><p class="ht" data-show="housing:Общежитие|Хостел">Предоставляемое жильё должно иметь статус жилого помещения.</p></div>
@@ -842,6 +850,7 @@
               <p class="ht">Укажите адрес или тип объекта, количество человек в комнате и другие важные условия.</p></div>
             <div class="q" data-req data-name="commute"><p class="qlab">Как сотрудники будут добираться до места работы?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Жильё находится в пешей доступности</button><button type="button" class="chipb">Сотрудники добираются самостоятельно</button><button type="button" class="chipb">Компания предоставляет транспорт</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="commute:Другое"><div class="box"><input name="commuteOther"><span class="pl">Другой вариант проезда<i>*</i></span></div><p class="et">Обязательное поле</p></div>
           </div>
         </section>
 
@@ -850,8 +859,10 @@
           <div class="tf-rows">
             <div class="q" data-req data-name="foreman"><p class="qlab">Нужен ли бригадир?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
-            <div class="q" data-name="med"><p class="qlab">Требуется расширенный медосмотр?</p>
-              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+            <div class="fi" data-req data-show="foreman:Да"><div class="box"><input name="foremanCount" type="number" min="1" inputmode="numeric"><span class="pl">Количество сотрудников на одного бригадира<i>*</i></span><span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="foremanHow" data-show="foreman:Да"><p class="qlab">Как будет выбран бригадир?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Назначим одного из сотрудников</button><button type="button" class="chipb">Откроем отдельную вакансию</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi"><div class="box"><input name="med"><span class="pl">Требуется расширенный медосмотр?</span></div></div>
           </div>
         </section>
 
@@ -860,10 +871,13 @@
           <div class="tf-rows">
             <div class="q" data-req data-name="tickets"><p class="qlab">Нужна помощь с покупкой билетов?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, купим билеты самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="tickets:Другое"><div class="box"><input name="ticketsOther"><span class="pl">Какая помощь с переездом нужна?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
             <div class="q" data-req data-name="airport"><p class="qlab">Нужна помощь со встречей сотрудников в аэропорту?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, встретим самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="airport:Другое"><div class="box"><input name="airportOther"><span class="pl">Свой вариант встречи<i>*</i></span></div><p class="et">Обязательное поле</p></div>
             <div class="q" data-req data-name="translator"><p class="qlab">Нужен ли переводчик?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да, в штат</button><button type="button" class="chipb">Да, на период адаптации</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="translator:Другое"><div class="box"><input name="translatorOther"><span class="pl">Какое сопровождение переводчика нужно?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
           </div>
         </section>
 
@@ -873,14 +887,11 @@
             <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Предпочтительный пол специалистов</p>
               <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
               <p class="ht" data-show="gender:Мужской|Женский">Указывайте предпочтение только при наличии объективных требований, связанных с характером работы.</p></div>
-            <div class="q" data-name="age" data-def="Диапазон возраста"><p class="qlab">Предпочтительный возраст</p>
-              <div class="chips"><button type="button" class="chipb">Диапазон возраста</button><button type="button" class="chipb">Не имеет значения</button></div>
-              <p class="ht">Указывайте возраст только при наличии объективных требований, связанных с характером работы</p></div>
-            <div class="tf-two" id="ageRange">
+            <div class="tf-two">
               <div class="fi" data-req data-def="18"><div class="box"><input name="ageFrom" type="number" min="18" inputmode="numeric"><span class="pl">Возраст от, лет<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
-              <div class="fi"><div class="box"><input name="ageTo" type="number" min="18" inputmode="numeric"><span class="pl">Возраст до, лет</span>
-                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div></div>
+              <div class="fi" data-req><div class="box"><input name="ageTo" type="number" min="18" inputmode="numeric"><span class="pl">Возраст до, лет<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
             </div>
             <div class="fi"><div class="box"><textarea name="duties" rows="3"></textarea><span class="pl">Должностные обязанности</span></div>
               <p class="ht">Опишите основные задачи специалиста</p></div>
@@ -902,6 +913,11 @@
               <p class="ht" data-show="schedule:Другое">Опишите особенности графика.</p></div>
             <div class="q" data-name="overtime"><p class="qlab">Планируются ли переработки?</p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+            <div class="q" data-req data-name="otPay" data-show="overtime:Да"><p class="qlab">Оплата переработок<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">По ТК РФ</button><button type="button" class="chipb">Фиксированная оплата</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="overtime:Да"><div class="box"><input name="otTerms"><span class="pl">Условия компенсации переработок<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Укажите ставку, порядок расчёта и другие условия (что считается переработками)</p></div>
+            <div class="q" data-req data-name="otCalc" data-show="overtime:Да"><p class="qlab">Как рассчитывается оплата переработок?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Почасово</button><button type="button" class="chipb">Сдельно</button><button type="button" class="chipb">Фиксированная сумма за месяц</button></div><p class="et">Обязательное поле</p></div>
           </div>
         </section>
 
@@ -975,11 +991,19 @@ $$(".q").forEach(q=>{
   });
 });
 const qVal=q=>{const c=q.querySelector('.chipb[aria-checked="true"]'); return c?c.textContent:"";};
-const setQ=(name,val)=>{const q=$('.q[data-name="'+name+'"]'); q.querySelectorAll(".chipb").forEach(c=>c.setAttribute("aria-checked",c.textContent===val));};
+const setQ=(name,val)=>{const q=$('.q[data-name="'+name+'"]'); if(!q) return; q.querySelectorAll(".chipb").forEach(c=>c.setAttribute("aria-checked",c.textContent===val));};
 /* условный показ полей и подсказок по матрице 16.10: data-show="поле:значение1|значение2&поле2:значение" */
 function valOf(name){ const q=$('.q[data-name="'+name+'"]'); if(q) return qVal(q); const el=form.elements[name]; return el?el.value:""; }
-function syncCond(){ $$("[data-show]").forEach(n=>{ n.hidden = !n.dataset.show.split("&").every(c=>{ const [k,v]=c.split(":"); return v.split("|").includes(valOf(k)); }); }); }
-function syncAge(){ $("#ageRange").hidden = qVal($('.q[data-name="age"]'))!=="Диапазон возраста"; }
+/* справочники профессий (демо): квотируемые — ОКПДТР с занятием; неквотируемые — перечень Минтруда */
+const PROF_Q={"Электросварщик ручной сварки":"Сварщики и газорезчики (7212)","Монтажник":"Монтажники металлоконструкций (7214)","Бетонщик":"Бетонщики (7114)","Арматурщик":"Арматурщики (7114)","Каменщик":"Каменщики (7112)","Слесарь-сборщик":"Слесари-сборщики (8211)"};
+const PROF_N=["Повар","Водитель автомобиля","Швея","Инженер-технолог","Оператор станков с ЧПУ","Сварщик (раздел «Строительство»)","Сварщик (раздел «Машиностроение»)"];
+function syncProf(){ const m=valOf("attract"), v=form.elements.prof.value.trim();
+  const list = m==="Квотируемые"?Object.keys(PROF_Q):m==="Неквотируемые"?PROF_N:[];
+  const dl=$("#profList"); const html=list.map(x=>'<option value="'+x+'">').join(""); if(dl.innerHTML!==html) dl.innerHTML=html;
+  $("#profManual").hidden = !(list.length && v && !list.includes(v));
+  const occ = m==="Квотируемые" ? (PROF_Q[v]||"") : ""; if(form.elements.occ.value!==occ){ form.elements.occ.value=occ; syncFi(form.elements.occ.closest(".fi")); } }
+function syncCond(){ syncProf(); $$("[data-show]").forEach(n=>{ n.hidden = !n.dataset.show.split("&").every(c=>{ const [k,v]=c.split(":"); return v.split("|").includes(valOf(k)); }); }); }
+function syncAge(){}
 
 /* дефолты макета: пол «Мужской», возраст «Диапазон возраста», от 18 — не считаются вводом пользователя */
 function applyDefaults(){
@@ -1043,14 +1067,14 @@ function renderHead(){
   if(S.sent){
     $("#draftChip").hidden=false; $("#draftChip").textContent=STL[S.status]; $("#draftChip").className="tf-chip s-"+S.status;
     $("#sub").hidden=true; $("#meta").hidden=false; $("#backTip").hidden=true; $("#delBtn").hidden=true;
-    $("#title").textContent="Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
+    $("#title").textContent=form.elements.prof.value||"Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
     const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
     $("#dupTip").innerHTML="Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small>";
     $("#meta").innerHTML="Отправлена: "+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
     setStackH(); return;
   }
   $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
-  $("#title").textContent="Создать заявку"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Создать заявку";
+  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Создать заявку"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Создать заявку";
   $("#draftChip").hidden=!S.draft;
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
@@ -1107,6 +1131,12 @@ $("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(
 $("#sendBtn").addEventListener("click",()=>{
   const miss=reqList().filter(n=>!filled(n));
   miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
+  /* проверки BRD US-016 §5.1: дата не в прошлом; возраст — целые годы, от 18, «от» не больше «до» */
+  const E=form.elements, wrong=(el,msg)=>{ const fi=el.closest(".fi"); fi.classList.add("bad"); fi.querySelector(".et").textContent=msg; miss.push(fi); };
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(E.start.value && new Date(E.start.value+"T00:00")<today) wrong(E.start,"Дата не может быть в прошлом");
+  if(E.ageFrom.value && +E.ageFrom.value<18) wrong(E.ageFrom,"Не меньше 18");
+  if(E.ageFrom.value && E.ageTo.value && +E.ageFrom.value>+E.ageTo.value) wrong(E.ageTo,"Не меньше, чем «Возраст от»");
   renderSteps();
   if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
   /* всё корректно → та же заявка в режиме просмотра (состояние «Отправлена») */
@@ -1192,7 +1222,7 @@ const MON=v=>{ const n=+String(v).replace(/\s/g,""); return isNaN(n)?v:n.toLocal
 function fiVal(el){
   if(!el.value) return "";
   if(el.type==="date"){ const [y,m,d]=el.value.split("-"); return d+"."+m+"."+y; }
-  if(el.name==="salary") return MON(el.value);
+  if(el.name==="salary"||el.name==="probSalary") return MON(el.value);
   return el.value;
 }
 function showSent(o={}){
@@ -1259,7 +1289,7 @@ function demo(st){
   if(st==="fromreq") return fromReq();
   applyDefaults();
   const E=form.elements;
-  E.attract.value="Квотируемые"; setQ("quota","Да"); E.region.value="Московская обл."; E.qty.value="12";
+  E.attract.value="Квотируемые"; setQ("quota","Да"); E.prof.value="Электросварщик ручной сварки"; E.region.value="Московская обл."; E.qty.value="12";
   setQ("term","1 год"); setQ("food","Да");
   S.bad=[];
   if(st==="field"||st==="fields"){ E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; if(st==="fields") E.salary.value="95000"; }
@@ -1274,7 +1304,7 @@ function demo(st){
     E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000"; E.start.value="2026-11-16";
     setQ("probation","Нет"); setQ("commute","Компания предоставляет транспорт"); setQ("foreman","Нет"); setQ("med","Нет");
     setQ("translator","Да, на период адаптации"); setQ("interview","Онлайн"); setQ("schedule","5/2, 8 часов в день"); setQ("overtime","Нет");
-    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС";
+    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС"; E.ageTo.value="45"; E.med.value="Расширенный медосмотр не требуется";
     if(st==="filled"||st==="sent"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
   }
   $$(".fi").forEach(syncFi);
@@ -1290,25 +1320,25 @@ function demo(st){
 function fromReq(){ fillWelder(); finishDup(); }
 function fillWelder(){
   applyDefaults();
-  const E=form.elements, v={attract:"Квотируемые",region:"Москва",address:"Москва, Пресненская набережная, 4",qty:"100",termOther:"24",grade:"От 5 разряда и выше",
+  const E=form.elements, v={attract:"Квотируемые",region:"Москва",prof:"Электросварщик ручной сварки",address:"Москва, Пресненская набережная, 4",qty:"100",termOther:"24",probSalary:"120000",foodOther:"Компенсация 20 000 ₽ в месяц на питание в корпоративной столовой",commuteOther:"Служебный транспорт до места работы",foremanCount:"15",med:"Психиатр, нарколог, флюорография",airportOther:"Встреча в аэропорту с табличкой, трансфер до общежития",schedDetails:"Смены по 12 часов, чередование 2/2",otTerms:"2000 ₽ / час, не чаще одного раза в месяц, не более 2 часов",housingTerms:"Общежитие рядом с работой, двухместные комнаты",grade:"От 5 разряда и выше",
     start:"2026-04-01",salary:"150000",ageFrom:"25",ageTo:"40",extra:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
     duties:"Сварка особо сложных конструкций, эксплуатируемых в экстремальных условиях (газо- и нефтепроводы, узлы летательных аппаратов)",
     reqs:"Опыт работы с разнородными металлами, допуск к работе на высоте"};
   Object.entries(v).forEach(([k,x])=>E[k].value=x);
-  [["quota","Да"],["term","Другой срок"],["probation","Да"],["food","Другое"],["housing","Общежитие"],["commute","Другое"],["foreman","Да"],["med","Да"],
-   ["tickets","Да"],["airport","Другое"],["translator","Да, на период адаптации"],["gender","Мужской"],["age","Диапазон возраста"],
-   ["interview","Онлайн"],["schedule","Сменный график"],["overtime","Да"]].forEach(([n,x])=>setQ(n,x));
+  [["quota","Да"],["term","Другой срок"],["probation","Да"],["food","Другое"],["housing","Общежитие"],["commute","Другое"],["foreman","Да"],["foremanHow","Назначим одного из сотрудников"],
+   ["tickets","Да"],["airport","Другое"],["translator","Да, на период адаптации"],["gender","Мужской"],
+   ["interview","Онлайн"],["schedule","Сменный график"],["overtime","Да"],["otPay","Фиксированная оплата"],["otCalc","Почасово"]].forEach(([n,x])=>setQ(n,x));
   syncAge(); S.bad=[];
 }
 /* ---------- открытие отправленной заявки из списка (requests.html → #req=ID): та же форма в режиме просмотра ---------- */
 const STL={new:"Новая",work:"В работе",done:"Завершена",cancel:"Отменена"};
 const D=(s,h=10,m=0)=>{ const [d,mo,y]=s.split("."); return new Date(+y,+mo-1,+d,h,m,12); };
 const REQS={
-  1:{st:"new",ref:"№12345_1",cr:"01.10.2026",reg:"Кабардино-Балкарская Республика",start:"2026-10-10",qty:6,hired:2,grade:"123-й квалификационный разряд"},
-  2:{st:"new",ref:"№12345_2",cr:"01.10.2026",reg:"Москва",start:"2026-10-10",qty:6,hired:0,grade:"2-й квалификационный разряд"},
+  1:{st:"new",prof:"Электросварщик ручной сварки",ref:"№12345_1",cr:"01.10.2026",reg:"Кабардино-Балкарская Республика",start:"2026-10-10",qty:6,hired:2,grade:"123-й квалификационный разряд"},
+  2:{st:"new",prof:"Монтажник",ref:"№12345_2",cr:"01.10.2026",reg:"Москва",start:"2026-10-10",qty:6,hired:0,grade:"2-й квалификационный разряд"},
   3:{st:"work",ref:"№12290_1",cr:"12.03.2026",welder:true,hired:15,qty:25,partners:["ООО Ромашка","Reliance Inc."],hist:[["work","14.03.2026"]]},
-  4:{st:"done",ref:"№11874_1",cr:"02.02.2026",reg:"Московская обл.",start:"2026-03-01",qty:10,hired:10,grade:"3-й квалификационный разряд",partners:["ООО Ромашка","Reliance Inc."],hist:[["work","04.02.2026"],["done","30.04.2026"]]},
-  5:{st:"cancel",ref:"№11802_1",cr:"20.01.2026",reg:"Республика Татарстан",start:"2026-02-15",qty:8,hired:0,grade:"4-й квалификационный разряд",hist:[["cancel","27.01.2026"]]}
+  4:{st:"done",prof:"Бетонщик",ref:"№11874_1",cr:"02.02.2026",reg:"Московская обл.",start:"2026-03-01",qty:10,hired:10,grade:"3-й квалификационный разряд",partners:["ООО Ромашка","Reliance Inc."],hist:[["work","04.02.2026"],["done","30.04.2026"]]},
+  5:{st:"cancel",prof:"Арматурщик",ref:"№11802_1",cr:"20.01.2026",reg:"Республика Татарстан",start:"2026-02-15",qty:8,hired:0,grade:"4-й квалификационный разряд",hist:[["cancel","27.01.2026"]]}
 };
 function openReq(id){
   const r=REQS[id]; if(!r) return go("empty");
@@ -1316,7 +1346,7 @@ function openReq(id){
   else{
     demo("filled"); const E=form.elements;
     if(![...E.region.options].some(o=>o.value===r.reg)) E.region.add(new Option(r.reg,r.reg));
-    E.region.value=r.reg; E.start.value=r.start; E.qty.value=String(r.qty); E.grade.value=r.grade;
+    E.region.value=r.reg; E.start.value=r.start; if(r.prof) E.prof.value=r.prof; E.qty.value=String(r.qty); E.grade.value=r.grade;
   }
   $$(".fi").forEach(syncFi);
   const cr=D(r.cr,9,40);
