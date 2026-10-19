@@ -766,7 +766,7 @@
     <form class="tf-card" id="form" novalidate autocomplete="off">
       <div id="dupAlert" aria-live="polite"></div>
       <div class="tf-mode" role="tablist">
-        <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать голосом</button>
+        <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать</button>
         <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить бриф</button>
       </div>
       <button type="button" class="tf-drop" id="drop">
@@ -960,8 +960,8 @@ function renderDrop(){
   const v=S.mode==="voice";
   $("#drop").classList.toggle("rec",v&&S.rec);
   $("#dropIc").innerHTML=v?MIC:UP;
-  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовку"):"Нажмите, чтобы загрузить бриф";
-  $("#dropS").textContent=v?"Убедитесь, что нужные данные находятся рядом":"Нейросеть распознает бриф и заполнит поля формы";
+  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовать"):"Нажмите, чтобы загрузить бриф";
+  $("#dropS").textContent=v?"":"Нейросеть распознает бриф и заполнит поля формы";
 }
 $$(".tf-mode .rtab").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode; S.rec=false; renderDrop();}));
 $("#drop").addEventListener("click",()=>{
