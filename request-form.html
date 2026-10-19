@@ -857,7 +857,8 @@
         <section class="tf-sec" id="s5">
           <h2>Организация работ и медицина</h2>
           <div class="tf-rows">
-            <div class="fi"><div class="box"><input name="med"><span class="pl">Требуется расширенный медосмотр?</span></div></div>
+            <div class="fi"><div class="box"><input name="med"><span class="pl">Расширенный медосмотр</span></div>
+              <p class="ht">Перечислите обследования, которые нужно пройти. Если медосмотр не нужен, напишите «Не требуется»</p></div>
             <div class="q" data-req data-name="foreman"><p class="qlab">Нужен ли бригадир?<i>*</i></p>
               <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
             <div class="fi" data-req data-show="foreman:Да"><div class="box"><input name="foremanCount" type="number" min="1" inputmode="numeric"><span class="pl">Количество сотрудников на одного бригадира<i>*</i></span><span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
@@ -1305,7 +1306,7 @@ function demo(st){
     E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000"; E.start.value="2026-11-16";
     setQ("probation","Нет"); setQ("commute","Компания предоставляет транспорт"); setQ("foreman","Нет"); setQ("med","Нет");
     setQ("translator","Да, на период адаптации"); setQ("interview","Онлайн"); setQ("schedule","5/2, 8 часов в день"); setQ("overtime","Нет");
-    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС"; E.ageTo.value="45"; E.med.value="Расширенный медосмотр не требуется";
+    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС"; E.ageTo.value="45"; E.med.value="Не требуется";
     if(st==="filled"||st==="sent"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
   }
   $$(".fi").forEach(syncFi);
