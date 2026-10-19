@@ -1090,7 +1090,7 @@ function renderHead(){
     : "Дубль откроется для редактирования<small>Текущий черновик заявки останется в «Черновиках»</small>";
   if(S.draft){
     const del=new Date(S.created); del.setDate(del.getDate()+30);
-    const parts=["Заполнено на "+progress()+"%","Создано: "+dmy(S.created),"Удалится автоматически: "+dmy(del),saveHtml()];
+    const parts=["Заполнено на "+progress()+"%","Удалится автоматически: "+dmy(del),saveHtml()];
     $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
   }
   setStackH();
