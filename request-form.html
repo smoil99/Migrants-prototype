@@ -483,6 +483,27 @@
   .tf-card.flash{animation:flash 1.2s ease-out}
   /* «Дополнительная информация» — общее поле заявки вне тематических блоков (BRD US-016 §5.4, строка 31) */
   .tf-general{padding:24px 0; border-top:1px solid var(--line)}
+  /* выпадающие списки — DS «Menu panel» (Figma 7003:51979) и «Menu item» (849:4694) */
+  .fi select{pointer-events:none}
+  .fi.dd .box{cursor:pointer}
+  .fi.dd.open .box{border-color:rgba(255,255,255,.4)}
+  .fi.dd.open .end.pe svg, .fi.dd-on.open .dd-chev svg{transform:rotate(180deg)}
+  .fi .end.pe svg{transition:transform .15s}
+  .fi:not(.dd-on) .dd-chev{display:none}
+  .dd-panel{position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:50; background:#161B1D; border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:6px; display:flex; flex-direction:column; gap:2px; box-shadow:0 12px 16px rgba(0,0,0,.45); max-height:420px; overflow:auto}
+  .dd-item{appearance:none; border:0; background:none; color:#fff; font:inherit; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:8px; width:100%}
+  .dd-item:hover,.dd-item.act{background:rgba(255,255,255,.08)}
+  .dd-item .tx{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .dd-item b{font-weight:400; font-size:16px; line-height:22px}
+  .dd-item small{font-size:12px; line-height:normal; color:rgba(255,255,255,.6)}
+  .dd-item .ck{width:16px; height:16px; flex:none; color:var(--primary)}
+  .dd-sep{height:11px; padding:5px 0; flex:none}
+  .dd-sep::before{content:""; display:block; height:1px; background:rgba(255,255,255,.1)}
+  .dd-empty{display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 10px; text-align:center; font-size:14px; color:rgba(255,255,255,.6)}
+  .dd-empty svg{width:24px; height:24px}
+  .dd-empty button{appearance:none; border:0; background:none; color:#fff; font:inherit; font-size:16px; font-weight:500; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
   .age-group .qlab{margin-bottom:12px}
   body.sent .tf-general > .fi{display:none}
   .fi .end.unit{right:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55)}
@@ -768,7 +789,7 @@
       <div id="dupAlert" aria-live="polite"></div>
       <div class="tf-mode" role="tablist">
         <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать</button>
-        <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить бриф</button>
+        <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить файл</button>
       </div>
       <button type="button" class="tf-drop" id="drop">
         <span class="mic" id="dropIc"></span>
@@ -793,10 +814,9 @@
         <section class="tf-sec" id="s2">
           <h2>Потребность в специалистах</h2>
           <div class="tf-rows">
-            <div class="fi" data-req data-show="attract:Квотируемые|Неквотируемые|Высококвалифицированные (ВКС)|Территория опережающего развития (ТОР)|Не знаю" id="profFi"><div class="box"><input name="prof" list="profList" autocomplete="off"><span class="pl">Профессия<i>*</i></span></div>
+            <div class="fi" data-req data-show="attract:Квотируемые|Неквотируемые|Высококвалифицированные (ВКС)|Территория опережающего развития (ТОР)|Не знаю" id="profFi"><div class="box"><input name="prof" autocomplete="off" role="combobox" aria-expanded="false"><span class="pl">Профессия<i>*</i></span><span class="end pe dd-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span></div>
               <p class="et">Обязательное поле</p>
               <p class="ht" id="profManual" hidden>Введено вручную. Профессию проверит и подберёт менеджер из справочника перед началом работы</p></div>
-            <datalist id="profList"></datalist>
             <div class="fi" data-show="attract:Квотируемые"><div class="box"><input name="occ" readonly tabindex="-1"><span class="pl">Занятие (привязано к профессии)</span></div></div>
             <div class="fi" data-req><div class="box">
               <select name="region"><option value=""></option><option>Москва</option><option>Московская обл.</option><option>Ленинградская обл.</option><option>Республика Татарстан</option><option>Свердловская обл.</option><option>Краснодарский край</option></select>
@@ -1000,10 +1020,11 @@ const setQ=(name,val)=>{const q=$('.q[data-name="'+name+'"]'); if(!q) return; q.
 function valOf(name){ const q=$('.q[data-name="'+name+'"]'); if(q) return qVal(q); const el=form.elements[name]; return el?el.value:""; }
 /* справочники профессий (демо): квотируемые — ОКПДТР с занятием; неквотируемые — перечень Минтруда */
 const PROF_Q={"Электросварщик ручной сварки":"Сварщики и газорезчики (7212)","Монтажник":"Монтажники металлоконструкций (7214)","Бетонщик":"Бетонщики (7114)","Арматурщик":"Арматурщики (7114)","Каменщик":"Каменщики (7112)","Слесарь-сборщик":"Слесари-сборщики (8211)"};
-const PROF_N=["Повар","Водитель автомобиля","Швея","Инженер-технолог","Оператор станков с ЧПУ","Сварщик (раздел «Строительство»)","Сварщик (раздел «Машиностроение»)"];
+const PROF_N=[["Инженер-конструктор","Работники научно-исследовательских, конструкторских и проектных организаций"],["Инженер-технолог","Работники организаций атомной энергетики"],["Инженер-технолог","Работники в сфере добычи, переработки и транспортировки нефти и газа"],["Инженер-технолог","Работники в сфере авиастроения"],["Инженер-технолог","Работники металлургического производства"],["Инженер-электрик","Работники организаций атомной энергетики"],["Повар","Работники сферы общественного питания"],["Сварщик","Работники строительства"],["Сварщик","Работники машиностроения"]];
+const METHOD_DESC={"Квотируемые":"Для визовых работников, чьи профессии не входят в перечень неквотируемых. Компании необходимо заранее получить квоту. Подтверждать знание русского не нужно","Неквотируемые":"Для визовых работников, чьи профессии входят в перечень Минтруда. Квота не требуется. Нужно подтвердить знание русского, а также истории и основ законодательства РФ","Высококвалифицированные (ВКС)":"Для высококвалифицированных специалистов с зарплатой, соответствующей актуальному установленному порогу. Подтверждать знание русского не нужно.","Территория опережающего развития (ТОР)":"Для компаний со статусом резидента территории опережающего развития. Квота не требуется. Нужно подтвердить знание русского","Не знаю":"Менеджер поможет определить тип специалистов"};
 function syncProf(){ const m=valOf("attract"), v=form.elements.prof.value.trim();
-  const list = m==="Квотируемые"?Object.keys(PROF_Q):m==="Неквотируемые"?PROF_N:[];
-  const dl=$("#profList"); const html=list.map(x=>'<option value="'+x+'">').join(""); if(dl.innerHTML!==html) dl.innerHTML=html;
+  const list = m==="Квотируемые"?Object.keys(PROF_Q):m==="Неквотируемые"?PROF_N.map(x=>x[0]):[];
+  $("#profFi").classList.toggle("dd-on", list.length>0);
   $("#profManual").hidden = !(list.length && v && !list.includes(v));
   const occ = m==="Квотируемые" ? (PROF_Q[v]||"") : ""; if(form.elements.occ.value!==occ){ form.elements.occ.value=occ; syncFi(form.elements.occ.closest(".fi")); } }
 function syncCond(){ syncProf(); $$("[data-show]").forEach(n=>{ n.hidden = !n.dataset.show.split("&").every(c=>{ const [k,v]=c.split(":"); return v.split("|").includes(valOf(k)); }); }); }
@@ -1104,6 +1125,43 @@ $("#meta").addEventListener("click",e=>{
 window.addEventListener("offline",()=>{ if(S.draft){ clearTimeout(saveT); S.save="offline"; renderHead(); } });
 window.addEventListener("online",()=>{ if(S.draft && S.save==="offline") save(); });
 function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===S.st)); }
+
+/* ---------- выпадающие списки по макету: select-поля и профессия ---------- */
+const CK='<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12l5 5 9-10"/></svg>';
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let ddOpen=null;
+function ddClose(){ if(!ddOpen) return; ddOpen.fi.classList.remove("open"); ddOpen.panel.remove(); const i=ddOpen.fi.querySelector("[role=combobox]"); if(i) i.setAttribute("aria-expanded","false"); ddOpen=null; }
+function ddRender(fi, items, cur, onPick, empty){
+  let panel=fi.querySelector(".dd-panel"); if(!panel){ panel=document.createElement("div"); panel.className="dd-panel"; panel.setAttribute("role","listbox"); fi.querySelector(".box").appendChild(panel); }
+  panel.innerHTML = items.length ? items.map((it,i)=> it.sep ? '<div class="dd-sep" role="separator"></div>'
+      : '<button type="button" class="dd-item" role="option" data-i="'+i+'" aria-selected="'+(it.v===cur)+'"><span class="tx"><b>'+esc(it.t)+'</b>'+(it.d?'<small>'+esc(it.d)+'</small>':'')+'</span>'+(it.v===cur?CK:'')+'</button>').join("")
+    : (empty||'');
+  panel.onmousedown=e=>e.preventDefault();
+  panel.onclick=e=>{ const b=e.target.closest(".dd-item"); if(b){ onPick(items[+b.dataset.i]); ddClose(); } const a=e.target.closest("[data-add]"); if(a){ ddClose(); fi.querySelector("input").blur(); syncCond(); } };
+  fi.classList.add("open"); ddOpen={fi,panel};
+}
+/* select → кастомный список (способ привлечения с описаниями вариантов, регион) */
+$$(".fi").forEach(fi=>{ const sel=fi.querySelector("select"); if(!sel) return; fi.classList.add("dd");
+  const box=fi.querySelector(".box"); box.tabIndex=0; box.setAttribute("role","combobox");
+  const open=()=>{ if(ddOpen&&ddOpen.fi===fi){ ddClose(); return; } ddClose();
+    const items=[]; [...sel.options].filter(o=>o.value).forEach(o=>{ if(sel.name==="attract" && o.value==="Не знаю") items.push({sep:1}); items.push({t:o.text, v:o.value, d: sel.name==="attract"?METHOD_DESC[o.value]:""}); });
+    ddRender(fi, items, sel.value, it=>{ sel.value=it.v; sel.dispatchEvent(new Event("input")); sel.dispatchEvent(new Event("change")); }); };
+  box.addEventListener("click",e=>{ if(e.target.closest(".dd-panel")) return; open(); });
+  box.addEventListener("keydown",e=>{ if(["Enter"," ","ArrowDown"].includes(e.key)){ e.preventDefault(); if(!(ddOpen&&ddOpen.fi===fi)) open(); } if(e.key==="Escape") ddClose(); });
+});
+/* профессия: поиск по справочнику способа; не нашли — «Добавить вручную» (Figma 7007:60458, 7008:64712) */
+(function(){ const fi=$("#profFi"), inp=form.elements.prof;
+  const EMPTY='<div class="dd-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg>Не смогли найти нужную профессию<button type="button" data-add>Добавить вручную</button></div>';
+  const show=()=>{ const m=valOf("attract"); if(m!=="Квотируемые" && m!=="Неквотируемые"){ ddClose(); return; }
+    const q=inp.value.trim().toLowerCase();
+    const all = m==="Квотируемые" ? Object.keys(PROF_Q).map(n=>({t:n,v:n})) : PROF_N.map(([n,d])=>({t:n,d,v:n}));
+    const items = all.filter(it=>!q || it.t.toLowerCase().includes(q));
+    ddRender(fi, items, inp.value, it=>{ inp.value=it.v; syncFi(fi); inp.dispatchEvent(new Event("input")); inp.blur(); }, q?EMPTY:''); if(!items.length && !q) ddClose(); };
+  inp.addEventListener("focus",show); inp.addEventListener("input",()=>{ if(document.activeElement===inp) show(); });
+  inp.addEventListener("keydown",e=>{ if(e.key==="Escape"){ ddClose(); inp.blur(); } });
+  inp.addEventListener("blur",()=>setTimeout(()=>{ if(ddOpen&&ddOpen.fi===fi && !fi.contains(document.activeElement)) ddClose(); },120));
+})();
+document.addEventListener("mousedown",e=>{ if(ddOpen && !ddOpen.fi.contains(e.target)) ddClose(); });
 
 /* ---------- степпер + подсветка текущей секции ---------- */
 const SECS=$$(".tf-sec");
