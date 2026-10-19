@@ -483,6 +483,7 @@
   .tf-card.flash{animation:flash 1.2s ease-out}
   /* «Дополнительная информация» — общее поле заявки вне тематических блоков (BRD US-016 §5.4, строка 31) */
   .tf-general{padding:24px 0; border-top:1px solid var(--line)}
+  .age-group .qlab{margin-bottom:12px}
   body.sent .tf-general > .fi{display:none}
   .fi .end.unit{right:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55)}
   #delBtn{position:relative}
@@ -888,12 +889,13 @@
             <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Пол специалистов</p>
               <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
               <p class="ht" data-show="gender:Мужской|Женский">Указывайте пол только при наличии объективных требований, связанных с характером работы</p></div>
-            <div class="tf-two">
-              <div class="fi" data-req data-def="18"><div class="box"><input name="ageFrom" type="number" min="18" inputmode="numeric"><span class="pl">Возраст от, лет<i>*</i></span>
+            <div class="age-group"><p class="qlab">Возраст, лет</p>
+              <div class="tf-two">
+              <div class="fi" data-req data-def="18" data-label="Возраст от, лет"><div class="box"><input name="ageFrom" aria-label="Возраст от, лет" type="number" min="18" inputmode="numeric"><span class="pl">От<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
-              <div class="fi" data-req><div class="box"><input name="ageTo" type="number" min="18" inputmode="numeric"><span class="pl">Возраст до, лет<i>*</i></span>
+              <div class="fi" data-req data-label="Возраст до, лет"><div class="box"><input name="ageTo" aria-label="Возраст до, лет" type="number" min="18" inputmode="numeric"><span class="pl">До<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
-            </div>
+            </div></div>
             <div class="fi"><div class="box"><textarea name="duties" rows="3"></textarea><span class="pl">Должностные обязанности</span></div>
               <p class="ht">Опишите основные задачи специалиста</p></div>
             <div class="fi"><div class="box"><textarea name="reqs" rows="3"></textarea><span class="pl">Требования к специалисту</span></div>
@@ -1233,7 +1235,7 @@ function showSent(o={}){
     const rows=[...sec.querySelectorAll(".fi,.q")].filter(n=>!n.closest("[hidden]")).map(n=>{
       if(n.classList.contains("q")) return [n.querySelector(".qlab").childNodes[0].textContent.trim(), qVal(n)];
       const el=n.querySelector("input,select,textarea");
-      return [n.querySelector(".pl").childNodes[0].textContent.trim(), fiVal(el)];
+      return [n.dataset.label || n.querySelector(".pl").childNodes[0].textContent.trim(), fiVal(el)];
     });
     const dl=document.createElement("dl"); dl.className="kvv";
     dl.innerHTML=rows.map(([k,v])=>'<div><dt>'+k+'</dt><dd'+(v?"":' class="none"')+'>'+(v?v.replace(/</g,"&lt;"):"Не указано")+'</dd></div>').join("");
