@@ -310,6 +310,7 @@
         <button data-scen="long" aria-pressed="false">Длинные тексты</button>
         <button data-scen="more" aria-pressed="false">Подгрузка</button>
         <button data-scen="many" aria-pressed="false">120 непрочитанных</button>
+        <button data-scen="newyear" aria-pressed="false">Начало года</button>
         <button data-scen="mobile" aria-pressed="false">Телефон</button>
       </div>
     </div>
@@ -342,9 +343,16 @@ if(EMBED) document.body.classList.add("embed");
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2800);}
 function say(m){const l=$("#live"); l.textContent=""; setTimeout(()=>{l.textContent=m;},30);}
 
-/* «сейчас» прототипа: реальное время, но не раньше 11:30 — чтобы «сегодняшние» события не оказались в будущем */
-const NOW=(()=>{const d=new Date(), m=new Date(d); m.setHours(11,30,0,0); return Math.max(+d,+m);})();
-const T0=(()=>{const d=new Date(NOW); d.setHours(0,0,0,0); return +d;})();   // начало сегодняшнего дня
+/* «сейчас» прототипа: реальное время, но не раньше 11:30 — чтобы «сегодняшние» события не оказались в будущем;
+   в сценарии #newyear — 5 января следующего года, чтобы показать дату с годом (D-10) */
+let NOW, T0;   // T0 — начало сегодняшнего дня
+function setClock(newYear){
+  const real=new Date(); let d=real;
+  if(newYear) d=new Date(real.getFullYear()+1,0,5,11,30);
+  else { const m=new Date(real); m.setHours(11,30,0,0); if(real<m) d=m; }
+  NOW=+d; const z=new Date(NOW); z.setHours(0,0,0,0); T0=+z;
+}
+const KEEP_DAYS=90;   // Q-05: уведомление видно 90 дней с момента события
 const at=(daysAgo,h,mi)=>{const d=new Date(T0); d.setDate(d.getDate()-daysAgo); d.setHours(h,mi,0,0); return +d;};
 const YMD=t=>{const d=new Date(t); return String(d.getFullYear()).slice(2)+pad(d.getMonth()+1)+pad(d.getDate());};
 
@@ -403,7 +411,7 @@ const KIND={
   U5:{ru:{t:"Заявка завершена", d:()=>"Заявка успешно завершена."},
       en:{t:"Request completed", d:()=>"The request has been completed."}},
   U6:{ru:{t:"Услуга выполнена", d:p=>"Услуга «"+p.svc+"» завершена."},
-      en:{t:"Service completed", d:p=>"Service \""+p.svc+"\" is completed."}},
+      en:{t:"Service completed", d:p=>"Service \""+p.svc+"\" completed."}},
   U7:{ru:{t:"Кандидаты ждут одобрения", d:p=>"Кандидатов на рассмотрении: "+p.n+"."},
       en:{t:"Candidates awaiting approval", d:p=>"Candidates for review: "+p.n+"."}}
 };
@@ -423,7 +431,7 @@ function mk(type,t,o){
   const refs=o&&o.refs||[YMD(t-(3+UID%17)*DAY)+"_"+k];
   return Object.assign({id:"n"+UID, type, t, read:true, refs}, o||{});
 }
-/* первая порция (10) — сегодня / вчера / раньше; дальше «архив» назад во времени, в т. ч. прошлый год */
+/* первые 10 — сегодня / вчера / раньше; дальше «архив» равномерно до 90-го дня (Q-05) */
 function seedFor(role,total){
   UID=0; const out=[];
   if(role==="client"){
@@ -438,8 +446,9 @@ function seedFor(role,total){
     out.push(mk("U5",at(8,12,0)));
     out.push(mk("U7",at(12,9,45),{n:7}));
     const cyc=["U6","U4","U7","U5"];
-    for(let i=out.length, d=15; i<total; i++, d+=6+(i%5)){
-      const ty=cyc[i%4], t=at(d,9+(i*3)%9,(i*17)%60);
+    const step=(KEEP_DAYS-1-15)/Math.max(1,total-out.length);
+    for(let i=out.length, d=15; i<total; i++, d+=step){
+      const ty=cyc[i%4], t=at(Math.floor(d),9+(i*3)%9,(i*17)%60);
       out.push(mk(ty,t,ty==="U6"?{svc:SVCS[i%SVCS.length]}:ty==="U7"?{n:2+i%6}:{}));
     }
   } else {
@@ -453,9 +462,11 @@ function seedFor(role,total){
     out.push(mk("U1",at(4,14,20),{client:CLIENTS[4][0], n:CLIENTS[4][1]}));
     out.push(mk("U3",at(6,9,0),{n:5, refs:["260611_2","260614_1","260620_3","260701_1","260705_2"]}));
     out.push(mk("U1",at(9,16,45),{client:CLIENTS[0][0], n:10}));
-    for(let i=out.length, d=12; i<total; i++, d+=6+(i%5)){
-      if(i%3===0){ const n=1+i%4, refs=[]; for(let j=0;j<n;j++) refs.push(YMD(at(d+20+j*4,0,0))+"_"+(1+(i+j)%5)); out.push(mk("U3",at(d,9,0),{n, refs})); }
-      else { const c=CLIENTS[i%CLIENTS.length]; out.push(mk("U1",at(d,10+(i*3)%8,(i*13)%60),{client:c[0], n:c[1]+i%7})); }
+    const step=(KEEP_DAYS-1-12)/Math.max(1,total-out.length), u3days=new Set();   // U3 — не чаще раза в день
+    for(let i=out.length, d=12; i<total; i++, d+=step){
+      const day=Math.floor(d);
+      if(i%3===0&&!u3days.has(day)){ u3days.add(day); const n=1+i%4, refs=[]; for(let j=0;j<n;j++) refs.push(YMD(at(day+20+j*4,0,0))+"_"+(1+(i+j)%5)); out.push(mk("U3",at(day,9,0),{n, refs})); }
+      else { const c=CLIENTS[i%CLIENTS.length]; out.push(mk("U1",at(day,10+(i*3)%8,(i*13)%60),{client:c[0], n:c[1]+i%7})); }
     }
   }
   return out.sort((a,b)=>b.t-a.t);
@@ -468,7 +479,7 @@ function freshFor(role){
 }
 
 /* ================= состояние ================= */
-const PAGE=10, MORE=20;
+const PAGE=20, MORE=20;   // D-6: порции по 20 в той же панели
 const S={role:"client", lang:"ru", scen:"filled", items:[], tab:"all", loaded:{all:PAGE, unread:PAGE},
   state:"ok", moreLoading:false, freezeMore:false, markFail:false, markErr:false, open:false, timers:[]};
 const unreadCount=()=>S.items.filter(i=>!i.read).length;
@@ -617,7 +628,7 @@ function openItem(id){
     const row=$('.nrow[data-id="'+id+'"]'); row.classList.remove("unread"); const sr=row.querySelector(".n-t .sr"); sr&&sr.remove();
     renderCounts();
   }
-  toast(i.type==="U3"?x.goList:i.type==="U7"?x.goCand(i.refs[0]):x.goReq(i.refs[0]));
+  toast(i.type==="U3"&&i.refs.length>1?x.goList:i.type==="U7"?x.goCand(i.refs[0]):x.goReq(i.refs[0]));
 }
 function markAll(){
   if(S.markFail&&!S.markTried){ S.markTried=true; S.markErr=true; $("#npAlert").hidden=false; return; }
@@ -693,7 +704,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.open&&!$("#np").
 
 /* ================= харнесс: роль и сценарии ================= */
 const HINTS={
-  filled:"<b>Есть новые:</b> 3 непрочитанных вперемешку с прочитанными. Клик по строке — прочитано, счётчики уменьшаются, тост-переход. Tab / ↑↓ по строкам, Enter — открыть, Esc или клик вне — закрыть (фокус вернётся на колокольчик).",
+  filled:"<b>Есть новые:</b> 3 непрочитанных вперемешку с прочитанными. Прочитано — только по клику на строку или «Прочитать все» (Q-03, Q-12): счётчики уменьшаются, тост-переход (Q-07). Список — за 90 дней (Q-05). Tab / ↑↓ по строкам, Enter — открыть, Esc или клик вне — закрыть (фокус вернётся на колокольчик).",
   allread:"<b>Всё прочитано:</b> бейджа на колокольчике нет, «Непрочитанные (0)», «Прочитать все» неактивна (40%).",
   empty:"<b>Пусто:</b> уведомлений ещё не было — иллюстрация и пояснение.",
   "unread-empty":"<b>Непрочитанных нет:</b> открыта вкладка «Непрочитанные», всё прочитано.",
@@ -703,17 +714,28 @@ const HINTS={
   "new":"<b>Пришло новое (pull):</b> через ~1,5 с при открытой панели — плашка «Новые уведомления: 1 — Показать», бейдж растёт; список сам не прыгает, по клику событие встаёт в начало «Сегодня».",
   long:"<b>Длинные тексты:</b> заголовок — 1 строка с «…», описание — до 2 строк с «…», длинный номер в плашке, сводный U3 — 2 номера + «+N».",
   more:"<b>Подгрузка:</b> «Показать ещё» нажата — спиннер внизу списка (застыло). В остальных сценариях кнопка догружает по 20 за ~600 мс и пропадает, когда больше нет.",
-  many:"<b>120 непрочитанных:</b> бейдж «9+», вкладка «Непрочитанные (99+)».",
+  many:"<b>120 непрочитанных:</b> бейдж «9+», вкладка «Непрочитанные (99+)». Из ежедневных U3 / U7 непрочитанным остаётся только последнее (Q-09 А).",
+  newyear:"<b>Начало года:</b> «сегодня» — 5 января; у событий прошлого года в дате есть год — «20 дек 2026, 11:00» (D-10). Старше 90 дней в списке ничего нет (Q-05).",
   mobile:"<b>Телефон:</b> страница в рамке 380 px — панель на всю ширину, в шапке крестик."
 };
 function seed(scen){
   UID=0;
-  let total=50;
-  if(scen==="many") total=130;
+  const total=scen==="many"?220:50;
   S.items = scen==="empty" ? [] : seedFor(S.role,total);
-  if(scen==="many") S.items.forEach((i,k)=>{i.read=k>=120;});
+  if(scen==="many") markUnread(120);
   if(scen==="allread"||scen==="unread-empty") S.items.forEach(i=>{i.read=true;});
   if(scen==="long") applyLong();
+}
+/* Q-09 (вариант А): из ежедневных напоминаний непрочитанным остаётся только последнее —
+   U3 на организацию, U7 на заявку; вчерашнее непрочитанное гаснет при приходе нового */
+function markUnread(n){
+  const seen=new Set(); let left=n;
+  S.items.forEach(i=>{
+    const key=i.type==="U3"?"U3":i.type==="U7"?"U7:"+i.refs[0]:null;
+    i.read = !(left>0 && !(key&&seen.has(key)));
+    if(key) seen.add(key);
+    if(!i.read) left--;
+  });
 }
 function applyLong(){
   const a=S.items[0], b=S.role==="client"?S.items[1]:S.items.find(i=>i.type==="U3");
@@ -734,7 +756,7 @@ function runScenario(k){
   S.timers.forEach(clearTimeout); S.timers=[];
   if(S.open){ S.open=false; $("#npLayer").hidden=true; document.body.classList.remove("locked"); }
   if(EMBED&&k==="mobile") k="filled";
-  S.scen=k; S.lang=ROLES[S.role].lang; document.documentElement.lang=S.lang;
+  S.scen=k; S.lang=ROLES[S.role].lang; setClock(k==="newyear"); document.documentElement.lang=S.lang;
   S.tab=k==="unread-empty"?"unread":"all"; S.loaded={all:PAGE, unread:PAGE};
   S.state=k==="loading"?"loading":k==="error"?"error":"ok";
   S.moreLoading=false; S.freezeMore=k==="more"; S.markFail=k==="markall-error"; S.markTried=false; S.markErr=false;
