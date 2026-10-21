@@ -148,7 +148,8 @@
   .split{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:20px; align-items:start}
 
   /* ---------- лист кандидатов ---------- */
-  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:0 4px 12px; font-size:14px; color:var(--text-2); min-height:42px}
+  /* «Выбрать всех» — glass-контейнер как у карточек, на всю ширину над листом и превью; чекбокс на одной оси с чекбоксами карточек */
+  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:8px; font-size:14px; color:var(--text-2); min-height:56px}
   .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
   .list-tools .btn{height:30px; font-size:14px; padding:0 16px}
   .list-tools .sp{flex:1}
@@ -435,9 +436,9 @@
     </div>
   </div>
 
+  <div class="glass list-tools" id="listTools"></div>
   <div class="split">
     <section aria-label="Список кандидатов">
-      <div class="list-tools" id="listTools"></div>
       <div class="clist" id="clist" role="listbox" aria-label="Кандидаты"></div>
     </section>
     <aside class="glass prev" id="prev" aria-label="Превью кандидата"></aside>
