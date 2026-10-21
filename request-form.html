@@ -554,7 +554,7 @@
   .tf-chip.s-work::before{background:var(--st-work)} .tf-chip.s-done::before{background:var(--st-done)} .tf-chip.s-cancel::before{background:var(--st-none)}
   .hdot.s-work{background:var(--st-work)} .hdot.s-done{background:var(--st-done)} .hdot.s-cancel{background:var(--st-none)}
   body.sent #dupAlert,body.sent .tf-mode,body.sent #drop,body.sent .tf-foot,body.sent .tf-rows{display:none}
-  body.sent .tf-sec h2{margin-bottom:12px}
+  body.sent .tf-sec h2,body.sent .tf-general h2{margin-bottom:12px}
   body.sent .tf-sec:first-of-type{padding-top:0}
   body.sent .tf-card > div[style]{margin-top:0!important}
   .kvv{margin:0; display:grid}
@@ -620,7 +620,9 @@
 
   .tf-sec{padding:24px 0; border-top:1px solid var(--line); scroll-margin-top:calc(var(--stack-h,200px) + 16px)}
   .tf-sec:first-of-type{border-top:0}
-  .tf-sec h2{font-size:22px; line-height:29px; font-weight:600; letter-spacing:-.3px; margin:0 0 24px}
+  .tf-sec h2,.tf-general h2{font-size:22px; line-height:29px; font-weight:600; letter-spacing:-.3px; margin:0 0 24px}
+  .fi.nolab textarea{padding-top:12px}
+  .kvv.solo > div{grid-template-columns:1fr}
   .tf-rows{display:grid; gap:24px}
   .tf-two{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
   .tf-half{max-width:446px}
@@ -685,7 +687,7 @@
   @media (max-width:1100px){ .tf-grid{grid-template-columns:minmax(0,1fr)} .tf-steps{display:none} }
   @media (max-width:640px){
     .tf-card{padding:18px 16px} .tf-two{grid-template-columns:1fr} .tf-half{max-width:none}
-    .tf-sec h2{font-size:19px; line-height:24px; margin-bottom:18px}
+    .tf-sec h2,.tf-general h2{font-size:19px; line-height:24px; margin-bottom:18px}
     .tf-foot .btn{flex:1 1 100%}
     .tf-crumbs{display:none}
   }
@@ -950,7 +952,8 @@
         </section>
 
         <div class="tf-general">
-          <div class="fi"><div class="box"><textarea name="extra" rows="3"></textarea><span class="pl">Дополнительная информация</span></div>
+          <h2>Дополнительная информация</h2>
+          <div class="fi nolab" data-label="Дополнительная информация"><div class="box"><textarea name="extra" rows="3" aria-label="Дополнительная информация"></textarea></div>
             <p class="ht">Укажите пожелания и уточнения, которых нет в других полях: маршрут прибытия, особые условия, сроки и т. д.</p></div>
         </div>
       </div>
@@ -1298,8 +1301,9 @@ function showSent(o={}){
       const el=n.querySelector("input,select,textarea");
       return [n.dataset.label || n.querySelector(".pl").childNodes[0].textContent.trim(), fiVal(el)];
     });
-    const dl=document.createElement("dl"); dl.className="kvv";
-    dl.innerHTML=rows.map(([k,v])=>'<div><dt>'+k+'</dt><dd'+(v?"":' class="none"')+'>'+(v?v.replace(/</g,"&lt;"):"Не указано")+'</dd></div>').join("");
+    const solo=sec.classList.contains("tf-general"); /* общее поле: заголовок блока, значение без повторной подписи */
+    const dl=document.createElement("dl"); dl.className="kvv"+(solo?" solo":"");
+    dl.innerHTML=rows.map(([k,v])=>'<div>'+(solo?'':'<dt>'+k+'</dt>')+'<dd'+(v?"":' class="none"')+'>'+(v?v.replace(/</g,"&lt;"):"Не указано")+'</dd></div>').join("");
     sec.appendChild(dl);
   });
   clearTimeout(saveT); showDupAlert("");

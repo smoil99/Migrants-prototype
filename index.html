@@ -154,6 +154,7 @@
     padding:9px 0; align-items:start}
   @media (max-width:560px){ .row{grid-template-columns:1fr; gap:2px} }
   .row + .row{border-top:1px solid rgba(255,255,255,.045)}
+  .row.solo{grid-template-columns:minmax(0,1fr)}
   .k{color:var(--muted); font-size:13px; padding-top:1px}
   .v{font-size:13.5px; color:#eef4f5; min-width:0; word-wrap:break-word}
   .v .file{color:var(--primary)}
@@ -507,10 +508,6 @@ const SECTIONS = [
       v:{ru:"Встреча в аэропорту с табличкой, трансфер до общежития",
          en:"Airport pickup with a name sign, transfer to the dormitory"} },
     { k:["Нужен переводчик","Interpreter needed"], v:["Да, на период адаптации","Yes, for the adaptation period"] },
-    { id:"addinfo", ft:true, src:"ru",
-      k:["Дополнительная информация","Additional information"],
-      v:{ru:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
-         en:"Arrival route: Bangalore – Krasnodar – Saint Petersburg"} },
   ]},
   { t:["Профиль вакансии и кандидата","Vacancy & candidate profile"], rows:[
     { k:["Предпочтительный пол специалиста","Preferred gender"], v:["Мужской","Male"] },
@@ -537,6 +534,13 @@ const SECTIONS = [
       k:["Детали оплаты переработок","Overtime payment details"],
       v:{en:"RUB 2,000/hour, no more than once a month, up to 2 hours",
          ru:"2000 ₽ / час, не чаще одного раза в месяц, не более 2 часов"} },
+  ]},
+  /* общее поле заявки вне тематических блоков — последняя секция, значение без повторной подписи (docs#314) */
+  { t:["Дополнительная информация","Additional information"], rows:[
+    { id:"addinfo", ft:true, src:"ru", solo:true,
+      k:["Дополнительная информация","Additional information"],
+      v:{ru:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
+         en:"Arrival route: Bangalore – Krasnodar – Saint Petersburg"} },
   ]},
 ];
 
@@ -611,6 +615,7 @@ function renderRow(r){
   } else {
     val = `<span class="v">${esc(r.v[vl==="en"?1:0])}</span>`;
   }
+  if(r.solo) return `<div class="row solo"><div class="v-wrap">${val}</div></div>`;
   return `<div class="row"><div class="k">${label}</div><div class="v-wrap">${val}</div></div>`;
 }
 
