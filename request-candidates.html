@@ -105,17 +105,18 @@
   .split{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:20px; align-items:start}
 
   /* ---------- лист кандидатов ---------- */
-  /* «Выбрать всех» — glass-контейнер как у карточек, на всю ширину над листом и превью; чекбокс на одной оси с чекбоксами карточек */
-  /* панель «Выбрано»: без выбора скрыта; при выборе — над листом, закреплена под навигацией, стекло (blur) */
-  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:20px; font-size:14px; color:var(--text-2); min-height:56px;
-    position:sticky; top:calc(var(--topnav-h,54px) + 8px); z-index:32; background:var(--glass); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
+  /* «Выбрать всех» — в плавающей панели «Выбрано» снизу (см. ниже) */
+  /* панель «Выбрано»: без выбора скрыта; при выборе — плавающая снизу по центру, стекло (blur) */
+  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; font-size:14px; color:var(--text-2); min-height:56px;
+    position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:44; width:min(880px, calc(100vw - 32px));
+    background:var(--glass); box-shadow:0 18px 44px -14px rgba(0,0,0,.75);
     -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
-    max-height:160px; overflow:hidden;
-    transition:max-height .14s ease, min-height .14s ease, padding .14s ease, margin-bottom .14s ease, opacity .11s ease, transform .14s ease}
-  /* без выбора — свёрнута; появление/исчезновение плавное */
-  .list-tools:not(.on){max-height:0; min-height:0; padding-top:0; padding-bottom:0; margin-bottom:0; opacity:0; transform:translateY(-8px); pointer-events:none}
-  /* превью встаёт под закреплённой панелью (56 + 8) */
-  .has-sel .prev{top:calc(var(--stack-h,230px) + 80px); height:calc(100vh - var(--stack-h,230px) - 96px)}
+    transform:translate(-50%,0); transition:opacity .11s ease, transform .14s ease}
+  /* без выбора — уезжает вниз и гаснет */
+  .list-tools:not(.on){opacity:0; transform:translate(-50%,16px); pointer-events:none}
+  /* при выборе превью укорачивается снизу, чтобы панель его не перекрывала; у листа — запас под панель */
+  .has-sel .prev{height:calc(100vh - var(--stack-h,230px) - 32px - 80px)}
+  .has-sel .split{padding-bottom:88px}
   .list-tools::before{background:rgba(255,255,255,.12)}   /* обводка — white 12%, 1px inside, как у «Document» (Figma 2200:38789) */
   .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer; font-size:16px; line-height:20px; font-weight:500; color:#fff}
   .list-tools .btn{height:32px; font-size:16px; padding:0 21px}
@@ -172,7 +173,7 @@
 
   /* ---------- превью карточки кандидата (содержимое — как на стенде /requests/{id}/candidates/{id}) ---------- */
   .prev{position:sticky; top:calc(var(--stack-h,230px) + 16px); height:calc(100vh - var(--stack-h,230px) - 32px); min-height:360px; display:flex; flex-direction:column; overflow:hidden;
-    transition:top .14s ease, height .14s ease}   /* плавный сдвиг под плашку «Выбрано» */
+    transition:height .14s ease}   /* плавно укорачивается под панель «Выбрано» */
   .ibtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--text-2); width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex:none}
   .ibtn:hover{background:rgba(255,255,255,.08); color:#fff}
   .ibtn svg{width:18px; height:18px}
@@ -674,19 +675,11 @@ function renderList(){
     '</div>';}).join("")
     : '<div class="empty">Нет кандидатов в этом статусе</div>';
   const vis=rows.map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
-  // панель «Выбрано» появляется/исчезает в потоке над листом — держим карточку у верха экрана на месте, без прыжка
-  const bar=$("#listTools"), on=S.checked.size>0, toggled=bar.classList.contains("on")!==on;
-  const anchor=toggled&&window.scrollY>0?[...document.querySelectorAll("#clist .ccard")].find(el=>el.getBoundingClientRect().bottom>0):null;
-  const aId=anchor&&anchor.dataset.id, aTop=anchor?anchor.getBoundingClientRect().top:0;
+  const bar=$("#listTools"), on=S.checked.size>0;
   bar.classList.toggle("on",on); bar.inert=!on; document.body.classList.toggle("has-sel",on);
   if(on) bar.innerHTML=   // при исчезновении содержимое не трогаем — пусть плавно гаснет как есть
     '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>Выбрано: <b>'+S.checked.size+'</b></label><span class="sp"></span>'+
     '<button class="lnk" data-bulk="clear">Снять выбор</button><button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
-  // пока плашка раскрывается/сворачивается, каждый кадр возвращаем карточку на её место
-  if(aId){ const end=performance.now()+210; (function keep(){
-    const el=document.querySelector('#clist .ccard[data-id="'+aId+'"]');
-    if(el){ const d=el.getBoundingClientRect().top-aTop; if(Math.abs(d)>.5) window.scrollBy(0,d); }
-    if(performance.now()<end) requestAnimationFrame(keep); })(); }
   const all=$("#cbAll"); if(all) all.indeterminate=n>0&&n<vis.length;
 }
 
