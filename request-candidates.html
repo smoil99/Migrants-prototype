@@ -115,34 +115,23 @@
     background:linear-gradient(160deg, rgba(255,255,255,.34), rgba(255,255,255,.06) 40%, rgba(255,255,255,.04) 70%, rgba(255,255,255,.22));
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
 
-  /* «Risk card» — сводка по статусам; клик фильтрует таблицу */
-  .pipeline{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px; margin-top:24px}
-  .scard{appearance:none; border:0; color:#fff; text-align:left; cursor:pointer; padding:24px; display:flex; flex-direction:column; gap:8px;
-    font-family:inherit; transition:background .12s}
-  .scard:hover{background:rgba(255,255,255,.14)}
-  .scard[aria-pressed="true"]{background:rgba(255,255,255,.16)}
-  .scard[aria-pressed="true"]::before{background:linear-gradient(160deg,#fff,rgba(255,255,255,.4))}
-  .scard .t{display:flex; align-items:center; gap:8px; font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .scard .n{font-size:30px; font-weight:500; letter-spacing:-.6px; line-height:1.2; font-variant-numeric:tabular-nums}
+  /* «Filter tabs» (Figma 7695:90882) — фильтр листа по статусам; активный: white@10% + обводка white */
+  .ftabs{display:flex; gap:6px; margin:0 0 20px; overflow-x:auto; scrollbar-width:none}
+  .ftabs::-webkit-scrollbar{display:none}
+  .ftab{appearance:none; border:0; background:none; cursor:pointer; flex:none; display:inline-flex; align-items:center; gap:4px;
+    padding:6px 12px; border-radius:var(--r-pill); font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff;
+    opacity:.8; white-space:nowrap; transition:opacity .12s, background .12s}
+  .ftab:hover{opacity:1; background:rgba(255,255,255,.06)}
+  .ftab[aria-selected="true"]{opacity:1; background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px #fff}
+  .ftab .n{font-weight:400; line-height:24px; letter-spacing:-.15px; color:var(--label); font-variant-numeric:tabular-nums}
   .dot{width:8px; height:8px; border-radius:50%; flex:none; background:var(--st-none)}
   .d-pending{background:var(--st-pending)} .d-review{background:var(--st-work)} .d-done{background:var(--st-done)}
-  .d-rejected{background:var(--st-error)} .d-cancelled{background:var(--st-none)}
+  .d-rejected{background:var(--st-error)} .d-cancelled{background:var(--st-none)} .d-employ{background:var(--primary)}
 
-  /* секция «Кандидаты N» + селект статуса */
+  /* секция «Кандидаты N» */
   .sec-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:36px 0 24px}
   .sec-head h2{margin:0; font-size:24px; font-weight:600; letter-spacing:-.3px}
   .sec-head h2 .cnt{color:var(--label); font-weight:500; margin-left:6px}
-  .sel{position:relative}
-  .sel-btn{appearance:none; border:0; background:none; cursor:pointer; color:var(--label); font-size:16px; display:inline-flex; align-items:center; gap:6px; padding:6px 4px}
-  .sel-btn b{color:#fff; font-weight:600}
-  .sel-btn svg{width:16px; height:16px; color:#fff}
-  .sel-pop{position:absolute; right:0; top:calc(100% + 6px); z-index:40; min-width:210px; padding:6px;
-    background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px; box-shadow:0 20px 50px -14px rgba(0,0,0,.7)}
-  .sel-pop button{appearance:none; border:0; background:none; width:100%; text-align:left; cursor:pointer; color:#fff; font-size:14px;
-    display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:8px}
-  .sel-pop button:hover{background:rgba(255,255,255,.06)}
-  .sel-pop button[aria-checked="true"]{background:var(--primary-dim)}
-  .sel-pop button .c{margin-left:auto; color:var(--label); font-variant-numeric:tabular-nums}
 
   /* раскладка как на rabota.ru/resume-search: лист карточек слева, липкое превью справа (≈1:2) */
   .split{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:20px; align-items:start}
@@ -306,7 +295,6 @@
   #toast.show{opacity:1; transform:translate(-50%,0)}
 
   @media (max-width:1180px){
-    .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}
     .split{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}
     .p-head{flex-wrap:wrap}
     .p-acts{width:100%; padding-left:80px; margin-top:0}
@@ -325,12 +313,9 @@
     .ccard[aria-selected="true"]::before{padding:1px; background:linear-gradient(160deg, rgba(255,255,255,.34), rgba(255,255,255,.06) 40%, rgba(255,255,255,.04) 70%, rgba(255,255,255,.22))}
   }
   @media (max-width:720px){
-    .pipeline{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
-    .scard{padding:16px} .scard .n{font-size:24px} .scard .t{font-size:14px}
     .who .txt,.who .chev{display:none}
     .brand-links{gap:20px}
     .sec-head h2{font-size:20px}
-    .sel-btn{font-size:14px}
     .p-head{padding:20px 16px 0; gap:12px}
     .ava.lg{width:48px; height:48px; font-size:16px}
     .p-title h3{font-size:22px; line-height:28px}
@@ -426,16 +411,10 @@
     <a class="tab" role="tab" href="documents.html">Документы</a>
   </div>
 
-  <div class="pipeline" id="pipeline"></div>
-
   <div class="sec-head">
     <h2>Кандидаты<span class="cnt" id="cnt"></span></h2>
-    <div class="sel" id="sel">
-      <button class="sel-btn" aria-haspopup="listbox" aria-expanded="false"><span>Статусы:</span> <b id="selCur">Все</b>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="sel-pop" role="listbox" hidden></div>
-    </div>
   </div>
+  <div class="ftabs" id="stTabs" role="tablist" aria-label="Статус кандидата"></div>
 
   <div class="glass list-tools" id="listTools"></div>
   <div class="split">
@@ -460,9 +439,10 @@ const ST={
   pending:  {chip:"Ожидание",        card:"Ожидание",        dot:"d-pending"},
   review:   {chip:"На рассмотрении", card:"На рассмотрении", dot:"d-review"},
   rejected: {chip:"Отклонён",        card:"Отклонены",       dot:"d-rejected"},
-  cancelled:{chip:"Отменён",         card:"Отменены",        dot:"d-cancelled"}
+  cancelled:{chip:"Отменён",         card:"Отменены",        dot:"d-cancelled"},
+  employ:   {chip:"К трудоустройству", card:"К трудоустройству", dot:"d-employ"}
 };
-const ST_ORDER=["done","pending","review","rejected","cancelled"];
+const ST_ORDER=["done","pending","review","rejected","cancelled","employ"];   // порядок табов: Figma 7695:90882 + «К трудоустройству»
 
 /* справочник «Тип документа» — как на стенде */
 const DOC_TYPES=["Удостоверение личности (Aadhaar)","Апостиль на документ об образовании","Резюме","Результат теста на ПАВ",
@@ -511,7 +491,7 @@ function buildData(){
     ["Arjun","Singh",1,"pending","5610 2287 9043"],["Ravi","Verma",2,"done","6038 4471 2195"],
     ["Manoj","Gupta",3,"review","8124 9306 7751"]
   ];
-  const rest={done:6,pending:15,review:34,rejected:14,cancelled:3};
+  const rest={done:6,pending:15,review:26,rejected:14,cancelled:3,employ:8};
   head.forEach(h=>rest[h[3]]--);
   const pool=[];ST_ORDER.forEach(k=>{for(let i=0;i<rest[k];i++)pool.push(k);});
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
@@ -579,20 +559,12 @@ const ILL={
   svc:'<svg class="ill" viewBox="0 0 96 80"><rect x="36" y="8" width="24" height="12" rx="4" fill="none" stroke="#3d6e66" stroke-width="5"/><rect x="18" y="18" width="60" height="46" rx="10" fill="#3d5a57" stroke="rgba(255,255,255,.25)"/><rect x="18" y="40" width="60" height="24" rx="10" fill="#2f6f63" opacity=".8"/><circle cx="48" cy="42" r="4" fill="#9cc7c0"/></svg>'
 };
 
-/* ---------- сводка ---------- */
-function renderPipeline(){
-  const cnt={};ST_ORDER.forEach(k=>cnt[k]=S.data.filter(c=>c.st===k).length);
-  $("#pipeline").innerHTML=ST_ORDER.map(k=>
-    '<button class="glass scard" data-st="'+k+'" aria-pressed="'+(S.filter===k)+'">'+
-      '<span class="t"><span class="dot '+ST[k].dot+'"></span>'+ST[k].card+'</span><span class="n">'+cnt[k]+'</span></button>').join("");
-}
 
-/* ---------- селект «Статусы» ---------- */
-function renderSel(){
-  $("#selCur").textContent=S.filter==="all"?"Все":ST[S.filter].card;
+/* ---------- табы-фильтр по статусам ---------- */
+function renderTabs(){
   const opts=[["all","Все",S.data.length]].concat(ST_ORDER.map(k=>[k,ST[k].card,S.data.filter(c=>c.st===k).length]));
-  $("#sel .sel-pop").innerHTML=opts.map(o=>
-    '<button role="option" data-st="'+o[0]+'" aria-checked="'+(S.filter===o[0])+'">'+(o[0]==="all"?"":'<span class="dot '+ST[o[0]].dot+'"></span>')+o[1]+'<span class="c">'+o[2]+'</span></button>').join("");
+  $("#stTabs").innerHTML=opts.map(o=>
+    '<button class="ftab" role="tab" data-st="'+o[0]+'" aria-selected="'+(S.filter===o[0])+'" tabindex="'+(S.filter===o[0]?0:-1)+'">'+o[1]+'<span class="n">'+o[2]+'</span></button>').join("");
 }
 
 /* ---------- лист карточек ---------- */
@@ -683,7 +655,7 @@ function renderTab(c){
      : '<div class="empty">Ничего не найдено</div>');
 }
 
-function render(){ renderPipeline(); renderSel(); renderList(); renderPreview(false); }
+function render(){ renderTabs(); renderList(); renderPreview(false); }
 
 function select(id,{focus=false,open=true}={}){
   if(id===S.sel && !narrow()) return;
@@ -698,7 +670,7 @@ function closeSheet(){ $("#prev").classList.remove("open"); $("#scrim").hidden=t
 
 function setStatus(ids,st){
   ids.forEach(id=>{const c=S.data.find(x=>x.id===id); if(c){ c.st=st; c.hist.push({st,at:new Date()}); }});
-  renderPipeline(); renderSel(); renderList(); renderPreview(true);
+  renderTabs(); renderList(); renderPreview(true);
 }
 
 /* ---------- события ---------- */
@@ -769,18 +741,14 @@ $("#prev").addEventListener("keydown",e=>{
   S.tab=n; renderPreview(false); $('#prev [data-tab="'+n+'"]').focus();
 });
 $("#scrim").addEventListener("click",closeSheet);
-$("#pipeline").addEventListener("click",e=>{
-  const b=e.target.closest(".scard"); if(!b) return;
-  S.filter=S.filter===b.dataset.st?"all":b.dataset.st; renderPipeline(); renderSel(); renderList(); renderPreview(true);
+function setFilter(st){ S.filter=st; renderTabs(); renderList(); renderPreview(true); }
+$("#stTabs").addEventListener("click",e=>{ const b=e.target.closest(".ftab"); if(b) setFilter(b.dataset.st); });
+$("#stTabs").addEventListener("keydown",e=>{
+  if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft") return;
+  const ks=["all"].concat(ST_ORDER), i=ks.indexOf(S.filter);
+  setFilter(ks[(i+(e.key==="ArrowRight"?1:ks.length-1))%ks.length]); $('#stTabs [aria-selected="true"]').focus();
 });
-(function(){
-  const w=$("#sel"), btn=w.querySelector(".sel-btn"), pop=w.querySelector(".sel-pop");
-  const cl=()=>{pop.hidden=true; btn.setAttribute("aria-expanded","false");};
-  btn.addEventListener("click",e=>{e.stopPropagation(); pop.hidden=!pop.hidden; btn.setAttribute("aria-expanded",String(!pop.hidden));});
-  pop.addEventListener("click",e=>{const o=e.target.closest("[data-st]"); if(!o) return; S.filter=o.dataset.st; cl(); renderPipeline(); renderSel(); renderList(); renderPreview(true);});
-  document.addEventListener("click",e=>{if(!w.contains(e.target)) cl();});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){cl(); closeSheet();}});
-})();
+document.addEventListener("keydown",e=>{if(e.key==="Escape") closeSheet();});
 
 /* ================= меню прототипов ================= */
 (function(){
