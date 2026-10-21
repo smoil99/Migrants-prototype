@@ -676,7 +676,7 @@ document.getElementById("headerToggle").onchange=e=>{ headerShowOther=e.target.c
 /* высота залипающей панели-харнесса → под неё уходит шапка ЛК */
 function setHarnessH(){
   const topnav = document.querySelector(".topnav").offsetHeight;
-  const lk = document.querySelector(".lk-header").offsetHeight;
+  const lk = document.documentElement.classList.contains("rh-pin") ? document.querySelector(".lk-header").offsetHeight : 0;   // шапка не закреплена — липкие колонки встают под навигацию
   document.documentElement.style.setProperty("--topnav-h", topnav + "px");
   document.documentElement.style.setProperty("--stack-h", (topnav + lk) + "px");
 }

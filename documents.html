@@ -507,7 +507,7 @@
   }
 })();
 function setHarnessH(){
-  const tn=document.querySelector('.topnav').offsetHeight, lk=document.querySelector('.lk-header').offsetHeight;
+  const tn=document.querySelector('.topnav').offsetHeight, lk=document.documentElement.classList.contains('rh-pin')?document.querySelector('.lk-header').offsetHeight:0;
   document.documentElement.style.setProperty('--topnav-h',tn+'px');
   document.documentElement.style.setProperty('--stack-h',(tn+lk)+'px');
 }

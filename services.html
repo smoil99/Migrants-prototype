@@ -259,18 +259,25 @@
   @media (max-width:860px){ .srow{grid-template-columns:1fr; gap:7px} .srow.shead{display:none} .su-act{justify-content:flex-start} }
   .su-name{font-size:13.5px; color:#eef4f5; line-height:1.4}
   .su-name small{display:block; color:var(--muted); font-size:12px; margin-top:5px}
-  .spill{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500;
-    border:1px solid var(--line-strong); background:rgba(255,255,255,.04); padding:5px 11px; border-radius:20px; color:#eaf0f1}
-  .spill .sd{width:7px;height:7px;border-radius:50%;flex:none}
-  .sd-none{background:#8A9092} .sd-prog{background:var(--accent)} .sd-done{background:#3FBF87}
+  /* статус и кнопки — те же компоненты, что на «Кандидатах»: DS статус (Text 1178:522) и Button Secondary / Primary */
+  .spill{position:relative; display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:32px;
+    background:rgba(255,255,255,.10); font-size:14px; line-height:20px; font-weight:500; color:#fff; white-space:nowrap}
+  .spill .sd{width:8px;height:8px;border-radius:50%;flex:none}
+  .sd-none{background:#808C99} .sd-prog{background:#61C7D6} .sd-done{background:#00E887}
+  .spill::after,.sbtn::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+    background:var(--rh-kit-stroke);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
   .su-plan,.su-com{font-size:13px; color:#dbe6e8; font-variant-numeric:tabular-nums}
   .su-com.empty,.su-plan.empty{color:var(--muted)}
   .su-com{overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-variant-numeric:normal}
   .su-act{display:flex; justify-content:flex-end}
-  .sbtn{appearance:none; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;
-    border-radius:8px; padding:7px 14px; border:1px solid var(--line-strong); background:transparent; color:#dbe6e8; transition:.12s}
-  .sbtn:hover:not(:disabled){border-color:var(--accent); color:#fff}
-  .sbtn.primary{background:var(--primary); border-color:var(--primary); color:#04231f}
+  .sbtn{appearance:none; position:relative; display:inline-flex; align-items:center; justify-content:center; height:32px; padding:0 14px;
+    border:0; border-radius:32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:14px; font-weight:500;
+    cursor:pointer; white-space:nowrap; transition:background .12s, filter .12s}
+  .sbtn:hover:not(:disabled){background:rgba(255,255,255,.16)}
+  .sbtn.primary{background:var(--primary)}
+  .sbtn.primary::after{display:none}   /* у Primary обводки нет */
+  .sbtn.primary:hover:not(:disabled){filter:brightness(1.08); background:var(--primary)}
   .sbtn:disabled{opacity:.4; cursor:default}
   .info{display:inline-grid; place-items:center; width:15px;height:15px;border-radius:50%;
     border:1px solid var(--line-strong); color:var(--muted); font-size:9px; font-style:normal; position:relative; cursor:default}
@@ -540,7 +547,7 @@
   }
 })();
 function setHarnessH(){
-  const tn=document.querySelector('.topnav').offsetHeight, lk=document.querySelector('.lk-header').offsetHeight;
+  const tn=document.querySelector('.topnav').offsetHeight, lk=document.documentElement.classList.contains('rh-pin')?document.querySelector('.lk-header').offsetHeight:0;
   document.documentElement.style.setProperty('--topnav-h',tn+'px');
   document.documentElement.style.setProperty('--stack-h',(tn+lk)+'px');
 }

@@ -58,10 +58,12 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
 .sup-scrim[hidden]{display:none}
 .rh-sr{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}
 
-/* ---------- шапка заявки: залипает под навигацией + стекло при скролле ---------- */
-.lk-header{position:sticky; top:calc(var(--topnav-h,54px) + env(safe-area-inset-top,0px)); z-index:30;
-  background:transparent; box-shadow:none; transition:background .22s ease, box-shadow .22s ease}
-body.scrolled .lk-header{background:var(--glass,rgba(24,28,31,.62));
+/* ---------- шапка заявки ----------
+   По умолчанию прокручивается со страницей (решение 21.10.2026). Закреп под навигацией + стекло при скролле —
+   за флагом: класс rh-pin на <html> (PIN_HEADER в request-header.js). */
+.lk-header{position:relative; z-index:30; background:transparent; box-shadow:none; transition:background .22s ease, box-shadow .22s ease}
+.rh-pin .lk-header{position:sticky; top:calc(var(--topnav-h,54px) + env(safe-area-inset-top,0px))}
+.rh-pin body.scrolled .lk-header{background:var(--glass,rgba(24,28,31,.62));
   -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
   box-shadow:0 12px 34px -22px rgba(0,0,0,.8)}
 .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible){z-index:40}   /* тултип «Дублировать» уходит в зону навигации */

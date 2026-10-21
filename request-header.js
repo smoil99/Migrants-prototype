@@ -1,10 +1,13 @@
 /* Общая шапка экрана заявки (request-header.css): меню «?» поддержки, «Дублировать», высоты залипающих слоёв. */
+/* Закреп шапки заявки под навигацией: false — шапка прокручивается со страницей; true — вернуть закреп. */
+const PIN_HEADER=false;
+document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
 (function(){
-  /* высоты навигации и шапки → --topnav-h (шапка уходит под навигацию), --stack-h (липкие колонки контента) */
+  /* высоты навигации и (закреплённой) шапки → --topnav-h, --stack-h (отступ липких колонок контента) */
   function setStack(){
     const tn=document.querySelector(".topnav"), lk=document.querySelector(".lk-header"); if(!tn||!lk) return;
     document.documentElement.style.setProperty("--topnav-h",tn.offsetHeight+"px");
-    document.documentElement.style.setProperty("--stack-h",(tn.offsetHeight+lk.offsetHeight)+"px");
+    document.documentElement.style.setProperty("--stack-h",(tn.offsetHeight+(PIN_HEADER?lk.offsetHeight:0))+"px");
   }
   setStack();
   window.addEventListener("resize",setStack);
