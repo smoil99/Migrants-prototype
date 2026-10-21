@@ -89,7 +89,6 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
   border:0; border-radius:32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:16px; font-weight:600; cursor:pointer; white-space:nowrap}
 .dup-btn:hover{background:rgba(255,255,255,.15)}
 .dup-btn > svg{width:16px; height:16px; flex:none}
-.dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
 .dup-tip{position:absolute; right:0; bottom:calc(100% + 8px); z-index:40; width:max-content; max-width:360px; pointer-events:none; text-align:left;
   background:#1c2023; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:6px 10px; font-size:12px; line-height:16px; font-weight:400; color:#fff;
   box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s}
@@ -117,4 +116,4 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
   .rh-who .txt,.rh-who .chev{display:none}
   .rh-links{gap:20px}
 }
-@media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl,.dup-btn .dup-i{display:none} }
+@media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl{display:none} }

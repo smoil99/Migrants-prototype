@@ -114,8 +114,12 @@
   /* превью встаёт под закреплённой панелью (56 + 8) */
   .has-sel .prev{top:calc(var(--stack-h,230px) + 80px); height:calc(100vh - var(--stack-h,230px) - 96px)}
   .list-tools::before{background:rgba(255,255,255,.12)}   /* обводка — white 12%, 1px inside, как у «Document» (Figma 2200:38789) */
-  .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
-  .list-tools .btn{height:30px; font-size:14px; padding:0 16px}
+  .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer; font-size:16px; line-height:20px; font-weight:500; color:#fff}
+  .list-tools .btn{height:32px; font-size:16px; padding:0 21px}
+  /* Button / Link / Secondary — «Снять выбор» */
+  .lnk{appearance:none; border:0; background:none; padding:0; margin-right:12px; cursor:pointer; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff;
+    text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:1px}
+  .lnk:hover{text-decoration-thickness:2px}
   .list-tools .sp{flex:1}
   .clist{display:flex; flex-direction:column; gap:8px}
   .ccard{position:relative; padding:16px 16px 14px; cursor:pointer; outline:0; transition:background .12s}
@@ -147,8 +151,9 @@
   .ava{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:600; letter-spacing:.2px;
     background:
       radial-gradient(120% 90% at 100% 100%, rgba(0,194,113,.38), rgba(0,194,113,0) 55%),
-      rgba(255,255,255,.10);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.2)}
+      rgba(255,255,255,.10); position:relative}
+  .ava::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none; background:var(--kit-stroke);   /* обводка как у кнопок */
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
   .ava.lg{width:64px; height:64px; font-size:21px}
 
   /* DS статус-чип (Text 1178:522) */
@@ -418,7 +423,6 @@
       <button type="button" class="dup-btn" id="dupBtn" aria-label="Дублировать заявку">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
         <span class="lbl">Дублировать</span>
-        <svg class="dup-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>
         <span class="dup-tip" role="tooltip">Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small></span>
       </button>
     </div>
@@ -617,7 +621,7 @@ function renderList(){
   bar.classList.toggle("on",on); document.body.classList.toggle("has-sel",on);
   bar.innerHTML=
     '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>Выбрано: <b>'+S.checked.size+'</b></label><span class="sp"></span>'+
-    '<button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
+    '<button class="lnk" data-bulk="clear">Снять выбор</button><button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
   if(anchor&&window.scrollY>0) window.scrollBy(0,anchor.getBoundingClientRect().top-aTop);
   const all=$("#cbAll"); if(all) all.indeterminate=n>0&&n<vis.length;
 }
@@ -628,12 +632,12 @@ function renderPreview(anim){
   const p=$("#prev"); const c=S.data.find(x=>x.id===S.sel);
   if(!c){ p.innerHTML='<div class="empty" style="margin:auto">Выберите кандидата в списке</div>'; return; }
   const act=c.st==="pending"||c.st==="review";
-  const cnt={docs:c.docs.length, media:c.media.length, svcs:c.svcs.reduce((n,g)=>n+g.rows.length,0)};
+  const cnt={docs:c.docs.length, media:c.media.length};
   p.innerHTML=
     '<button class="ibtn p-close" id="pClose" aria-label="Закрыть">'+ICO.x+'</button>'+
     '<div class="p-head"><span class="ava lg">'+initials(c)+'</span>'+
       '<div class="p-who"><div class="p-title"><h3>'+esc(c.fn+" "+c.ln)+'</h3>'+'<span class="status"><span class="dot '+ST[c.st].dot+'"></span>'+ST[c.st].chip+'</span></div>'+
-        '<div class="pr">Aadhaar '+c.aad+'</div></div>'+
+        '<div class="pr">Aadhaar: '+c.aad+'</div></div>'+
       (act?'<div class="p-acts"><button class="btn" data-act="rejected">Отклонить</button><button class="btn primary" data-act="done">Одобрить</button></div>':'')+
     '</div>'+
     '<div class="p-tabs" role="tablist">'+TABS.map(t=>
@@ -742,6 +746,7 @@ $("#listTools").addEventListener("change",e=>{
 });
 $("#listTools").addEventListener("click",e=>{
   const b=e.target.closest("[data-bulk]"); if(!b) return;
+  if(b.dataset.bulk==="clear"){ S.checked.clear(); renderList(); return; }
   const ids=[...S.checked].filter(id=>{const c=S.data.find(x=>x.id===id); return c.st==="pending"||c.st==="review";});
   const skipped=S.checked.size-ids.length;
   S.checked.clear(); setStatus(ids,b.dataset.bulk);

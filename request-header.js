@@ -61,7 +61,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     dup.addEventListener("click",()=>{
       if(dup.classList.contains("busy")) return;
       dup.classList.add("busy"); dup.querySelector(".lbl").textContent="Дублирование…";
-      const sp=document.createElement("span"); sp.className="spin"; dup.querySelector("svg:not(.dup-i)").replaceWith(sp);
+      const sp=document.createElement("span"); sp.className="spin"; dup.querySelector("svg").replaceWith(sp);
       setTimeout(()=>{ location.href="request-form.html#fromreq"; },700);
     });
     /* возврат «Назад» из bfcache — снять состояние загрузки */
