@@ -149,7 +149,8 @@
 
   /* ---------- лист кандидатов ---------- */
   /* «Выбрать всех» — glass-контейнер как у карточек, на всю ширину над листом и превью; чекбокс на одной оси с чекбоксами карточек */
-  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:8px; font-size:14px; color:var(--text-2); min-height:56px}
+  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:8px; font-size:14px; color:var(--text-2); min-height:56px; transition:background .15s, box-shadow .15s}
+  .list-tools:not(.on){background:transparent; box-shadow:none}  /* заливка — только когда выбран хотя бы один кандидат */
   .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
   .list-tools .btn{height:30px; font-size:14px; padding:0 16px}
   .list-tools .sp{flex:1}
@@ -610,6 +611,7 @@ function renderList(){
     '</div>';}).join("")
     : '<div class="empty">Нет кандидатов в этом статусе</div>';
   const vis=rows.map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
+  $("#listTools").classList.toggle("on",S.checked.size>0);
   $("#listTools").innerHTML=
     '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>'+(S.checked.size?'Выбрано: <b>'+S.checked.size+'</b>':'Выбрать всех')+'</label><span class="sp"></span>'+
     (S.checked.size?'<button class="btn" data-bulk="rejected">Отклонить</button><button class="btn ok" data-bulk="done">Одобрить</button>':'');
