@@ -85,8 +85,8 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
 
 /* «Дублировать» — Button / Secondary справа в строке заголовка (решение 12.10.2026) */
-.dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 18px;
-  border:0; border-radius:32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:16px; font-weight:600; cursor:pointer; white-space:nowrap}
+.dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:32px; padding:0 14px;
+  border:0; border-radius:32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; white-space:nowrap}
 .dup-btn:hover{background:rgba(255,255,255,.15)}
 .dup-btn > svg{width:16px; height:16px; flex:none}
 .dup-tip{position:absolute; right:0; bottom:calc(100% + 8px); z-index:40; width:max-content; max-width:360px; pointer-events:none; text-align:left;
@@ -116,4 +116,4 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
   .rh-who .txt,.rh-who .chev{display:none}
   .rh-links{gap:20px}
 }
-@media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl{display:none} }
+@media (max-width:640px){ .dup-btn{width:32px; padding:0} .dup-btn .lbl{display:none} }
