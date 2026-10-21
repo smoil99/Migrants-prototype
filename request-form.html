@@ -639,7 +639,8 @@
   .fi .pl{position:absolute; left:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55); pointer-events:none; transition:.12s;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 80px)}
   .fi .pl i,.qlab i{color:var(--err); font-style:normal}
-  .fi.has .pl,.fi .box:focus-within .pl{top:4px; font-size:12px; line-height:16px}
+  .fi.has .pl,.fi .box:focus-within .pl,.fi.ph .pl{top:4px; font-size:12px; line-height:16px}
+  .fi input::placeholder{color:rgba(255,255,255,.38)}
   .fi:not(.has) select{color:transparent}
   .fi .end{display:flex; gap:6px; padding-right:8px; flex:none; color:rgba(255,255,255,.6)}
   .fi .end svg{width:16px; height:16px}
@@ -910,12 +911,12 @@
         <section class="tf-sec" id="s7">
           <h2>Профиль вакансии и кандидата</h2>
           <div class="tf-rows">
-            <div class="q" data-name="gender" data-def="Мужской"><p class="qlab">Пол специалистов</p>
+            <div class="q" data-name="gender"><p class="qlab">Пол специалистов</p>
               <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
               <p class="ht" data-show="gender:Мужской|Женский">Указывайте пол только при наличии объективных требований, связанных с характером работы</p></div>
             <div class="age-group"><p class="qlab">Возраст, лет</p>
               <div class="tf-two">
-              <div class="fi" data-req data-def="18" data-label="Возраст от, лет"><div class="box"><input name="ageFrom" aria-label="Возраст от, лет" type="number" min="18" inputmode="numeric"><span class="pl">От<i>*</i></span>
+              <div class="fi ph" data-req data-label="Возраст от, лет"><div class="box"><input name="ageFrom" aria-label="Возраст от, лет" type="number" min="18" inputmode="numeric" placeholder="18"><span class="pl">От<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
               <div class="fi" data-req data-label="Возраст до, лет"><div class="box"><input name="ageTo" aria-label="Возраст до, лет" type="number" min="18" inputmode="numeric"><span class="pl">До<i>*</i></span>
                 <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
@@ -1003,8 +1004,8 @@ $$(".fi").forEach(fi=>{
   el.addEventListener("input",()=>{syncFi(fi); fi.classList.remove("bad"); S.bad=S.bad.filter(n=>n!==el.name); touched();});
   el.addEventListener("change",()=>{syncFi(fi); syncCond(); touched();});
   fi.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
-    const min=+el.min||0, v=el.value===""?(min||0):+el.value;
-    el.value=Math.max(min, v+(+b.dataset.d)); syncFi(fi); fi.classList.remove("bad"); touched();
+    const min=+el.min||0;
+    el.value=el.value===""?min:Math.max(min, +el.value+(+b.dataset.d)); syncFi(fi); fi.classList.remove("bad"); touched();
   }));
 });
 $$(".q").forEach(q=>{
@@ -1034,12 +1035,10 @@ function syncProf(){ const m=valOf("attract"), v=form.elements.prof.value.trim()
 function syncCond(){ syncProf(); $$("[data-show]").forEach(n=>{ n.hidden = !n.dataset.show.split("&").every(c=>{ const [k,v]=c.split(":"); return v.split("|").includes(valOf(k)); }); }); }
 function syncAge(){}
 
-/* дефолты макета: пол «Мужской», возраст «Диапазон возраста», от 18 — не считаются вводом пользователя */
+/* пустая форма: без предзаполнений — пол и «Возраст от» пустые, в «От» подсказка «18» (US-016 §5.4, docs#309 нота 49009) */
 function applyDefaults(){
   form.querySelectorAll("input,select,textarea").forEach(el=>el.value="");
   $$(".chipb").forEach(c=>c.setAttribute("aria-checked","false"));
-  $$(".q[data-def]").forEach(q=>setQ(q.dataset.name,q.dataset.def));
-  form.elements.ageFrom.value="18";
   $$(".fi").forEach(fi=>{syncFi(fi); fi.classList.remove("bad");});
   $$(".q").forEach(q=>q.classList.remove("bad"));
   syncAge();
@@ -1177,7 +1176,7 @@ function secState(sec){
   const vis=n=>!n.closest("[hidden]");
   const req=[...sec.querySelectorAll("[data-req]")].filter(vis);
   if(req.length) return req.every(filled)?"done":"";
-  const any=[...sec.querySelectorAll(".fi,.q")].filter(vis).filter(n=>!n.dataset.def).some(filled);
+  const any=[...sec.querySelectorAll(".fi,.q")].filter(vis).some(filled);
   return any?"done":"";
 }
 function renderSteps(){
