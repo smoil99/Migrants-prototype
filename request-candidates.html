@@ -106,8 +106,13 @@
 
   /* ---------- лист кандидатов ---------- */
   /* «Выбрать всех» — glass-контейнер как у карточек, на всю ширину над листом и превью; чекбокс на одной оси с чекбоксами карточек */
-  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:20px; font-size:14px; color:var(--text-2); min-height:56px; transition:background .15s, box-shadow .15s}
-  .list-tools:not(.on){background:transparent; box-shadow:none}  /* заливка — только когда выбран хотя бы один кандидат */
+  /* панель «Выбрано»: без выбора скрыта; при выборе — над листом, закреплена под навигацией, стекло (blur) */
+  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:20px; font-size:14px; color:var(--text-2); min-height:56px;
+    position:sticky; top:calc(var(--topnav-h,54px) + 8px); z-index:32; background:var(--glass); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4)}
+  .list-tools:not(.on){display:none}
+  /* превью встаёт под закреплённой панелью (56 + 8) */
+  .has-sel .prev{top:calc(var(--stack-h,230px) + 80px); height:calc(100vh - var(--stack-h,230px) - 96px)}
   .list-tools::before{background:rgba(255,255,255,.12)}   /* обводка — white 12%, 1px inside, как у «Document» (Figma 2200:38789) */
   .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
   .list-tools .btn{height:30px; font-size:14px; padding:0 16px}
@@ -245,7 +250,7 @@
     color:#fff; font-family:inherit; font-size:14px; font-weight:600; padding:4px 20px 4px 0; cursor:pointer}
   .sv-f select option{background:var(--panel-solid)}
   .srch{position:relative; flex:0 1 200px; min-width:150px}
-  .srch input{width:100%; height:36px; border:0; border-radius:12px; padding:0 12px 0 32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:16px}
+  .srch input{width:100%; height:36px; border:0; border-radius:12px; padding:0 12px 0 32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:14px}
   .srch input::placeholder{color:var(--label)}
   .srch svg{position:absolute; left:11px; top:11px; width:14px; height:14px; color:var(--label)}
   .svc{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--row-line)}
@@ -581,10 +586,15 @@ function renderList(){
     '</div>';}).join("")
     : '<div class="empty">Нет кандидатов в этом статусе</div>';
   const vis=rows.map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
-  $("#listTools").classList.toggle("on",S.checked.size>0);
-  $("#listTools").innerHTML=
-    '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>'+(S.checked.size?'Выбрано: <b>'+S.checked.size+'</b>':'Выбрать всех')+'</label><span class="sp"></span>'+
-    (S.checked.size?'<button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>':'');
+  // панель «Выбрано» появляется/исчезает в потоке над листом — держим карточку у верха экрана на месте, без прыжка
+  const bar=$("#listTools"), on=S.checked.size>0, toggled=bar.classList.contains("on")!==on;
+  const anchor=toggled?[...document.querySelectorAll("#clist .ccard")].find(el=>el.getBoundingClientRect().bottom>0):null;
+  const aTop=anchor?anchor.getBoundingClientRect().top:0;
+  bar.classList.toggle("on",on); document.body.classList.toggle("has-sel",on);
+  bar.innerHTML=
+    '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>Выбрано: <b>'+S.checked.size+'</b></label><span class="sp"></span>'+
+    '<button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
+  if(anchor&&window.scrollY>0) window.scrollBy(0,anchor.getBoundingClientRect().top-aTop);
   const all=$("#cbAll"); if(all) all.indeterminate=n>0&&n<vis.length;
 }
 
