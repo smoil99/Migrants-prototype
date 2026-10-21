@@ -495,9 +495,8 @@ const SECTIONS = [
     { k:["Нужен бригадир","Foreman required"], v:["Да","Yes"] },
     { k:["Сотрудников на одного бригадира","Employees per foreman"], v:["15","15"] },
     { k:["Как будет выбран бригадир","How the foreman is chosen"], v:["Назначим одного из сотрудников","We will appoint one of the employees"] },
-    { k:["Требуется расширенный медосмотр","Extended medical exam required"], v:["Да","Yes"] },
     { id:"med", ft:true, src:"ru", status:"machine",
-      k:["Необходимые обследования","Required examinations"],
+      k:["Расширенный медосмотр","Extended medical examination"],
       v:{ru:"Психиатр, нарколог, флюорография",en:"Psychiatrist, narcologist, fluorography"} },
   ]},
   { t:["Дополнительные услуги","Additional services"], rows:[
@@ -510,8 +509,9 @@ const SECTIONS = [
     { k:["Нужен переводчик","Interpreter needed"], v:["Да, на период адаптации","Yes, for the adaptation period"] },
   ]},
   { t:["Профиль вакансии и кандидата","Vacancy & candidate profile"], rows:[
-    { k:["Предпочтительный пол специалиста","Preferred gender"], v:["Мужской","Male"] },
-    { k:["Предпочтительный возраст","Preferred age"], v:["25–40 лет","25–40 years"] },
+    { k:["Пол специалистов","Specialists’ gender"], v:["Мужской","Male"] },
+    { k:["Возраст от, лет","Age from, years"], v:["25","25"] },
+    { k:["Возраст до, лет","Age to, years"], v:["40","40"] },
     { id:"duties", ft:true, src:"en", status:"confirmed",
       k:["Должностные обязанности","Job responsibilities"],
       v:{en:"Welding of especially complex structures operated in extreme conditions (gas and oil pipelines, aircraft assemblies)",
