@@ -13,7 +13,7 @@
   :root{
     color-scheme: dark;
     --bg:#181C1F;
-    --panel-solid:#26292C;
+    --panel:rgba(255,255,255,.045); --panel-solid:#26292C;
     --card:rgba(255,255,255,.10);
     --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14); --row-line:rgba(255,255,255,.2);
     --text:#ffffff; --text-2:rgba(255,255,255,.8); --muted:#8A9092; --muted2:#6E767A;
@@ -114,8 +114,11 @@
   .list-tools .sp{flex:1}
   .clist{display:flex; flex-direction:column; gap:8px}
   .ccard{position:relative; padding:16px 16px 14px; cursor:pointer; outline:0; transition:background .12s}
-  .ccard:hover{background:rgba(255,255,255,.13)}
-  .ccard[aria-selected="true"]{background:rgba(255,255,255,.14)}
+  /* карточки и превью — цветом блоков вкладки «Услуги»: white 4.5% + обводка white 8% */
+  .ccard,.prev{background:var(--panel); box-shadow:none}
+  .ccard::before,.prev::before{background:var(--line)}
+  .ccard:hover{background:rgba(255,255,255,.07)}
+  .ccard[aria-selected="true"]{background:rgba(255,255,255,.07)}
   .ccard[aria-selected="true"]::before{padding:2px; background:var(--primary)}
   .ccard:focus-visible{box-shadow:0 0 0 2px var(--accent)}
   /* карточка: чекбокс · аватар · имя + Aadhaar · статус справа вверху */
@@ -282,8 +285,8 @@
     .p-close{display:grid}
     .p-head{padding-right:52px}
     .scrim{position:fixed; inset:0; z-index:45; background:rgba(0,0,0,.45)}
-    .ccard[aria-selected="true"]{background:var(--card)}
-    .ccard[aria-selected="true"]::before{padding:1px; background:linear-gradient(160deg, rgba(255,255,255,.34), rgba(255,255,255,.06) 40%, rgba(255,255,255,.04) 70%, rgba(255,255,255,.22))}
+    .ccard[aria-selected="true"]{background:var(--panel)}
+    .ccard[aria-selected="true"]::before{padding:1px; background:var(--line)}
   }
   @media (max-width:720px){
 
