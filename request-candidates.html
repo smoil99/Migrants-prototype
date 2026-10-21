@@ -116,7 +116,7 @@
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
 
   /* «Filter tabs» (Figma 7695:90882) — фильтр листа по статусам; активный: white@10% + обводка white */
-  .ftabs{display:flex; gap:6px; margin:0 0 20px; overflow-x:auto; scrollbar-width:none}
+  .ftabs{display:flex; gap:6px; margin:24px 0 20px; overflow-x:auto; scrollbar-width:none}
   .ftabs::-webkit-scrollbar{display:none}
   .ftab{appearance:none; border:0; background:none; cursor:pointer; flex:none; display:inline-flex; align-items:center; gap:4px;
     padding:6px 12px; border-radius:var(--r-pill); font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff;
@@ -128,10 +128,6 @@
   .d-pending{background:var(--st-pending)} .d-review{background:var(--st-work)} .d-done{background:var(--st-done)}
   .d-rejected{background:var(--st-error)} .d-cancelled{background:var(--st-none)} .d-employ{background:var(--primary)}
 
-  /* секция «Кандидаты N» */
-  .sec-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:36px 0 24px}
-  .sec-head h2{margin:0; font-size:24px; font-weight:600; letter-spacing:-.3px}
-  .sec-head h2 .cnt{color:var(--label); font-weight:500; margin-left:6px}
 
   /* раскладка как на rabota.ru/resume-search: лист карточек слева, липкое превью справа (≈1:2) */
   .split{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:20px; align-items:start}
@@ -315,7 +311,6 @@
   @media (max-width:720px){
     .who .txt,.who .chev{display:none}
     .brand-links{gap:20px}
-    .sec-head h2{font-size:20px}
     .p-head{padding:20px 16px 0; gap:12px}
     .ava.lg{width:48px; height:48px; font-size:16px}
     .p-title h3{font-size:22px; line-height:28px}
@@ -411,9 +406,6 @@
     <a class="tab" role="tab" href="documents.html">Документы</a>
   </div>
 
-  <div class="sec-head">
-    <h2>Кандидаты<span class="cnt" id="cnt"></span></h2>
-  </div>
   <div class="ftabs" id="stTabs" role="tablist" aria-label="Статус кандидата"></div>
 
   <div class="glass list-tools" id="listTools"></div>
@@ -570,7 +562,6 @@ function renderTabs(){
 /* ---------- лист карточек ---------- */
 function renderList(){
   const rows=visible();
-  $("#cnt").textContent=rows.length;
   if(rows.length && !rows.some(c=>c.id===S.sel)) S.sel=rows[0].id;
   if(!rows.length) S.sel=null;
   $("#clist").innerHTML=rows.length? rows.map(c=>{
