@@ -109,17 +109,20 @@
   /* панель «Выбрано»: без выбора скрыта; при выборе — над листом, закреплена под навигацией, стекло (blur) */
   .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; margin-bottom:20px; font-size:14px; color:var(--text-2); min-height:56px;
     position:sticky; top:calc(var(--topnav-h,54px) + 8px); z-index:32; background:var(--glass); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
-    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4)}
-  .list-tools:not(.on){display:none}
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    max-height:160px; overflow:hidden;
+    transition:max-height .28s ease, min-height .28s ease, padding .28s ease, margin-bottom .28s ease, opacity .22s ease, transform .28s ease}
+  /* без выбора — свёрнута; появление/исчезновение плавное */
+  .list-tools:not(.on){max-height:0; min-height:0; padding-top:0; padding-bottom:0; margin-bottom:0; opacity:0; transform:translateY(-8px); pointer-events:none}
   /* превью встаёт под закреплённой панелью (56 + 8) */
   .has-sel .prev{top:calc(var(--stack-h,230px) + 80px); height:calc(100vh - var(--stack-h,230px) - 96px)}
   .list-tools::before{background:rgba(255,255,255,.12)}   /* обводка — white 12%, 1px inside, как у «Document» (Figma 2200:38789) */
   .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer; font-size:16px; line-height:20px; font-weight:500; color:#fff}
   .list-tools .btn{height:32px; font-size:16px; padding:0 21px}
   /* Button / Link / Secondary — «Снять выбор» */
-  .lnk{appearance:none; border:0; background:none; padding:0; margin-right:12px; cursor:pointer; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff;
-    text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:1px}
-  .lnk:hover{text-decoration-thickness:2px}
+  .lnk{appearance:none; border:0; border-bottom:1px solid #fff; border-radius:0; background:none; padding:0; cursor:pointer; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff; transition:color .12s, border-color .12s}
+  .lnk:hover{color:rgba(255,255,255,.6); border-bottom-color:rgba(255,255,255,.6)}   /* Button / Link / Secondary (1576:8636): Hover — 60% */
+  .list-tools .lnk{margin-right:14px}
   .list-tools .sp{flex:1}
   .clist{display:flex; flex-direction:column; gap:8px}
   .ccard{position:relative; padding:16px 16px 14px; cursor:pointer; outline:0; transition:background .12s}
@@ -168,7 +171,8 @@
   .status.past{color:var(--label)}
 
   /* ---------- превью карточки кандидата (содержимое — как на стенде /requests/{id}/candidates/{id}) ---------- */
-  .prev{position:sticky; top:calc(var(--stack-h,230px) + 16px); height:calc(100vh - var(--stack-h,230px) - 32px); min-height:360px; display:flex; flex-direction:column; overflow:hidden}
+  .prev{position:sticky; top:calc(var(--stack-h,230px) + 16px); height:calc(100vh - var(--stack-h,230px) - 32px); min-height:360px; display:flex; flex-direction:column; overflow:hidden;
+    transition:top .28s ease, height .28s ease}   /* плавный сдвиг под плашку «Выбрано» */
   .ibtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--text-2); width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex:none}
   .ibtn:hover{background:rgba(255,255,255,.08); color:#fff}
   .ibtn svg{width:18px; height:18px}
@@ -326,6 +330,31 @@
     .kv{grid-template-columns:1fr; gap:2px; padding:7px 0}
     .srch{flex:1 1 100%}
   }
+
+  /* ---------- полноэкранный профиль кандидата (Figma 2200:35078): «Открыть полностью» в превью ---------- */
+  .full-mode .lk-header,.full-mode #listMain{display:none}
+  .fullv{padding-top:28px}
+  .f-crumbs{font-size:14px; margin-bottom:24px}
+  .f-head{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+  .ava.xl{width:65px; height:65px; font-size:20px}
+  .f-who{flex:1; min-width:0}
+  .f-title{display:flex; align-items:center; gap:8px 16px; flex-wrap:wrap}
+  .f-title h1{margin:0; font-size:32px; line-height:1.2; font-weight:600; letter-spacing:-.16px}
+  .f-sub{margin-top:4px; font-size:16px; line-height:22px; color:var(--label)}
+  .f-head > .p-acts{width:auto; padding-left:0; margin-top:0}
+  .f-tabs{display:flex; gap:32px; margin-top:24px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+  .f-tabs::-webkit-scrollbar{display:none}
+  .ftb{appearance:none; border:0; background:none; cursor:pointer; position:relative; flex:none; padding:10px 12px 12px; font-family:inherit; font-size:16px; line-height:24px; color:rgba(255,255,255,.6)}
+  .ftb:hover{color:#fff}
+  .ftb[aria-selected="true"]{color:#fff}
+  .ftb[aria-selected="true"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:#fff}
+  .ftb .n{margin-left:4px; color:var(--label)}
+  .f-grid{display:grid; grid-template-columns:minmax(0,1fr) 416px; gap:20px; align-items:start; margin-top:24px}
+  .f-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px; container-type:inline-size}
+  .fullv > .f-card{margin-top:24px}
+  .f-card .blk h4{font-size:20px; font-weight:500}
+  @media (max-width:960px){ .f-grid{grid-template-columns:1fr} }
+  @media (max-width:720px){ .f-title h1{font-size:24px} .f-head > .p-acts{width:100%} .f-head > .p-acts .btn{flex:1 1 0} .f-tabs{gap:16px} .f-card{padding:16px} }
   @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 </style>
 <link rel="stylesheet" href="request-header.css">
@@ -440,7 +469,7 @@
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="listMain">
 
   <div class="ftabs" id="stTabs" role="tablist" aria-label="Статус кандидата"></div>
 
@@ -452,6 +481,7 @@
     <aside class="glass prev" id="prev" aria-label="Превью кандидата"></aside>
   </div>
 </main>
+<main class="wrap fullv" id="fullView" hidden></main>
 <div class="scrim" id="scrim" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -616,19 +646,24 @@ function renderList(){
   const vis=rows.map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
   // панель «Выбрано» появляется/исчезает в потоке над листом — держим карточку у верха экрана на месте, без прыжка
   const bar=$("#listTools"), on=S.checked.size>0, toggled=bar.classList.contains("on")!==on;
-  const anchor=toggled?[...document.querySelectorAll("#clist .ccard")].find(el=>el.getBoundingClientRect().bottom>0):null;
-  const aTop=anchor?anchor.getBoundingClientRect().top:0;
-  bar.classList.toggle("on",on); document.body.classList.toggle("has-sel",on);
-  bar.innerHTML=
+  const anchor=toggled&&window.scrollY>0?[...document.querySelectorAll("#clist .ccard")].find(el=>el.getBoundingClientRect().bottom>0):null;
+  const aId=anchor&&anchor.dataset.id, aTop=anchor?anchor.getBoundingClientRect().top:0;
+  bar.classList.toggle("on",on); bar.inert=!on; document.body.classList.toggle("has-sel",on);
+  if(on) bar.innerHTML=   // при исчезновении содержимое не трогаем — пусть плавно гаснет как есть
     '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>Выбрано: <b>'+S.checked.size+'</b></label><span class="sp"></span>'+
     '<button class="lnk" data-bulk="clear">Снять выбор</button><button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
-  if(anchor&&window.scrollY>0) window.scrollBy(0,anchor.getBoundingClientRect().top-aTop);
+  // пока плашка раскрывается/сворачивается, каждый кадр возвращаем карточку на её место
+  if(aId){ const end=performance.now()+420; (function keep(){
+    const el=document.querySelector('#clist .ccard[data-id="'+aId+'"]');
+    if(el){ const d=el.getBoundingClientRect().top-aTop; if(Math.abs(d)>.5) window.scrollBy(0,d); }
+    if(performance.now()<end) requestAnimationFrame(keep); })(); }
   const all=$("#cbAll"); if(all) all.indeterminate=n>0&&n<vis.length;
 }
 
 /* ---------- превью: шапка, вкладки как на стенде ---------- */
 const TABS=[["info","Данные кандидата"],["docs","Документы"],["media","Фото и видео"],["svcs","Услуги"]];
 function renderPreview(anim){
+  if(S.full){ renderFull(); return; }
   const p=$("#prev"); const c=S.data.find(x=>x.id===S.sel);
   if(!c){ p.innerHTML='<div class="empty" style="margin:auto">Выберите кандидата в списке</div>'; return; }
   const act=c.st==="pending"||c.st==="review";
@@ -637,7 +672,7 @@ function renderPreview(anim){
     '<button class="ibtn p-close" id="pClose" aria-label="Закрыть">'+ICO.x+'</button>'+
     '<div class="p-head"><span class="ava lg">'+initials(c)+'</span>'+
       '<div class="p-who"><div class="p-title"><h3>'+esc(c.fn+" "+c.ln)+'</h3>'+'<span class="status"><span class="dot '+ST[c.st].dot+'"></span>'+ST[c.st].chip+'</span></div>'+
-        '<div class="pr">Aadhaar: '+c.aad+'</div></div>'+
+        '<div class="pr"><button class="lnk" data-full>Открыть полностью</button></div></div>'+
       (act?'<div class="p-acts"><button class="btn" data-act="rejected">Отклонить</button><button class="btn primary" data-act="done">Одобрить</button></div>':'')+
     '</div>'+
     '<div class="p-tabs" role="tablist">'+TABS.map(t=>
@@ -648,20 +683,27 @@ function renderPreview(anim){
 
 function renderTab(c){
   const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>';
-  if(S.tab==="info"){
+  if(S.tab==="info") return infoBlocks(c)+histBlock(c);
+  return tabContent(c);
+}
+function infoBlocks(c){
+  const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>';
+  return '<div class="blk"><h4>Основная информация</h4>'+
+      kv("Имя",c.fn+" "+c.ln)+kv("Дата рождения",c.dob)+kv("Страна",c.country)+kv("Пол",c.sex)+kv("Номер Aadhaar",c.aad)+'</div>'+
+    '<div class="blk"><h4>Данные по профессии</h4>'+kv("Профессия",c.prof)+'</div>';
+}
+function histBlock(c){
     const last=c.hist.length-1;
-    return '<div class="blk"><h4>Основная информация</h4>'+
-        kv("Имя",c.fn+" "+c.ln)+kv("Дата рождения",c.dob)+kv("Страна",c.country)+kv("Пол",c.sex)+kv("Номер Aadhaar",c.aad)+'</div>'+
-      '<div class="blk"><h4>Данные по профессии</h4>'+kv("Профессия",c.prof)+'</div>'+
-      '<div class="blk"><div class="blk-h"><h4>История статусов</h4><button class="ibtn chev-btn" data-hist aria-expanded="'+S.histOpen+'" aria-label="Свернуть историю">'+ICO.chev+'</button></div>'+
+    return '<div class="blk"><div class="blk-h"><h4>История статусов</h4><button class="ibtn chev-btn" data-hist aria-expanded="'+S.histOpen+'" aria-label="Свернуть историю">'+ICO.chev+'</button></div>'+
         (S.histOpen?'<div class="hist">'+c.hist.map((h,i)=>{
           const lbl=h.st==="draft"?"Черновик":ST[h.st].chip, dot=h.st==="draft"?"d-cancelled":ST[h.st].dot;
           return '<div class="row"><span class="status sm'+(i<last?" past":"")+'"><span class="dot '+dot+'"></span>'+lbl+'</span><span>'+fmtDT(h.at)+'</span></div>';}).join("")+'</div>':'')+
       '</div>';
-  }
+}
+function tabContent(c){
   if(S.tab==="docs"){
-    return '<div class="up-row"><div class="grow"><label class="fld-l" for="docType">Тип документа <span class="req">*</span></label>'+
-        '<select class="fsel" id="docType" required><option value="" disabled'+(S.docType?"":" selected")+' hidden>Выберите тип документа</option>'+
+    return '<div class="up-row"><div class="grow">'+
+        '<select class="fsel" id="docType" required aria-label="Тип документа"><option value="" disabled'+(S.docType?"":" selected")+' hidden>Выберите тип документа</option>'+
         DOC_TYPES.map(t=>'<option'+(t===S.docType?" selected":"")+'>'+esc(t)+'</option>').join("")+'</select></div>'+
         '<button class="btn sm teal" data-add="doc"'+(S.docType?"":" disabled")+'>'+ICO.plus+'Добавить</button></div>'+
       '<div class="dz" data-add="doc" role="button" tabindex="0">'+'<div class="up">'+ICO.up+'</div><div class="t">Перетащите или выберите файл</div><div class="s">Форматы: PDF, JPG, PNG. Макс. размер: 20 МБ</div></div>'+
@@ -706,6 +748,40 @@ function renderTab(c){
 }
 
 function render(){ renderTabs(); renderList(); renderPreview(false); }
+
+/* ---------- полноэкранный профиль кандидата ---------- */
+const profName=c=>c.prof.replace(/\s*\(\d+\)$/,"");
+function renderFull(){
+  const v=$("#fullView"), c=S.data.find(x=>x.id===S.sel); if(!c) return;
+  const act=c.st==="pending"||c.st==="review", name=esc(c.fn+" "+c.ln), cnt={docs:c.docs.length, media:c.media.length};
+  v.innerHTML=
+    '<div class="rh-crumbs f-crumbs"><a href="requests.html">Заявки</a><span class="sep">/</span><a href="#" data-back>Электросварщик ручной сварки</a><span class="sep">/</span><b>'+name+'</b></div>'+
+    '<div class="f-head"><span class="ava xl">'+initials(c)+'</span>'+
+      '<div class="f-who"><div class="f-title"><h1>'+name+'</h1><span class="status"><span class="dot '+ST[c.st].dot+'"></span>'+ST[c.st].chip+'</span></div>'+
+        '<div class="f-sub">'+esc(profName(c))+', 5-й разряд</div></div>'+
+      (act?'<div class="p-acts"><button class="btn" data-act="rejected">Отклонить</button><button class="btn primary" data-act="done">Одобрить</button></div>':'')+
+    '</div>'+
+    '<div class="f-tabs" role="tablist">'+TABS.map(t=>
+      '<button class="ftb" role="tab" data-tab="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(cnt[t[0]]?'<span class="n">'+cnt[t[0]]+'</span>':'')+'</button>').join("")+'</div>'+
+    (S.tab==="info"
+      ? '<div class="f-grid"><section class="f-card">'+infoBlocks(c)+'</section><aside class="f-card">'+histBlock(c)+'</aside></div>'
+      : '<section class="f-card">'+tabContent(c)+'</section>');
+}
+function openFull(push=true){
+  S.full=true; document.body.classList.add("full-mode"); closeSheet();
+  $("#prev").innerHTML=""; $("#fullView").hidden=false; renderFull(); window.scrollTo(0,0);
+  if(push) history.pushState({full:S.sel},"","#candidate-"+S.sel);
+}
+function closeFull(pop=false){
+  if(!S.full) return;
+  S.full=false; document.body.classList.remove("full-mode"); $("#fullView").hidden=true; $("#fullView").innerHTML="";
+  renderList(); renderPreview(false);
+  if(!pop&&/^#candidate-/.test(location.hash)) history.pushState(null,"",location.pathname+location.search);
+}
+window.addEventListener("popstate",()=>{
+  const m=location.hash.match(/^#candidate-(\d+)$/);
+  if(m&&S.data.some(x=>x.id===+m[1])){ S.sel=+m[1]; openFull(false); } else closeFull(true);
+});
 /* перерисовать превью, сохранив прокрутку его содержимого */
 function keepScroll(){ const b=$("#prev .p-body"), y=b?b.scrollTop:0; renderPreview(false); const nb=$("#prev .p-body"); if(nb) nb.scrollTop=y; }
 
@@ -752,11 +828,13 @@ $("#listTools").addEventListener("click",e=>{
   S.checked.clear(); setStatus(ids,b.dataset.bulk);
   toast((b.dataset.bulk==="done"?"Одобрено: ":"Отклонено: ")+ids.length+(skipped?" · пропущено "+skipped+" (статус уже финальный)":""));
 });
-$("#prev").addEventListener("click",e=>{
-  const c=S.data.find(x=>x.id===S.sel); if(!c) return;
+function paneClick(e){
+  const pane=e.currentTarget, c=S.data.find(x=>x.id===S.sel); if(!c) return;
   if(e.target.closest("#pClose")){ closeSheet(); return; }
+  if(e.target.closest("[data-full]")){ openFull(); return; }
+  if(e.target.closest("[data-back]")){ e.preventDefault(); closeFull(); return; }
   const t=e.target.closest("[data-tab]");
-  if(t){ S.tab=t.dataset.tab; renderPreview(false); const nt=$('#prev [data-tab="'+S.tab+'"]'); if(nt) nt.focus(); return; }
+  if(t){ S.tab=t.dataset.tab; renderPreview(false); const nt=pane.querySelector('[data-tab="'+S.tab+'"]'); if(nt) nt.focus(); return; }
   if(e.target.closest("[data-hist]")){ S.histOpen=!S.histOpen; renderPreview(false); return; }
   const svf=e.target.closest("[data-svf]"); if(svf){ S.svcF=svf.dataset.svf; keepScroll(); return; }
   const cat=e.target.closest("[data-cat]"); if(cat){ const i=+cat.dataset.cat; S.svcOpen.has(i)?S.svcOpen.delete(i):S.svcOpen.add(i); keepScroll(); return; }
@@ -770,7 +848,7 @@ $("#prev").addEventListener("click",e=>{
   const add=e.target.closest("[data-add]");
   if(add){
     if(add.dataset.add==="doc"){
-      if(!S.docType){ toast("Сначала выберите тип документа"); const s=$("#docType"); if(s) s.focus(); return; }
+      if(!S.docType){ toast("Сначала выберите тип документа"); const s=pane.querySelector("#docType"); if(s) s.focus(); return; }
       c.docs.unshift({type:S.docType, name:"scan_"+c.ln.toLowerCase()+".pdf", size:"1,2 МБ", at:fmtDT(new Date())});
       S.docType=""; renderPreview(false); renderList(); toast("Документ загружен");
     } else {
@@ -785,21 +863,23 @@ $("#prev").addEventListener("click",e=>{
   const b=e.target.closest("[data-act]"); if(!b) return;
   setStatus([c.id],b.dataset.act);
   toast((b.dataset.act==="done"?"Кандидат одобрен: ":"Кандидат отклонён: ")+c.fn+" "+c.ln);
-});
-$("#prev").addEventListener("change",e=>{
-  if(e.target.id==="docType"){ S.docType=e.target.value; const b=$('#prev .btn[data-add="doc"]'); if(b) b.disabled=!S.docType; }
-});
-$("#prev").addEventListener("input",e=>{
+}
+function paneChange(e){
+  if(e.target.id==="docType"){ S.docType=e.target.value; const b=e.currentTarget.querySelector('.btn[data-add="doc"]'); if(b) b.disabled=!S.docType; }
+}
+function paneInput(e){
   if(e.target.id!=="svcQ") return;
-  S.svcQ=e.target.value; const pos=e.target.selectionStart; keepScroll();
-  const q=$("#svcQ"); q.focus(); q.setSelectionRange(pos,pos);
-});
-$("#prev").addEventListener("keydown",e=>{
+  const pane=e.currentTarget; S.svcQ=e.target.value; const pos=e.target.selectionStart; keepScroll();
+  const q=pane.querySelector("#svcQ"); q.focus(); q.setSelectionRange(pos,pos);
+}
+function paneKey(e){
   if(e.target.matches(".dz")&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); e.target.click(); return; }
   const t=e.target.closest("[data-tab]"); if(!t||(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")) return;
-  const i=TABS.findIndex(x=>x[0]===t.dataset.tab), n=TABS[(i+(e.key==="ArrowRight"?1:TABS.length-1))%TABS.length][0];
-  S.tab=n; renderPreview(false); $('#prev [data-tab="'+n+'"]').focus();
-});
+  const pane=e.currentTarget, i=TABS.findIndex(x=>x[0]===t.dataset.tab), n=TABS[(i+(e.key==="ArrowRight"?1:TABS.length-1))%TABS.length][0];
+  S.tab=n; renderPreview(false); pane.querySelector('[data-tab="'+n+'"]').focus();
+}
+["#prev","#fullView"].forEach(sel=>{ const p=$(sel);
+  p.addEventListener("click",paneClick); p.addEventListener("change",paneChange); p.addEventListener("input",paneInput); p.addEventListener("keydown",paneKey); });
 $("#scrim").addEventListener("click",closeSheet);
 function setFilter(st){ S.filter=st; renderTabs(); renderList(); renderPreview(true); }
 $("#stTabs").addEventListener("click",e=>{ const b=e.target.closest(".ftab"); if(b) setFilter(b.dataset.st); });
@@ -827,6 +907,7 @@ window.addEventListener("scroll",onScroll,{passive:true});
 window.addEventListener("resize",()=>{ if(!narrow()) closeSheet(); });
 
 reset();
+{ const m=location.hash.match(/^#candidate-(\d+)$/); if(m&&S.data.some(x=>x.id===+m[1])){ S.sel=+m[1]; renderList(); openFull(false); } }
 </script>
 <script src="request-header.js"></script>
 </body>
