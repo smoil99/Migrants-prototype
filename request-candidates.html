@@ -243,23 +243,38 @@
   .es .s{font-size:13px; color:var(--label); margin-top:4px}
 
   /* «Услуги»: заголовок с фильтром и поиском, список */
-  .sv-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
-  .sv-head h4{margin:0; font-size:20px; font-weight:600; flex:1}
-  .sv-head h4 .n{color:var(--label); font-weight:500}
-  .sv-f{display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--label)}
-  .sv-f select{appearance:none; -webkit-appearance:none; border:0; background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 0 center / 14px no-repeat;
-    color:#fff; font-family:inherit; font-size:14px; font-weight:600; padding:4px 20px 4px 0; cursor:pointer}
-  .sv-f select option{background:var(--panel-solid)}
-  .srch{position:relative; flex:0 1 200px; min-width:150px}
+  /* вкладка «Услуги» превью — контент вкладки «Услуги» заявки: табы-фильтр + поиск, аккордеоны категорий, таблица */
+  .p-body{container-type:inline-size}
+  .sv-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px}
+  .sv-tabs{margin:0; min-height:0}
+  .srch{position:relative; flex:0 1 240px; min-width:180px}
   .srch input{width:100%; height:36px; border:0; border-radius:12px; padding:0 12px 0 32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:14px}
   .srch input::placeholder{color:var(--label)}
   .srch svg{position:absolute; left:11px; top:11px; width:14px; height:14px; color:var(--label)}
-  .svc{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--row-line)}
-  .svc:last-child{border-bottom:0}
-  .svc .sm1{flex:1; min-width:0}
-  .svc .sn{display:block; font-size:14px; font-weight:500}
-  .svc .sd2{display:block; font-size:12.5px; color:var(--label); margin-top:2px}
-  .svc-list{margin-top:12px}
+  .sv-cat{background:var(--panel); border:1px solid var(--line); border-radius:14px; margin-bottom:10px; overflow:hidden}
+  .sv-cat-h{appearance:none; border:0; background:none; color:#fff; font-family:inherit; width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 16px; cursor:pointer; text-align:left}
+  .sv-cat-h .t{font-size:15px; font-weight:600; line-height:1.35}
+  .sv-cat-h .cn{color:var(--label); font-weight:500; font-size:13px; margin-left:6px}
+  .sv-cat-h svg{width:16px; height:16px; color:var(--muted); flex:none; transition:transform .18s}   /* шеврон — как у профиля в шапке */
+  .sv-cat-h[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .sv-body{padding:0 16px 6px}
+  .sv-row{display:grid; grid-template-columns:minmax(0,2.2fr) 150px 88px minmax(0,1fr) 108px; gap:12px; align-items:start; padding:12px 0; border-top:1px solid var(--line)}
+  .sv-th{border-top:0; padding:0 0 8px; font-size:12.5px; color:var(--label); align-items:center}
+  .sv-th .r{text-align:right}
+  .sv-n{font-size:13.5px; line-height:1.4}
+  .sv-n small{display:block; color:var(--label); font-size:12px; margin-top:4px}
+  .sv-p,.sv-c{font-size:13px; color:var(--text-2); font-variant-numeric:tabular-nums; padding-top:5px}
+  .sv-c{overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-variant-numeric:normal}
+  .sv-a{display:flex; justify-content:flex-end}
+  .sv-i{display:inline-grid; place-items:center; width:15px; height:15px; border-radius:50%; border:1px solid rgba(255,255,255,.3); font-size:9px; font-style:normal; color:var(--label); cursor:help}
+  @container (max-width:640px){
+    .sv-row{grid-template-columns:1fr; gap:6px}
+    .sv-th{display:none}
+    .sv-p,.sv-c{padding-top:0}
+    .sv-p::before{content:"План: "; color:var(--label)}
+    .sv-a{justify-content:flex-start}
+  }
 
   .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
     height:32px; padding:0 21px; border:0; border-radius:var(--r-pill); font-size:16px; font-weight:500; color:#fff;
@@ -460,9 +475,20 @@ const DOC_TYPES=["Удостоверение личности (Aadhaar)","Апо
   "Справка об отсутствии судимости","Профессиональный сертификат / свидетельство о квалификации","Паспорт моряка",
   "Сертификат о прохождении обучения","Медицинское заключение (для визы)"];
 /* услуги и их состояния — как на вкладке «Услуги» заявки */
-const SVC_ST={none:{t:"Не начата",dot:"d-cancelled"},work:{t:"В работе",dot:"d-review"},done:{t:"Выполнена",dot:"d-done"}};
-const SVC_NAMES=["Оформление визы","Медицинский осмотр","Перевод и заверение документов","Авиаперелёт","Встреча в аэропорту",
-  "Регистрация по месту пребывания","Оформление патента","Проживание"];
+/* услуги — контент вкладки «Услуги» заявки (services.html): категории → услуги; у кандидата своя копия со своими состояниями */
+const SVC_CATS=[{"t":"Подбор и проверка кандидатов","rows":[{"n":"Проверка истории приводов в полицию, административных и уголовных правонарушений, а также судимости","ex":"Исполнитель №1","st":"none","tip":"","plan":"—","com":"—"},{"n":"Верификация документов: проверка аутентичности образовательных и профессиональных сертификатов, свидетельств и дипломов","ex":"Исполнитель №1","st":"prog","tip":"Начата: Иван Иванов, 20.06.2026","plan":"18.06.2026","com":"—"},{"n":"HR-скрининг: персональное интервью с кандидатом","ex":"Исполнитель №1","st":"done","tip":"Начата: Иван Иванов, 20.06.2026 · Завершена: Константин Константинович, 20.06.2026","plan":"18.06.2026","com":"Длинный текст комментария который отображается полностью при наведении на него"}]},{"t":"Процедуры получения разрешений на работу и въездных виз","rows":[{"n":"Оформление приглашения на въезд","ex":"Исполнитель №2","st":"done","tip":"","plan":"10.06.2026","com":"—"},{"n":"Получение рабочей визы","ex":"Исполнитель №2","st":"done","tip":"","plan":"12.06.2026","com":"—"},{"n":"Постановка на миграционный учёт","ex":"Исполнитель №2","st":"done","tip":"","plan":"14.06.2026","com":"—"}]},{"t":"Транспортное обеспечение и логистическая поддержка сотрудников","rows":[{"n":"Бронирование авиабилетов","ex":"Исполнитель №3","st":"prog","tip":"","plan":"18.06.2026","com":"—"},{"n":"Трансфер из аэропорта","ex":"Исполнитель №3","st":"none","tip":"","plan":"—","com":"—"},{"n":"Размещение в общежитии","ex":"Исполнитель №3","st":"none","tip":"","plan":"—","com":"—"},{"n":"Внутренний трансфер до объекта","ex":"Исполнитель №3","st":"none","tip":"","plan":"—","com":"—"},{"n":"Выдача корпоративных проездных","ex":"Исполнитель №3","st":"none","tip":"","plan":"—","com":"—"}]}];
+const SVC_LBL={done:"Завершена",prog:"В работе",none:"Не начата"}, SVC_DOT={done:"d-done",prog:"d-review",none:"d-cancelled"};
+const SVC_TABS=[["all","Все"],["done","Завершены"],["prog","В работе"],["none","Не начато"]];
+/* состояния услуг по статусу кандидата; отдельный генератор, чтобы не сдвигать остальные данные */
+function mkSvcs(id,st){
+  const r=rng(1000+id);
+  return SVC_CATS.map(g=>({t:g.t, rows:g.rows.map(x=>{
+    const k=r(); let v="none";
+    if(st==="done"||st==="employ") v=k<.75?"done":k<.9?"prog":"none";
+    else if(st==="review") v=k<.25?"done":k<.45?"prog":"none";
+    return Object.assign({},x,{st:v, plan:v==="none"?"—":p2(1+Math.floor(r()*28))+".10.2026", tip:"", com:"—"});
+  })}));
+}
 
 /* ---------- данные: 72 кандидата, распределение как в макете (6/15/34/14/3) ---------- */
 const PROFS=[
@@ -521,11 +547,8 @@ function buildData(){
       const n=1+Math.floor(r()*3);
       for(let i=0;i<n;i++){const v=i===n-1&&r()<.5; c.media.push({v, name:(v?"work_video_":"photo_")+(i+1)+(v?".mp4":".jpg"), dur:v?"0:"+p2(15+Math.floor(r()*44)):""});}
     }
-    if(out.length && (st==="done"||st==="review") && r()<.8){
-      const n=2+Math.floor(r()*4);
-      for(let i=0;i<n;i++) c.svcs.push({name:SVC_NAMES[i], st:st==="done"?(i<n-1?"done":"work"):(i===0?"work":"none"),
-        plan:p2(1+Math.floor(r()*28))+".11.2026"});
-    }
+    // у первого кандидата (Raja Pani) услуги — ровно как на вкладке «Услуги» заявки
+    c.svcs=out.length?mkSvcs(c.id,st):JSON.parse(JSON.stringify(SVC_CATS));
     return c;
   }
   head.forEach(h=>{used.add(h[0]+h[1]); out.push(mk(h[0],h[1],h[2],h[3],h[4]));});
@@ -539,7 +562,7 @@ function buildData(){
   return out;
 }
 
-const S={data:[], filter:"all", sel:null, tab:"info", checked:new Set(), histOpen:true, docType:"", svcF:"all", svcQ:""};
+const S={data:[], filter:"all", sel:null, tab:"info", checked:new Set(), histOpen:true, docType:"", svcF:"all", svcQ:"", svcOpen:new Set()};
 function reset(){S.data=buildData(); S.filter="all"; S.sel=1; S.tab="info"; S.checked.clear(); render(); }
 
 const visible=()=>S.data.filter(c=>S.filter==="all"||c.st===S.filter);
@@ -605,7 +628,7 @@ function renderPreview(anim){
   const p=$("#prev"); const c=S.data.find(x=>x.id===S.sel);
   if(!c){ p.innerHTML='<div class="empty" style="margin:auto">Выберите кандидата в списке</div>'; return; }
   const act=c.st==="pending"||c.st==="review";
-  const cnt={docs:c.docs.length, media:c.media.length, svcs:c.svcs.length};
+  const cnt={docs:c.docs.length, media:c.media.length, svcs:c.svcs.reduce((n,g)=>n+g.rows.length,0)};
   p.innerHTML=
     '<button class="ibtn p-close" id="pClose" aria-label="Закрыть">'+ICO.x+'</button>'+
     '<div class="p-head"><span class="ava lg">'+initials(c)+'</span>'+
@@ -650,23 +673,41 @@ function renderTab(c){
       (c.media.length? '<div class="media">'+c.media.map(m=>'<div class="thumb'+(m.v?" v":"")+'">'+(m.v?ICO.play:ICO.img)+(m.v?'<span class="dur">'+m.dur+'</span>':'')+'<span class="cap">'+esc(m.name)+'</span></div>').join("")+'</div>'
         : '<div class="es">'+ILL.media+'<div class="t">Фото и видео пока нет</div><div class="s">Загрузите файл выше</div></div>');
   }
-  // svcs
-  const list=c.svcs.filter(s=>(S.svcF==="all"||s.st===S.svcF)&&(!S.svcQ||s.name.toLowerCase().includes(S.svcQ.toLowerCase())));
-  return '<div class="sv-head"><h4>Услуги <span class="n">'+c.svcs.length+'</span></h4>'+
-      '<label class="sv-f">Статус <select id="svcF" aria-label="Состояние услуги"><option value="all">Все</option>'+
-        Object.keys(SVC_ST).map(k=>'<option value="'+k+'"'+(S.svcF===k?" selected":"")+'>'+SVC_ST[k].t+'</option>').join("")+'</select></label>'+
-      '<span class="srch">'+ICO.search+'<input id="svcQ" type="search" placeholder="Поиск по услугам" value="'+esc(S.svcQ)+'"></span></div>'+
-    (!c.svcs.length? '<div class="es" style="padding-top:40px">'+ILL.svc+'<div class="t">Услуги не назначены</div></div>'
-     : list.length? '<div class="svc-list">'+list.map(s=>'<div class="svc"><span class="sm1"><span class="sn">'+esc(s.name)+'</span><span class="sd2">План: '+s.plan+'</span></span>'+
-          '<span class="status sm"><span class="dot '+SVC_ST[s.st].dot+'"></span>'+SVC_ST[s.st].t+'</span></div>').join("")+'</div>'
-     : '<div class="empty">Ничего не найдено</div>');
+  // svcs — как вкладка «Услуги» заявки
+  const q=S.svcQ.trim().toLowerCase(), all=c.svcs.flatMap(g=>g.rows);
+  const match=x=>(S.svcF==="all"||x.st===S.svcF)&&(!q||x.n.toLowerCase().includes(q));
+  const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  const row=(g,gi,x)=>{
+    const ri=g.rows.indexOf(x);
+    const btn=x.st==="none"?'<button class="btn sm" data-svc="'+gi+':'+ri+'" data-do="start">Начать</button>'
+      : x.st==="prog"?'<button class="btn sm primary" data-svc="'+gi+':'+ri+'" data-do="finish">Завершить</button>'
+      : '<button class="btn sm" disabled>Завершить</button>';
+    return '<div class="sv-row"><div class="sv-n">'+esc(x.n)+'<small>'+esc(x.ex)+'</small></div>'+
+      '<div><span class="status"><span class="dot '+SVC_DOT[x.st]+'"></span>'+SVC_LBL[x.st]+(x.tip?' <i class="sv-i" title="'+esc(x.tip)+'">i</i>':'')+'</span></div>'+
+      '<div class="sv-p">'+x.plan+'</div><div class="sv-c" title="'+(x.com==="—"?"":esc(x.com))+'">'+esc(x.com)+'</div><div class="sv-a">'+btn+'</div></div>';
+  };
+  const groups=c.svcs.map((g,gi)=>{
+    const rows=g.rows.filter(match); if(!rows.length) return "";
+    const open=S.svcOpen.has(gi), done=g.rows.filter(x=>x.st==="done").length;
+    return '<div class="sv-cat"><button class="sv-cat-h" data-cat="'+gi+'" aria-expanded="'+open+'"><span class="t">'+esc(g.t)+'<span class="cn">('+done+' из '+g.rows.length+')</span></span>'+CHEV+'</button>'+
+      (open?'<div class="sv-body"><div class="sv-row sv-th"><div>Услуга</div><div>Статус</div><div>План</div><div>Комментарий</div><div class="r">Действия</div></div>'+rows.map(x=>row(g,gi,x)).join("")+'</div>':'')+'</div>';
+  }).join("");
+  return '<div class="sv-head"><div class="ftabs sv-tabs" role="tablist" aria-label="Состояние услуги">'+SVC_TABS.map(([k,t])=>{
+      const n=k==="all"?all.length:all.filter(x=>x.st===k).length;
+      return '<button class="ftab" role="tab" data-svf="'+k+'" aria-selected="'+(S.svcF===k)+'">'+t+'<span class="n">'+n+'</span></button>';
+    }).join("")+'</div>'+
+    '<span class="srch">'+ICO.search+'<input id="svcQ" type="search" placeholder="Поиск по услугам" value="'+esc(S.svcQ)+'"></span></div>'+
+    (!all.length? '<div class="es" style="padding-top:40px">'+ILL.svc+'<div class="t">Услуги не назначены</div></div>'
+     : groups || '<div class="empty">Ничего не найдено</div>');
 }
 
 function render(){ renderTabs(); renderList(); renderPreview(false); }
+/* перерисовать превью, сохранив прокрутку его содержимого */
+function keepScroll(){ const b=$("#prev .p-body"), y=b?b.scrollTop:0; renderPreview(false); const nb=$("#prev .p-body"); if(nb) nb.scrollTop=y; }
 
 function select(id,{focus=false,open=true}={}){
   if(id===S.sel && !narrow()) return;
-  if(id!==S.sel){ S.docType=""; S.svcF="all"; S.svcQ=""; }
+  if(id!==S.sel){ S.docType=""; S.svcF="all"; S.svcQ=""; S.svcOpen=new Set(); }
   S.sel=id;
   document.querySelectorAll("#clist .ccard").forEach(el=>{const on=+el.dataset.id===id; el.setAttribute("aria-selected",on); el.tabIndex=on?0:-1; if(on&&focus){el.focus(); el.scrollIntoView({block:"nearest"});}});
   renderPreview(true);
@@ -712,6 +753,15 @@ $("#prev").addEventListener("click",e=>{
   const t=e.target.closest("[data-tab]");
   if(t){ S.tab=t.dataset.tab; renderPreview(false); const nt=$('#prev [data-tab="'+S.tab+'"]'); if(nt) nt.focus(); return; }
   if(e.target.closest("[data-hist]")){ S.histOpen=!S.histOpen; renderPreview(false); return; }
+  const svf=e.target.closest("[data-svf]"); if(svf){ S.svcF=svf.dataset.svf; keepScroll(); return; }
+  const cat=e.target.closest("[data-cat]"); if(cat){ const i=+cat.dataset.cat; S.svcOpen.has(i)?S.svcOpen.delete(i):S.svcOpen.add(i); keepScroll(); return; }
+  const sv=e.target.closest("[data-svc]");
+  if(sv){
+    const [gi,ri]=sv.dataset.svc.split(":").map(Number), x=c.svcs[gi].rows[ri];
+    if(sv.dataset.do==="start"){ x.st="prog"; x.plan="28.10.2026"; x.tip="Начата: ИП Гаврилова, 21.10.2026"; toast("Услуга начата: "+x.n); }
+    else { x.st="done"; x.tip=(x.tip?x.tip+" · ":"")+"Завершена: ИП Гаврилова, 21.10.2026"; toast("Услуга завершена: "+x.n); }
+    keepScroll(); return;
+  }
   const add=e.target.closest("[data-add]");
   if(add){
     if(add.dataset.add==="doc"){
@@ -733,11 +783,10 @@ $("#prev").addEventListener("click",e=>{
 });
 $("#prev").addEventListener("change",e=>{
   if(e.target.id==="docType"){ S.docType=e.target.value; const b=$('#prev .btn[data-add="doc"]'); if(b) b.disabled=!S.docType; }
-  if(e.target.id==="svcF"){ S.svcF=e.target.value; renderPreview(false); }
 });
 $("#prev").addEventListener("input",e=>{
   if(e.target.id!=="svcQ") return;
-  S.svcQ=e.target.value; const pos=e.target.selectionStart; renderPreview(false);
+  S.svcQ=e.target.value; const pos=e.target.selectionStart; keepScroll();
   const q=$("#svcQ"); q.focus(); q.setSelectionRange(pos,pos);
 });
 $("#prev").addEventListener("keydown",e=>{
