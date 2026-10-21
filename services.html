@@ -60,83 +60,6 @@
   .hint{font-size:11.5px; color:var(--muted2); flex:1 1 240px; min-width:0}
   .hint b{color:var(--muted); font-weight:500}
 
-  /* ---------- верхняя навигация ЛК ---------- */
-  .topnav{position:sticky; top:env(safe-area-inset-top,0px); z-index:35;
-    background:transparent; border-bottom:1px solid transparent; padding:0 clamp(16px,4vw,40px);
-    transition:background .22s ease, border-color .22s ease}
-  body.scrolled .topnav{background:var(--glass);
-    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
-    border-bottom-color:var(--line)}
-  .topnav-in{max-width:1240px; margin:0 auto; height:54px; display:flex; align-items:center; gap:26px}
-  .brand-links{display:flex; gap:22px; align-items:center}
-  .brand-links a{display:flex; align-items:center; gap:7px; color:var(--muted); font-weight:500; font-size:13.5px}
-  .brand-links a.active{color:#fff}
-  .brand-links .ic{width:15px;height:15px;opacity:.75}
-  .who{margin-left:auto; display:flex; align-items:center; gap:10px}
-  .who .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1c3a44,#0f2129);
-    display:grid;place-items:center;color:var(--accent);font-size:12px}
-  .who .nm{font-size:13px;font-weight:600;line-height:1.1}
-  .who .rl{font-size:11px;color:var(--muted)}
-
-  /* ---------- меню «?» — связаться с техподдержкой (Figma 3050:21391) ---------- */
-  .help{position:relative; margin-left:auto; flex:none}
-  .help + .who{margin-left:0}
-  .help-btn{appearance:none; width:40px; height:40px; border-radius:32px; display:grid; place-items:center; cursor:pointer;
-    background:rgba(255,255,255,.1); border:1px solid var(--line-strong); color:#fff; padding:0; transition:border-color .12s}
-  .help-btn:hover,.help-btn[aria-expanded="true"]{border-color:rgba(255,255,255,.32)}
-  .help-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-  .help-btn svg{width:24px; height:24px}
-  .sup-pop{position:absolute; top:calc(100% + 12px); left:-13px; z-index:60; width:272px; box-sizing:border-box;
-    background:#161b1d; border:1px solid rgba(255,255,255,.12); border-radius:14px; box-shadow:0 12px 16px rgba(0,0,0,.45);
-    padding:6px; display:flex; flex-direction:column; gap:2px}
-  .sup-pop[hidden]{display:none}
-  .sup-label{padding:10px 10px 6px; font-size:13px; font-weight:600; line-height:16px; letter-spacing:.3px; color:rgba(255,255,255,.5)}
-  .sup-item{display:flex; align-items:center; gap:10px; min-height:36px; padding:0 10px; box-sizing:border-box; border-radius:8px}
-  .sup-mail{flex:1; min-width:0; font-size:16px; line-height:20px; color:var(--primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .sup-mail:hover{text-decoration:underline; text-underline-offset:3px}
-  .sup-mail:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
-  /* иконка 16px, кликабельная зона 32×32 без сдвига вёрстки */
-  .copy-btn{position:relative; appearance:none; flex:none; width:32px; height:32px; margin:-8px; display:grid; place-items:center;
-    border:0; border-radius:8px; background:transparent; color:#fff; cursor:pointer; padding:0; transition:background .12s}
-  .copy-btn:hover{background:rgba(255,255,255,.08)}
-  .copy-btn:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
-  .copy-btn svg{width:16px; height:16px}
-  .copy-btn .ic-done{display:none; color:var(--primary)}
-  .copy-btn.copied .ic-copy{display:none}
-  .copy-btn.copied .ic-done{display:block}
-  .copy-tip{position:absolute; bottom:calc(100% + 6px); right:0; width:max-content; max-width:240px;
-    background:#2A2D30; border:1px solid rgba(255,255,255,.09); border-radius:8px; padding:7px 10px;
-    font-size:12px; line-height:1.35; font-weight:400; color:#dbe6e8; text-align:left; white-space:nowrap;
-    opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .14s, transform .14s; z-index:2}
-  .copy-btn:hover .copy-tip,.copy-btn:focus-visible .copy-tip,.copy-btn.copied .copy-tip{opacity:1; transform:none}
-  .sup-scrim{position:fixed; inset:0; z-index:34; background:rgba(0,0,0,.5)}
-  .sup-scrim[hidden]{display:none}
-
-  /* ---------- шапка ЛК: залипает при скролле + glassmorphism ---------- */
-  .lk-header{position:sticky; top:calc(var(--topnav-h,54px) + env(safe-area-inset-top,0px)); z-index:30;
-    background:transparent; box-shadow:none;
-    transition:background .22s ease, box-shadow .22s ease}
-  body.scrolled .lk-header{background:var(--glass);
-    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
-    box-shadow:0 12px 34px -22px rgba(0,0,0,.8)}
-  .lk-header-in{max-width:1240px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 0}
-  .crumbs{font-size:12.5px; color:var(--muted); margin-bottom:12px}
-  .crumbs b{color:var(--muted); font-weight:400}
-  .head{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
-  h1{font-size:clamp(22px,3vw,30px); font-weight:600; letter-spacing:-.5px; margin:0; text-wrap:balance}
-  .status-pill{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:500;
-    color:var(--accent); border:1px solid rgba(97,199,214,.4); background:rgba(97,199,214,.08);
-    padding:4px 11px; border-radius:20px}
-  .status-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
-  .meta{display:flex; flex-wrap:wrap; gap:20px; margin-top:10px; color:#fff; font-size:13px}
-  .meta span{display:inline-flex; gap:6px; align-items:center}
-  .tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line)}
-  .tabs a{appearance:none;border:0;background:0;font-family:inherit;color:var(--muted);text-decoration:none;
-    font-size:14px;font-weight:500;padding:0 0 12px;cursor:pointer;position:relative;transition:color .12s}
-  .tabs a:hover{color:#dbe6e8}
-  .tabs a.active{color:#fff}
-  .tabs a.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--primary)}
-
   /* тумблер «Показать англ. версию» — в строке заголовка справа */
   .head-toggle{margin-left:auto}
   @media (max-width:560px){ .head-toggle{margin-left:0} }
@@ -382,6 +305,7 @@
   .dfile .fact svg{width:17px;height:17px}
   .dfile.disabled{opacity:.5}
 </style>
+<link rel="stylesheet" href="request-header.css">
 </head>
 <body>
 <div class="harness">
@@ -434,11 +358,12 @@
   </div>
 </div>
 
+<!-- ============ ШАПКА ЗАЯВКИ — общая для Обзор · Кандидаты · Услуги · Документы (request-header.css/.js) ============ -->
 <nav class="topnav">
-  <div class="topnav-in">
-    <div class="brand-links">
-      <a href="#" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
-      <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Заявки</span></a>
+  <div class="rh-nav">
+    <div class="rh-links">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i="nav_home">Главная</span></a>
+      <a href="requests.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v13H8l-4 3z"/></svg><span data-i="nav_req">Заявки</span></a>
     </div>
     <div class="help" id="supMenu">
       <button class="help-btn" type="button" aria-label="Помощь" aria-haspopup="true" aria-expanded="false" aria-controls="supPop">
@@ -454,32 +379,39 @@
             <span class="copy-tip" id="copyTip" role="tooltip">Скопировать адрес почты</span>
           </button>
         </div>
-        <span class="sr-only" id="copyLive" aria-live="polite"></span>
+        <span class="rh-sr" id="copyLive" aria-live="polite"></span>
       </div>
     </div>
-    <div class="who">
-      <div class="av">ИГ</div>
-      <div><div class="nm">ИП Гаврилова</div><div class="rl">Клиент в РФ</div></div>
+    <div class="rh-who">
+      <div class="txt"><div class="nm" id="whoName">ИП Гаврилова</div><div class="rl" id="whoRole">Клиент в РФ</div></div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
   </div>
 </nav>
-
 <header class="lk-header">
   <div class="lk-header-in">
-    <div class="crumbs"><b>Заявки</b> / <span>Электросварщик ручной сварки</span></div>
-    <div class="head">
-      <h1>Электросварщик ручной сварки</h1>
-      <span class="status-pill"><span class="dot"></span><span>В работе</span></span>
+    <div class="rh-crumbs"><a href="requests.html" data-i="nav_req">Заявки</a><span class="sep">/</span><b data-i="req_title">Электросварщик ручной сварки</b></div>
+    <div class="rh-head">
+      <h1 data-i="req_title">Электросварщик ручной сварки</h1>
+      <span class="rh-status"><span class="rh-dot"></span><span data-i="status">В работе</span></span>
+      <button type="button" class="dup-btn" id="dupBtn" aria-label="Дублировать заявку">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+        <span class="lbl">Дублировать</span>
+        <svg class="dup-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>
+        <span class="dup-tip" role="tooltip">Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small></span>
+      </button>
     </div>
-    <div class="meta">
-      <span>Разряд 5–6</span><span>Количество 25 чел.</span><span>Москва</span>
+    <div class="rh-meta">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg><span data-i="m_grade">Разряд: 5-й</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.3c1.6.6 2.7 2.2 3 4.7"/></svg><span data-i="m_count">Количество: 25 чел.</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-i="m_city">Москва</span></span>
     </div>
-    <div class="tabs" role="tablist">
-      <a href="index.html">Обзор</a>
-      <a href="request-candidates.html">Кандидаты</a>
-      <a class="active" href="services.html">Услуги</a>
-      <a href="documents.html">Документы</a>
-    </div>
+    <nav class="rh-tabs" aria-label="Разделы заявки">
+      <a href="index.html" data-i="tab_overview">Обзор</a>
+      <a href="request-candidates.html" data-i="tab_cand">Кандидаты</a>
+      <a href="services.html" data-i="tab_serv" aria-current="page">Услуги</a>
+      <a href="documents.html" data-i="tab_docs">Документы</a>
+    </nav>
   </div>
 </header>
 
@@ -602,54 +534,6 @@
     document.addEventListener('click',e=>{if(!pm.contains(e.target)){pop.hidden=true;t.setAttribute('aria-expanded','false');}});
   }
 })();
-/* меню «?» — связаться с техподдержкой; services.html#support открывает его сразу */
-(function(){
-  const box=document.getElementById('supMenu'); if(!box) return;
-  const btn=box.querySelector('.help-btn'), pop=document.getElementById('supPop');
-  const copy=box.querySelector('.copy-btn'), tip=document.getElementById('copyTip'), live=document.getElementById('copyLive');
-  const TIP='Скопировать адрес почты', DONE='Скопировано в буфер обмена';
-  const scrim=document.createElement('div'); scrim.className='sup-scrim'; scrim.hidden=true; document.body.appendChild(scrim);
-  let timer;
-  function place(){
-    pop.style.left='';
-    const r=pop.getBoundingClientRect(), over=r.right-(window.innerWidth-16);
-    if(over>0) pop.style.left=(-13-over)+'px';
-  }
-  function setOpen(o){
-    pop.hidden=!o; scrim.hidden=!o; btn.setAttribute('aria-expanded',String(o));
-    if(o) place(); else reset();
-  }
-  function reset(){clearTimeout(timer); copy.classList.remove('copied'); tip.textContent=TIP; live.textContent='';}
-  async function write(text){
-    try{await navigator.clipboard.writeText(text);}
-    catch(e){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-      document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();}
-  }
-  btn.addEventListener('click',e=>{e.stopPropagation(); setOpen(pop.hidden);});
-  scrim.addEventListener('click',()=>setOpen(false));
-  document.addEventListener('click',e=>{if(!pop.hidden&&!box.contains(e.target)) setOpen(false);});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden){setOpen(false); btn.focus();}});
-  copy.addEventListener('click',async()=>{
-    await write(copy.dataset.copy);
-    clearTimeout(timer);
-    copy.classList.add('copied'); tip.textContent=DONE; live.textContent=DONE;
-    timer=setTimeout(reset,2000);
-  });
-  function fromHash(){
-    if(location.hash!=='#support') return;
-    const pm=document.getElementById('protoMenu');
-    if(pm){
-      pm.querySelector('.pm-cur').textContent='Связаться с техподдержкой';
-      pm.querySelectorAll('.pm-pop a').forEach(a=>a.toggleAttribute('aria-current',a.getAttribute('href')==='services.html#support'));
-      pm.querySelector('[aria-current]').setAttribute('aria-current','page');
-      pm.querySelector('.pm-pop').hidden=true; pm.querySelector('.pm-trigger').setAttribute('aria-expanded','false');
-    }
-    setOpen(true);
-  }
-  window.addEventListener('hashchange',fromHash);
-  window.addEventListener('resize',()=>{if(!pop.hidden) place();});
-  fromHash();
-})();
 function setHarnessH(){
   const tn=document.querySelector('.topnav').offsetHeight, lk=document.querySelector('.lk-header').offsetHeight;
   document.documentElement.style.setProperty('--topnav-h',tn+'px');
@@ -669,5 +553,6 @@ document.querySelectorAll('[data-collapse]').forEach(btn=>{
 });
 setHarnessH();onScroll();
 </script>
+<script src="request-header.js"></script>
 </body>
 </html>

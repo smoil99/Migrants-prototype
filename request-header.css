@@ -1,0 +1,118 @@
+/* Общая шапка экрана заявки — одна на вкладки Обзор · Кандидаты · Услуги · Документы.
+   Навигация ЛК (как на стенде: «Заявки» активна, «?» поддержки, имя + роль) + залипающая шапка заявки:
+   крошки, заголовок + статус + «Дублировать», строка «разряд · количество · город», табы заявки.
+   Подключается после <style> страницы. */
+:root{
+  /* обводка кита (Text 1178:522, Button / Secondary 1576:8599): 1px inside, два линейных градиента */
+  --rh-kit-stroke:linear-gradient(297deg, rgba(255,255,255,.12) 21%, rgba(255,255,255,0) 31%),
+                  linear-gradient(146deg, rgba(255,255,255,.4) -8%, rgba(255,255,255,0) 45%);
+}
+
+/* ---------- верхняя навигация ЛК: прозрачная, стекло при скролле ---------- */
+.topnav{position:sticky; top:env(safe-area-inset-top,0px); z-index:35;
+  background:transparent; border-bottom:1px solid transparent; padding:0 clamp(16px,4vw,40px);
+  transition:background .22s ease, border-color .22s ease}
+body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
+  -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+  border-bottom-color:var(--line,rgba(255,255,255,.08))}
+.rh-nav{max-width:1240px; margin:0 auto; height:54px; display:flex; align-items:center; gap:12px}
+.rh-links{display:flex; gap:22px; align-items:center; min-width:0}
+.rh-links a{display:flex; align-items:center; gap:7px; color:var(--muted,#8A9092); font-weight:500; font-size:13.5px; white-space:nowrap; text-decoration:none}
+.rh-links a.active{color:#fff; font-weight:600}
+.rh-links svg{width:15px; height:15px; opacity:.75}
+.rh-who{display:flex; align-items:center; gap:10px; white-space:nowrap; margin-left:8px}
+.rh-who .nm{font-size:14px; font-weight:600; line-height:1.15}
+.rh-who .rl{font-size:11px; color:var(--muted,#8A9092)}
+.rh-who .chev{width:16px; height:16px; color:var(--muted,#8A9092); margin-left:6px}
+
+/* меню «?» — связаться с техподдержкой (Figma 3050:21391) */
+.help{position:relative; margin-left:auto; flex:none}
+.help-btn{appearance:none; width:40px; height:40px; border-radius:32px; display:grid; place-items:center; cursor:pointer;
+  background:rgba(255,255,255,.1); border:1px solid var(--line-strong,rgba(255,255,255,.14)); color:#fff; padding:0; transition:border-color .12s}
+.help-btn:hover,.help-btn[aria-expanded="true"]{border-color:rgba(255,255,255,.32)}
+.help-btn:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px}
+.help-btn svg{width:24px; height:24px}
+.sup-pop{position:absolute; top:calc(100% + 12px); left:-13px; z-index:60; width:272px; box-sizing:border-box;
+  background:#161b1d; border:1px solid rgba(255,255,255,.12); border-radius:14px; box-shadow:0 12px 16px rgba(0,0,0,.45);
+  padding:6px; display:flex; flex-direction:column; gap:2px}
+.sup-pop[hidden]{display:none}
+.sup-label{padding:10px 10px 6px; font-size:13px; font-weight:600; line-height:16px; letter-spacing:.3px; color:rgba(255,255,255,.5)}
+.sup-item{display:flex; align-items:center; gap:10px; min-height:36px; padding:0 10px; box-sizing:border-box; border-radius:8px}
+.sup-mail{flex:1; min-width:0; font-size:16px; line-height:20px; color:var(--primary,#07BBB2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-decoration:none}
+.sup-mail:hover{text-decoration:underline; text-underline-offset:3px}
+.sup-mail:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px; border-radius:4px}
+.copy-btn{position:relative; appearance:none; flex:none; width:32px; height:32px; margin:-8px; display:grid; place-items:center;
+  border:0; border-radius:8px; background:transparent; color:#fff; cursor:pointer; padding:0; transition:background .12s}
+.copy-btn:hover{background:rgba(255,255,255,.08)}
+.copy-btn:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:-2px}
+.copy-btn svg{width:16px; height:16px}
+.copy-btn .ic-done{display:none; color:var(--primary,#07BBB2)}
+.copy-btn.copied .ic-copy{display:none}
+.copy-btn.copied .ic-done{display:block}
+.copy-tip{position:absolute; bottom:calc(100% + 6px); right:0; width:max-content; max-width:240px;
+  background:#2A2D30; border:1px solid rgba(255,255,255,.09); border-radius:8px; padding:7px 10px;
+  font-size:12px; line-height:1.35; font-weight:400; color:#dbe6e8; text-align:left; white-space:nowrap;
+  opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .14s, transform .14s; z-index:2}
+.copy-btn:hover .copy-tip,.copy-btn:focus-visible .copy-tip,.copy-btn.copied .copy-tip{opacity:1; transform:none}
+.sup-scrim{position:fixed; inset:0; z-index:34; background:rgba(0,0,0,.5)}
+.sup-scrim[hidden]{display:none}
+.rh-sr{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}
+
+/* ---------- шапка заявки: залипает под навигацией + стекло при скролле ---------- */
+.lk-header{position:sticky; top:calc(var(--topnav-h,54px) + env(safe-area-inset-top,0px)); z-index:30;
+  background:transparent; box-shadow:none; transition:background .22s ease, box-shadow .22s ease}
+body.scrolled .lk-header{background:var(--glass,rgba(24,28,31,.62));
+  -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+  box-shadow:0 12px 34px -22px rgba(0,0,0,.8)}
+.lk-header:has(.dup-btn:hover,.dup-btn:focus-visible){z-index:40}   /* тултип «Дублировать» уходит в зону навигации */
+.lk-header-in{max-width:1240px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 0}
+.rh-crumbs{font-size:12.5px; color:var(--muted,#8A9092); margin:0 0 12px}
+.rh-crumbs a{color:var(--muted,#8A9092); text-decoration:none}
+.rh-crumbs a:hover{color:#fff}
+.rh-crumbs b{color:#fff; font-weight:500}
+.rh-crumbs .sep{margin:0 6px}
+.rh-head{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
+.rh-head h1{font-size:clamp(22px,3vw,30px); line-height:1.15; font-weight:600; letter-spacing:-.5px; margin:0; text-wrap:balance}
+
+/* DS статус (Text 1178:522): white@10%, обводка кита, 5/13 */
+.rh-status{position:relative; display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:32px;
+  background:rgba(255,255,255,.10); font-size:14px; line-height:20px; font-weight:500; color:#fff; white-space:nowrap}
+.rh-status .rh-dot{width:8px; height:8px; border-radius:50%; background:#61C7D6; flex:none}
+.rh-status::after,.dup-btn::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+  background:var(--rh-kit-stroke);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
+
+/* «Дублировать» — Button / Secondary справа в строке заголовка (решение 12.10.2026) */
+.dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:40px; padding:0 18px;
+  border:0; border-radius:32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:16px; font-weight:600; cursor:pointer; white-space:nowrap}
+.dup-btn:hover{background:rgba(255,255,255,.15)}
+.dup-btn > svg{width:16px; height:16px; flex:none}
+.dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
+.dup-tip{position:absolute; right:0; bottom:calc(100% + 8px); z-index:40; width:max-content; max-width:360px; pointer-events:none; text-align:left;
+  background:#1c2023; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:6px 10px; font-size:12px; line-height:16px; font-weight:400; color:#fff;
+  box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s}
+.dup-tip small{display:block; color:var(--muted,#8A9092); font-size:12px}
+.dup-btn:hover .dup-tip,.dup-btn:focus-visible .dup-tip{opacity:1; transform:none}
+.dup-btn.busy{cursor:progress}
+.dup-btn.busy .dup-tip{display:none}
+.dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--primary,#07BBB2); animation:rh-spin .8s linear infinite}
+@keyframes rh-spin{to{transform:rotate(360deg)}}
+
+/* строка «разряд · количество · город» — текст и иконки белые */
+.rh-meta{display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:12px; font-size:13px; color:#fff}
+.rh-meta > span{display:inline-flex; align-items:center; gap:6px}
+.rh-meta svg{width:15px; height:15px; color:#fff; flex:none}
+
+/* табы заявки (DS «Tab») */
+.rh-tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line,rgba(255,255,255,.08)); overflow-x:auto; scrollbar-width:none}
+.rh-tabs::-webkit-scrollbar{display:none}
+.rh-tabs a{position:relative; flex:none; padding:0 0 12px; font-size:14px; line-height:20px; font-weight:500; color:var(--muted,#8A9092); text-decoration:none; transition:color .12s}
+.rh-tabs a:hover{color:#dbe6e8}
+.rh-tabs a[aria-current="page"]{color:#fff}
+.rh-tabs a[aria-current="page"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary,#07BBB2)}
+
+@media (max-width:720px){
+  .rh-who .txt,.rh-who .chev{display:none}
+  .rh-links{gap:20px}
+}
+@media (max-width:640px){ .dup-btn{width:40px; padding:0} .dup-btn .lbl,.dup-btn .dup-i{display:none} }
