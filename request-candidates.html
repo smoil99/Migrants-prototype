@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
 <title>Кандидаты заявки</title>
-<meta name="description" content="Прототип по макету Figma 6783:65020: ЛК клиента РФ — страница заявки, вкладка «Кандидаты»; выбор строки таблицы меняет превью карточки кандидата справа">
+<meta name="description" content="ЛК клиента РФ — страница заявки, вкладка «Кандидаты»: лист карточек слева и липкое превью справа (как rabota.ru/resume-search); превью — содержимое карточки кандидата со стенда: 4 вкладки + Одобрить/Отклонить">
 <style>
-  /* Layout: ЛК клиента РФ — страница заявки → вкладка «Кандидаты»: сводка по статусам, таблица, превью кандидата справа */
+  /* Layout: ЛК клиента РФ — страница заявки → вкладка «Кандидаты»: сводка по статусам, лист карточек, превью кандидата справа */
   :root{
     color-scheme: dark;
     --bg:#181C1F;
@@ -144,24 +144,29 @@
   .sel-pop button[aria-checked="true"]{background:var(--primary-dim)}
   .sel-pop button .c{margin-left:auto; color:var(--label); font-variant-numeric:tabular-nums}
 
-  /* раскладка: таблица + превью */
-  .split{display:grid; grid-template-columns:minmax(0,956fr) minmax(0,416fr); gap:20px; align-items:start}
-  .tsec{padding:24px; overflow:hidden}
-  .tbl{width:100%}
-  .tr{display:flex; align-items:center; gap:20px; padding:14px 20px}
-  .thead{padding:16px 20px 14px; font-size:16px; color:var(--text-2)}
-  .c-cand{display:flex; align-items:center; gap:16px; flex:0 0 266px; min-width:0}
-  .c-cand .who2{display:flex; align-items:center; gap:12px; min-width:0}
-  .c-prof{flex:1 1 0; min-width:0; font-size:16px; line-height:20px; color:var(--text-2)}
-  .c-st{flex:0 0 136px}
-  .thead .c-cand{gap:16px}
-  .tbody .tr{cursor:pointer; border-bottom:1px solid var(--row-line); transition:background .1s}
-  .tbody .tr:hover{background:rgba(255,255,255,.04)}
-  .tbody .tr[aria-selected="true"]{background:var(--card); border-radius:12px; border-bottom-color:transparent}
-  .tbody .tr:has(+ .tr[aria-selected="true"]){border-bottom-color:transparent}
-  .tbody .tr:focus-visible{outline-offset:-2px; border-radius:12px}
-  .nm{display:block; font-size:16px; line-height:20px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .sub{display:block; font-size:14px; line-height:20px; color:var(--label); font-variant-numeric:tabular-nums}
+  /* раскладка как на rabota.ru/resume-search: лист карточек слева, липкое превью справа (≈1:2) */
+  .split{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:20px; align-items:start}
+
+  /* ---------- лист кандидатов ---------- */
+  .list-tools{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:0 4px 12px; font-size:14px; color:var(--text-2); min-height:42px}
+  .list-tools label{display:inline-flex; align-items:center; gap:10px; cursor:pointer}
+  .list-tools .btn{height:30px; font-size:14px; padding:0 16px}
+  .list-tools .sp{flex:1}
+  .clist{display:flex; flex-direction:column; gap:8px}
+  .ccard{position:relative; padding:16px 16px 14px; cursor:pointer; outline:0; transition:background .12s}
+  .ccard:hover{background:rgba(255,255,255,.13)}
+  .ccard[aria-selected="true"]{background:rgba(255,255,255,.14)}
+  .ccard[aria-selected="true"]::before{padding:2px; background:var(--primary)}
+  .ccard:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+  .cc-top{display:flex; gap:12px; align-items:flex-start}
+  .cc-main{flex:1; min-width:0}
+  .cc-name{display:block; font-size:18px; line-height:24px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cc-prof{display:block; margin-top:2px; font-size:14px; line-height:20px; color:var(--text-2)}
+  .cc-facts{margin-top:10px; font-size:14px; line-height:20px; color:var(--text-2)}
+  .cc-facts .sub{color:var(--label)}
+  .cc-foot{display:flex; align-items:center; gap:10px; margin-top:12px}
+  .cc-foot .upd{flex:1; min-width:0; font-size:13px; color:var(--label); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right}
+  .ccard .ava{width:48px; height:48px; font-size:16px}
   .empty{padding:40px 20px; text-align:center; color:var(--label)}
 
   /* чекбокс 16px */
@@ -171,6 +176,7 @@
   .cb:checked::after{content:""; width:8px; height:4px; border:2px solid #fff; border-top:0; border-right:0; transform:translate(0,-1px) rotate(-45deg)}
   .cb:indeterminate{background:var(--primary)}
   .cb:indeterminate::after{content:""; width:8px; height:2px; background:#fff; border-radius:1px}
+  .cc-cb{position:relative; z-index:1; padding:6px; margin:-6px}
 
   /* «Icon bubble» — аватар-инициалы */
   .ava{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:600; letter-spacing:.2px;
@@ -178,29 +184,114 @@
       radial-gradient(120% 90% at 100% 100%, rgba(0,194,113,.38), rgba(0,194,113,0) 55%),
       rgba(255,255,255,.10);
     box-shadow:inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.2)}
-  .ava.lg{width:80px; height:80px; font-size:25px}
+  .ava.lg{width:64px; height:64px; font-size:21px}
 
   /* DS статус-чип (Text 1178:522) */
   .status{display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:var(--r-pill);
     background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
     font-size:14px; line-height:20px; font-weight:500; color:#fff; white-space:nowrap}
+  .status.sm{padding:2px 10px; font-size:13px; gap:6px}
+  .status.past{color:var(--label)}
 
-  /* превью карточки кандидата */
-  .prev{position:sticky; top:84px; padding:32px; min-height:576px; display:flex; flex-direction:column}
-  .p-head{display:flex; align-items:center; gap:16px}
-  .p-head h3{margin:0; font-size:20px; font-weight:500; line-height:1.25}
-  .p-head .pr{font-size:16px; line-height:24px; color:var(--label)}
-  .p-head .gr{font-size:14px; color:var(--label); margin-top:2px}
-  .p-st{margin-top:18px}
-  .kv-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 24px; margin-top:24px}
-  .kv .k{display:block; font-size:14px; line-height:20px; color:var(--label)}
-  .kv .v{display:block; margin-top:4px; font-size:14px; line-height:20px; font-weight:500; overflow-wrap:anywhere}
-  .p-acts{margin-top:auto; padding-top:32px; display:flex; gap:12px}
-  .p-acts .btn{flex:1 1 0}
-  .p-note{margin-top:auto; padding-top:32px; font-size:13px; color:var(--label)}
-  .prev.fade .p-body{animation:fade .18s ease}
+  /* ---------- превью карточки кандидата (содержимое — как на стенде /requests/{id}/candidates/{id}) ---------- */
+  .prev{position:sticky; top:70px; height:calc(100vh - 86px); min-height:480px; display:flex; flex-direction:column; overflow:hidden}
+  .p-bar{flex:none; display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); font-size:13px; color:var(--label)}
+  .p-bar .sp{flex:1}
+  .ibtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--text-2); width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex:none}
+  .ibtn:hover{background:rgba(255,255,255,.08); color:#fff}
+  .ibtn svg{width:18px; height:18px}
+  .p-head{flex:none; display:flex; align-items:flex-start; gap:16px; padding:24px 24px 0}
+  .p-who{flex:1; min-width:0}
+  .p-title{display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px}
+  .p-title h3{margin:0; font-size:26px; line-height:32px; font-weight:600; letter-spacing:-.3px}
+  .p-who .pr{margin-top:2px; font-size:15px; line-height:22px; color:var(--label)}
+  .p-acts{display:flex; gap:8px; flex:none; margin-top:4px}
+  .btn.ok{background:#52C46A; box-shadow:inset 0 0 0 1px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.22)}
+  .btn.ok:hover{background:#5ccf74}
+  .p-tabs{flex:none; display:flex; gap:24px; margin:20px 24px 0; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+  .p-tabs::-webkit-scrollbar{display:none}
+  .p-tabs .tab{white-space:nowrap}
+  .p-tabs .tab .n{color:var(--label); margin-left:4px; font-variant-numeric:tabular-nums}
+  .p-body{flex:1; min-height:0; overflow-y:auto; padding:24px; overscroll-behavior:contain}
+  .prev.fade .p-head,.prev.fade .p-tabs,.prev.fade .p-body{animation:fade .18s ease}
   @keyframes fade{from{opacity:.25; transform:translateY(3px)} to{opacity:1; transform:none}}
   .p-close{display:none}
+
+  /* «Данные кандидата»: строки «метка — значение» */
+  .blk + .blk{margin-top:20px; padding-top:20px; border-top:1px solid var(--line)}
+  .blk h4{margin:0 0 12px; font-size:18px; line-height:24px; font-weight:600}
+  .blk-h{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .blk-h h4{margin:0}
+  .kv{display:grid; grid-template-columns:minmax(140px,36%) minmax(0,1fr); gap:16px; padding:6px 0; font-size:14px; line-height:20px}
+  .kv .k{color:var(--label)}
+  .kv .v{font-weight:500; overflow-wrap:anywhere; font-variant-numeric:tabular-nums}
+  .hist{display:flex; flex-direction:column; gap:10px; margin-top:12px}
+  .hist .row{display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; color:var(--text-2); font-variant-numeric:tabular-nums}
+  .chev-btn svg{transition:transform .15s}
+  .chev-btn[aria-expanded="false"] svg{transform:rotate(180deg)}
+
+  /* «Документы» / «Фото и видео»: поле типа, «Добавить», дропзона, список */
+  .up-row{display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap}
+  .up-row .grow{flex:1 1 220px; min-width:0}
+  .up-row h4{margin:0; font-size:18px; line-height:24px; font-weight:600; flex:1}
+  .fld-l{display:block; font-size:13px; color:var(--text-2); margin-bottom:6px}
+  .fld-l .req{color:var(--st-error)}
+  .fsel{appearance:none; -webkit-appearance:none; width:100%; max-width:300px; height:40px; border:0; border-radius:12px; padding:0 36px 0 12px;
+    font-family:inherit; font-size:14px; color:#fff; cursor:pointer;
+    background:rgba(255,255,255,.10) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 12px center / 14px no-repeat}
+  .fsel:invalid{color:var(--label)}
+  .fsel option{background:var(--panel-solid); color:#fff}
+  .btn.sm{height:32px; font-size:14px; padding:0 14px}
+  .btn svg{width:14px; height:14px}
+  .btn:disabled{opacity:.4; cursor:default; background:rgba(255,255,255,.10); filter:none}
+  .btn.teal{background:var(--primary); box-shadow:inset 0 0 0 1px rgba(255,255,255,.4), inset 0 1px 0 rgba(255,255,255,.22)}
+  .btn.teal:disabled{background:rgba(255,255,255,.10)}
+  .dz{margin-top:16px; border:1px dashed rgba(255,255,255,.28); border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:background .12s}
+  .dz:hover{background:rgba(255,255,255,.04)}
+  .dz .up{width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.12); display:grid; place-items:center; margin:0 auto 10px}
+  .dz .up svg{width:15px; height:15px}
+  .dz .t{font-size:14px; font-weight:600}
+  .dz .s{font-size:12px; color:var(--label); margin-top:4px}
+  .lst-h{margin:24px 0 12px; font-size:18px; line-height:24px; font-weight:600}
+  .lst-h .n{color:var(--label); font-weight:500}
+  .file{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.06); margin-bottom:8px}
+  .file .fic{width:36px; height:36px; border-radius:10px; background:rgba(7,187,178,.16); color:var(--accent); display:grid; place-items:center; flex:none}
+  .file .fic svg{width:18px; height:18px}
+  .file .fm{flex:1; min-width:0}
+  .file .fn{display:block; font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .file .fs{display:block; font-size:12px; color:var(--label); margin-top:2px; font-variant-numeric:tabular-nums}
+  .media{display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px}
+  .thumb{position:relative; aspect-ratio:4/3; border-radius:12px; overflow:hidden; background:linear-gradient(140deg,#2c5a57,#1d3036 60%,#36424a)}
+  .thumb.v{background:linear-gradient(140deg,#3a4a63,#1f2a33 60%,#2e5a55)}
+  .thumb svg.ph{position:absolute; inset:0; margin:auto; width:34px; height:34px; color:rgba(255,255,255,.55)}
+  .thumb .cap{position:absolute; left:0; right:0; bottom:0; padding:16px 8px 6px; font-size:11.5px; background:linear-gradient(transparent,rgba(0,0,0,.6));
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .thumb .dur{position:absolute; right:6px; top:6px; font-size:11px; padding:1px 6px; border-radius:6px; background:rgba(0,0,0,.55)}
+
+  /* пустые состояния (иллюстрации — упрощённые glass-иконки стенда) */
+  .es{padding:28px 12px 8px; text-align:center}
+  .es .ill{width:96px; height:80px; margin:0 auto 12px; display:block}
+  .es .t{font-size:16px; font-weight:600}
+  .es .s{font-size:13px; color:var(--label); margin-top:4px}
+
+  /* «Услуги»: заголовок с фильтром и поиском, список */
+  .sv-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .sv-head h4{margin:0; font-size:20px; font-weight:600; flex:1}
+  .sv-head h4 .n{color:var(--label); font-weight:500}
+  .sv-f{display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--label)}
+  .sv-f select{appearance:none; -webkit-appearance:none; border:0; background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 0 center / 14px no-repeat;
+    color:#fff; font-family:inherit; font-size:14px; font-weight:600; padding:4px 20px 4px 0; cursor:pointer}
+  .sv-f select option{background:var(--panel-solid)}
+  .srch{position:relative; flex:0 1 200px; min-width:150px}
+  .srch input{width:100%; height:36px; border:0; border-radius:12px; padding:0 12px 0 32px; background:rgba(255,255,255,.10); color:#fff; font-family:inherit; font-size:14px}
+  .srch input::placeholder{color:var(--label)}
+  .srch svg{position:absolute; left:11px; top:11px; width:14px; height:14px; color:var(--label)}
+  .svc{display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--row-line)}
+  .svc:last-child{border-bottom:0}
+  .svc .sm1{flex:1; min-width:0}
+  .svc .sn{display:block; font-size:14px; font-weight:500}
+  .svc .sd2{display:block; font-size:12.5px; color:var(--label); margin-top:2px}
+  .svc-list{margin-top:12px}
 
   .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
     height:32px; padding:0 21px; border:0; border-radius:var(--r-pill); font-size:16px; font-weight:500; color:#fff;
@@ -210,10 +301,6 @@
   .btn.primary{background:var(--primary); box-shadow:inset 0 0 0 1px rgba(255,255,255,.4), inset 0 1px 0 rgba(255,255,255,.22)}
   .btn.primary:hover{filter:brightness(1.08)}
 
-  /* панель массовых действий (при выделении чекбоксами) */
-  .bulk{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:0 20px 12px; font-size:14px; color:var(--text-2)}
-  .bulk .btn{height:30px; font-size:14px; padding:0 16px}
-
   #toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:90; transform:translate(-50%,16px);
     background:var(--panel-solid); border:1px solid var(--line-strong); color:#fff; border-radius:12px; padding:11px 16px;
     font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; max-width:calc(100vw - 32px)}
@@ -221,36 +308,40 @@
 
   @media (max-width:1180px){
     .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .c-cand{flex-basis:230px}
+    .split{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}
+    .p-head{flex-wrap:wrap}
+    .p-acts{width:100%; padding-left:80px; margin-top:0}
   }
-  /* узко: превью — нижний лист поверх таблицы */
+  /* узко: лист на всю ширину, превью — нижний лист поверх */
   @media (max-width:960px){
     .split{grid-template-columns:1fr}
-    .prev{position:fixed; left:0; right:0; bottom:0; top:auto; z-index:50; min-height:0; max-height:82vh; overflow:auto;
-      border-radius:20px 20px 0 0; background:rgba(38,41,44,.96);
+    .prev{position:fixed; left:0; right:0; bottom:0; top:auto; z-index:50; height:88vh; min-height:0;
+      border-radius:20px 20px 0 0; background:rgba(38,41,44,.97);
       -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px);
-      padding:24px 20px calc(20px + env(safe-area-inset-bottom,0px)); transform:translateY(105%); transition:transform .25s ease}
+      padding-bottom:env(safe-area-inset-bottom,0px); transform:translateY(105%); transition:transform .25s ease}
     .prev.open{transform:none}
-    .p-close{display:grid; position:absolute; right:14px; top:14px; width:32px; height:32px; border-radius:50%; border:0; cursor:pointer;
-      background:rgba(255,255,255,.10); color:#fff; place-items:center}
-    .p-close svg{width:16px; height:16px}
+    .p-close{display:grid}
     .scrim{position:fixed; inset:0; z-index:45; background:rgba(0,0,0,.45)}
-    .tbody .tr[aria-selected="true"]{background:transparent; border-bottom-color:var(--row-line); border-radius:0}
-    .tbody .tr:has(+ .tr[aria-selected="true"]){border-bottom-color:var(--row-line)}
+    .ccard[aria-selected="true"]{background:var(--card)}
+    .ccard[aria-selected="true"]::before{padding:1px; background:linear-gradient(160deg, rgba(255,255,255,.34), rgba(255,255,255,.06) 40%, rgba(255,255,255,.04) 70%, rgba(255,255,255,.22))}
   }
   @media (max-width:720px){
     .pipeline{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
     .scard{padding:16px} .scard .n{font-size:24px} .scard .t{font-size:14px}
-    .tsec{padding:8px}
-    .thead{display:none}
-    .tr{flex-wrap:wrap; gap:8px 12px; padding:14px 12px}
-    .c-cand{flex:1 1 100%}
-    .c-prof{flex:1 1 0; padding-left:28px; font-size:14px; color:var(--label)}
-    .c-st{flex:none}
     .who .txt,.who .chev{display:none}
     .brand-links{gap:20px}
     .sec-head h2{font-size:20px}
     .sel-btn{font-size:14px}
+    .p-head{padding:20px 16px 0; gap:12px}
+    .ava.lg{width:48px; height:48px; font-size:16px}
+    .p-title h3{font-size:22px; line-height:28px}
+    .p-acts{padding-left:0}
+    .p-acts .btn{flex:1 1 0}
+    .p-tabs{margin:16px 16px 0; gap:20px}
+    .p-body{padding:20px 16px}
+    .p-bar{padding:10px 12px 10px 16px}
+    .kv{grid-template-columns:1fr; gap:2px; padding:7px 0}
+    .srch{flex:1 1 100%}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
 </style>
@@ -282,7 +373,7 @@
         </a>
         <a role="menuitem" href="request-candidates.html" aria-current="page">
           <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><rect x="15" y="5" width="7" height="9" rx="1.5"/></svg>
-          <span>Кандидаты заявки<small>Таблица кандидатов · превью карточки справа</small></span>
+          <span>Кандидаты заявки<small>Лист карточек · превью: 4 вкладки карточки кандидата</small></span>
         </a>
         <a role="menuitem" href="candidate-import.html">
           <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5L12 11l2.5 2.5"/></svg>
@@ -348,18 +439,11 @@
   </div>
 
   <div class="split">
-    <section class="glass tsec">
-      <div class="bulk" id="bulk" hidden></div>
-      <div class="tbl" role="grid" aria-label="Кандидаты">
-        <div class="tr thead" role="row">
-          <div class="c-cand"><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"><span>Кандидат</span></div>
-          <div class="c-prof">Профессия</div>
-          <div class="c-st">Статус</div>
-        </div>
-        <div class="tbody" id="tbody"></div>
-      </div>
+    <section aria-label="Список кандидатов">
+      <div class="list-tools" id="listTools"></div>
+      <div class="clist" id="clist" role="listbox" aria-label="Кандидаты"></div>
     </section>
-    <aside class="glass prev" id="prev" aria-live="polite"></aside>
+    <aside class="glass prev" id="prev" aria-label="Превью кандидата"></aside>
   </div>
 </main>
 <div class="scrim" id="scrim" hidden></div>
@@ -371,33 +455,61 @@ const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2600);}
 
-/* статусы кандидата: chip — подпись в таблице, card — подпись в сводке */
+/* статусы кандидата: chip — подпись в листе, превью и «Истории статусов» (как на стенде), card — подпись в сводке */
 const ST={
-  done:     {chip:"Завершён",     card:"Завершены",       dot:"d-done"},
-  pending:  {chip:"Ожидание",     card:"Ожидание",        dot:"d-pending"},
-  review:   {chip:"Рассмотрение", card:"На рассмотрении", dot:"d-review"},
-  rejected: {chip:"Отклонён",     card:"Отклонены",       dot:"d-rejected"},
-  cancelled:{chip:"Отменён",      card:"Отменены",        dot:"d-cancelled"}
+  done:     {chip:"Завершён",        card:"Завершены",       dot:"d-done"},
+  pending:  {chip:"Ожидание",        card:"Ожидание",        dot:"d-pending"},
+  review:   {chip:"На рассмотрении", card:"На рассмотрении", dot:"d-review"},
+  rejected: {chip:"Отклонён",        card:"Отклонены",       dot:"d-rejected"},
+  cancelled:{chip:"Отменён",         card:"Отменены",        dot:"d-cancelled"}
 };
 const ST_ORDER=["done","pending","review","rejected","cancelled"];
+
+/* справочник «Тип документа» — как на стенде */
+const DOC_TYPES=["Удостоверение личности (Aadhaar)","Апостиль на документ об образовании","Резюме","Результат теста на ПАВ",
+  "Документ об образовании","Рекомендательное письмо от работодателя","Авиабилет","Паспорт (международный)",
+  "Нотариально заверенный перевод диплома","Другое","Налоговый идентификатор (PAN)","Согласие на обработку персональных данных",
+  "Справка об отсутствии судимости","Профессиональный сертификат / свидетельство о квалификации","Паспорт моряка",
+  "Сертификат о прохождении обучения","Медицинское заключение (для визы)"];
+/* услуги и их состояния — как на вкладке «Услуги» заявки */
+const SVC_ST={none:{t:"Не начата",dot:"d-cancelled"},work:{t:"В работе",dot:"d-review"},done:{t:"Выполнена",dot:"d-done"}};
+const SVC_NAMES=["Оформление визы","Медицинский осмотр","Перевод и заверение документов","Авиаперелёт","Встреча в аэропорту",
+  "Регистрация по месту пребывания","Оформление патента","Проживание"];
 
 /* ---------- данные: 72 кандидата, распределение как в макете (6/15/34/14/3) ---------- */
 const PROFS=[
   "Электросварщик ручной сварки (105558)","Токарь-универсал (103254)","Слесарь-ремонтник (118732)",
   "Монтажник стальных и железобетонных конструкций (112045)","Электромонтажник (190451)","Бетонщик (111324)",
-  "Арматурщик (110470)","Каменщик (112786)"
+  "Арматурщик (110470)","Каменщик (112786)","Электрик (105460)"
 ];
 const FIRST=["Rajesh","Vikram","Sunil","Amit","Arjun","Ravi","Manoj","Deepak","Sanjay","Rahul","Anil","Prakash","Suresh","Kiran","Ashok","Naveen","Gaurav","Pradeep","Harish","Mohit","Imran","Farhan","Karan","Rohit"];
 const LAST=["Kumar","Patel","Yadav","Sharma","Singh","Verma","Gupta","Reddy","Nair","Das","Mehta","Joshi","Chauhan","Mishra","Iyer","Khan","Pillai","Rao"];
 const CITY_COUNTRY=["Индия","Индия","Индия","Непал","Индия","Бангладеш"];
+const TODAY=new Date(2026,9,21);
 
 function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+const p2=n=>String(n).padStart(2,"0");
+const fmtDT=d=>p2(d.getDate())+"."+p2(d.getMonth()+1)+"."+d.getFullYear()+", "+p2(d.getHours())+":"+p2(d.getMinutes());
+function age(dob){const [d,m,y]=dob.split(".").map(Number);let a=TODAY.getFullYear()-y;if(TODAY.getMonth()+1<m||(TODAY.getMonth()+1===m&&TODAY.getDate()<d))a--;return a;}
+function plural(n,a,b,c){const m10=n%10,m100=n%100;return m10===1&&m100!==11?a:(m10>=2&&m10<=4&&(m100<10||m100>=20)?b:c);}
+
+/* история: Черновик → (На рассмотрении) → текущий */
+function mkHist(st,start,r){
+  const t=new Date(start), h=[{st:"draft",at:new Date(t)}];
+  const add=(s,min)=>{t.setMinutes(t.getMinutes()+min); h.push({st:s,at:new Date(t)});};
+  if(st==="pending"){ add("pending",1); return h; }
+  add("review",1);
+  if(st!=="review") add(st,60+Math.floor(r()*60*48));
+  return h;
+}
+
 function buildData(){
   const r=rng(7);
   const pick=a=>a[Math.floor(r()*a.length)];
   const dig=n=>{let s="";for(let i=0;i<n;i++)s+=Math.floor(r()*10);return s;};
-  // первые 7 — как в макете
+  // первый — кандидат со стенда (Raja Pani), следующие 7 — как в макете
   const head=[
+    ["Raja","Pani",8,"review","1231 2312 3111"],
     ["Rajesh","Kumar",0,"pending","4827 6193 5041"],["Vikram","Patel",1,"pending","3105 8927 6640"],
     ["Sunil","Yadav",2,"done","9842 1730 5529"],["Amit","Sharma",3,"review","7291 4056 1832"],
     ["Arjun","Singh",1,"pending","5610 2287 9043"],["Ravi","Verma",2,"done","6038 4471 2195"],
@@ -407,33 +519,69 @@ function buildData(){
   head.forEach(h=>rest[h[3]]--);
   const pool=[];ST_ORDER.forEach(k=>{for(let i=0;i<rest[k];i++)pool.push(k);});
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-  const out=[];
-  const used=new Set();
+  const out=[], used=new Set();
   function mk(fn,ln,pi,st,aad){
-    const total=4+Math.floor(r()*14), spec=Math.max(1,total-Math.floor(r()*8));
     const y=1975+Math.floor(r()*27), m=1+Math.floor(r()*12), d=1+Math.floor(r()*28);
-    return {id:out.length+1, fn, ln, prof:PROFS[pi], grade:(3+Math.floor(r()*4))+"-й разряд",
-      st, aad, dob:String(d).padStart(2,"0")+"."+String(m).padStart(2,"0")+"."+y,
-      country:out.length===0?"Индия":pick(CITY_COUNTRY), sex:"Мужской", total, spec,
-      phone:"+91 "+dig(5)+" "+dig(5), mail:(ln+fn).toLowerCase()+"@gmail.com"};
+    const start=new Date(2026,8,1+Math.floor(r()*40),9+Math.floor(r()*10),Math.floor(r()*60));
+    const c={id:out.length+1, fn, ln, prof:PROFS[pi], st, aad, dob:p2(d)+"."+p2(m)+"."+y,
+      country:out.length===0?"Индия":pick(CITY_COUNTRY), sex:"Мужской",
+      hist:mkHist(st,start,r), docs:[], media:[], svcs:[]};
+    // документы, фото/видео и услуги — у части кандидатов (у Raja Pani пусто, как на стенде)
+    if(out.length && r()<.7){
+      const n=1+Math.floor(r()*4), types=[0,2,7,4,11,12].slice(0,n);
+      c.docs=types.map(ti=>({type:DOC_TYPES[ti], name:(ti===2?"CV_":ti===0?"Aadhaar_":ti===7?"Passport_":"Doc_")+fn+"_"+ln+(ti===2?".pdf":r()<.5?".jpg":".pdf"),
+        size:(0.3+r()*4).toFixed(1).replace(".",",")+" МБ", at:fmtDT(c.hist[0].at)}));
+    }
+    if(out.length && r()<.5){
+      const n=1+Math.floor(r()*3);
+      for(let i=0;i<n;i++){const v=i===n-1&&r()<.5; c.media.push({v, name:(v?"work_video_":"photo_")+(i+1)+(v?".mp4":".jpg"), dur:v?"0:"+p2(15+Math.floor(r()*44)):""});}
+    }
+    if(out.length && (st==="done"||st==="review") && r()<.8){
+      const n=2+Math.floor(r()*4);
+      for(let i=0;i<n;i++) c.svcs.push({name:SVC_NAMES[i], st:st==="done"?(i<n-1?"done":"work"):(i===0?"work":"none"),
+        plan:p2(1+Math.floor(r()*28))+".11.2026"});
+    }
+    return c;
   }
-  head.forEach(h=>{used.add(h[0]+h[1]);const c=mk(h[0],h[1],h[2],h[3],h[4]);out.push(c);});
-  out[0].dob="01.07.1990"; out[0].total=10; out[0].spec=4; out[0].phone="+91 98765 43210"; out[0].grade="5-й разряд";
+  head.forEach(h=>{used.add(h[0]+h[1]); out.push(mk(h[0],h[1],h[2],h[3],h[4]));});
+  // Raja Pani — значения стенда
+  Object.assign(out[0],{dob:"10.10.1990",hist:[{st:"draft",at:new Date(2026,9,13,19,30)},{st:"review",at:new Date(2026,9,13,19,31)}]});
   pool.forEach(st=>{
     let fn,ln; do{fn=pick(FIRST);ln=pick(LAST);}while(used.has(fn+ln)); used.add(fn+ln);
-    const pi=r()<.3?0:Math.floor(r()*PROFS.length);
+    const pi=r()<.3?0:Math.floor(r()*(PROFS.length-1));
     out.push(mk(fn,ln,pi,st,dig(4)+" "+dig(4)+" "+dig(4)));
   });
   return out;
 }
 
-const S={data:[], filter:"all", sel:null, checked:new Set()};
-function reset(){S.data=buildData(); S.filter="all"; S.sel=1; S.checked.clear(); render(); }
+const S={data:[], filter:"all", sel:null, tab:"info", checked:new Set(), histOpen:true, docType:"", svcF:"all", svcQ:""};
+function reset(){S.data=buildData(); S.filter="all"; S.sel=1; S.tab="info"; S.checked.clear(); render(); }
 
 const visible=()=>S.data.filter(c=>S.filter==="all"||c.st===S.filter);
 const initials=c=>(c.fn[0]+c.ln[0]).toUpperCase();
-const chip=st=>'<span class="status"><span class="dot '+ST[st].dot+'"></span>'+ST[st].chip+'</span>';
+const chip=(st,cls)=>'<span class="status'+(cls?" "+cls:"")+'"><span class="dot '+ST[st].dot+'"></span>'+ST[st].chip+'</span>';
+const profName=c=>c.prof.replace(/\s*\(\d+\)$/,"");
+const updated=c=>fmtDT(c.hist[c.hist.length-1].at);
 const narrow=()=>matchMedia("(max-width:960px)").matches;
+const ICO={
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  open:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 4h6v6M20 4l-8 8"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V7M6.5 11.5L12 6l5.5 5.5M5 4h14"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>',
+  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>',
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg>',
+  chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg>',
+  img:'<svg class="ph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>',
+  play:'<svg class="ph" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/></svg>'
+};
+/* упрощённые иллюстрации пустых состояний стенда */
+const ILL={
+  docs:'<svg class="ill" viewBox="0 0 96 80"><rect x="22" y="14" width="40" height="54" rx="8" transform="rotate(-12 42 41)" fill="#2f6f63" opacity=".7"/><rect x="34" y="10" width="40" height="58" rx="8" fill="#3d5a57" stroke="rgba(255,255,255,.25)"/><rect x="42" y="24" width="24" height="4" rx="2" fill="#7fb3aa"/><rect x="42" y="34" width="24" height="4" rx="2" fill="#7fb3aa"/><rect x="42" y="44" width="24" height="4" rx="2" fill="#7fb3aa"/></svg>',
+  media:'<svg class="ill" viewBox="0 0 96 80"><rect x="16" y="10" width="50" height="40" rx="9" fill="#2f6f63" opacity=".75"/><rect x="28" y="22" width="52" height="44" rx="9" fill="#3d5a57" stroke="rgba(255,255,255,.25)"/><circle cx="66" cy="34" r="5" fill="#9cc7c0"/><path d="M34 60l14-14 10 10 6-6 12 10z" fill="#7fb3aa"/></svg>',
+  svc:'<svg class="ill" viewBox="0 0 96 80"><rect x="36" y="8" width="24" height="12" rx="4" fill="none" stroke="#3d6e66" stroke-width="5"/><rect x="18" y="18" width="60" height="46" rx="10" fill="#3d5a57" stroke="rgba(255,255,255,.25)"/><rect x="18" y="40" width="60" height="24" rx="10" fill="#2f6f63" opacity=".8"/><circle cx="48" cy="42" r="4" fill="#9cc7c0"/></svg>'
+};
 
 /* ---------- сводка ---------- */
 function renderPipeline(){
@@ -451,56 +599,101 @@ function renderSel(){
     '<button role="option" data-st="'+o[0]+'" aria-checked="'+(S.filter===o[0])+'">'+(o[0]==="all"?"":'<span class="dot '+ST[o[0]].dot+'"></span>')+o[1]+'<span class="c">'+o[2]+'</span></button>').join("");
 }
 
-/* ---------- таблица ---------- */
-function renderTable(){
+/* ---------- лист карточек ---------- */
+function renderList(){
   const rows=visible();
   $("#cnt").textContent=rows.length;
   if(rows.length && !rows.some(c=>c.id===S.sel)) S.sel=rows[0].id;
   if(!rows.length) S.sel=null;
-  $("#tbody").innerHTML=rows.length? rows.map(c=>
-    '<div class="tr" role="row" tabindex="'+(c.id===S.sel?0:-1)+'" data-id="'+c.id+'" aria-selected="'+(c.id===S.sel)+'">'+
-      '<div class="c-cand"><input type="checkbox" class="cb" aria-label="Выбрать '+esc(c.fn+" "+c.ln)+'"'+(S.checked.has(c.id)?" checked":"")+'>'+
-        '<div class="who2"><span class="ava">'+initials(c)+'</span><span style="min-width:0"><span class="nm">'+esc(c.fn+" "+c.ln)+'</span><span class="sub">'+c.aad+'</span></span></div></div>'+
-      '<div class="c-prof">'+esc(c.prof)+'</div>'+
-      '<div class="c-st">'+chip(c.st)+'</div>'+
-    '</div>').join("")
+  $("#clist").innerHTML=rows.length? rows.map(c=>{
+    const a=age(c.dob);
+    return '<div class="glass ccard" role="option" tabindex="'+(c.id===S.sel?0:-1)+'" data-id="'+c.id+'" aria-selected="'+(c.id===S.sel)+'">'+
+      '<div class="cc-top"><div class="cc-main"><span class="cc-name">'+esc(c.fn+" "+c.ln)+'</span><span class="cc-prof">'+esc(c.prof)+'</span></div>'+
+        '<span class="ava">'+initials(c)+'</span></div>'+
+      '<div class="cc-facts">'+c.sex+', '+a+' '+plural(a,"год","года","лет")+', '+c.country+'<br><span class="sub">Aadhaar '+c.aad+'</span></div>'+
+      '<div class="cc-foot">'+chip(c.st,"sm")+'<span class="upd">Обновлено '+updated(c)+'</span>'+
+        '<label class="cc-cb"><input type="checkbox" class="cb" aria-label="Выбрать '+esc(c.fn+" "+c.ln)+'"'+(S.checked.has(c.id)?" checked":"")+'></label></div>'+
+    '</div>';}).join("")
     : '<div class="empty">Нет кандидатов в этом статусе</div>';
   const vis=rows.map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
-  const all=$("#cbAll"); all.checked=n>0&&n===vis.length; all.indeterminate=n>0&&n<vis.length;
-  const b=$("#bulk");
-  if(S.checked.size){ b.hidden=false; b.innerHTML='Выбрано: <b>'+S.checked.size+'</b><button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button><button class="hlink" data-bulk="clear" style="font-size:14px">Снять выделение</button>'; }
-  else b.hidden=true;
+  $("#listTools").innerHTML=
+    '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>'+(S.checked.size?'Выбрано: <b>'+S.checked.size+'</b>':'Выбрать всех')+'</label><span class="sp"></span>'+
+    (S.checked.size?'<button class="btn" data-bulk="rejected">Отклонить</button><button class="btn ok" data-bulk="done">Одобрить</button>':'');
+  const all=$("#cbAll"); if(all) all.indeterminate=n>0&&n<vis.length;
 }
 
-/* ---------- превью ---------- */
+/* ---------- превью: шапка, вкладки как на стенде ---------- */
+const TABS=[["info","Данные кандидата"],["docs","Документы"],["media","Фото и видео"],["svcs","Услуги"]];
 function renderPreview(anim){
   const p=$("#prev"); const c=S.data.find(x=>x.id===S.sel);
-  if(!c){ p.innerHTML='<div class="empty" style="margin:auto">Выберите кандидата в таблице</div>'; return; }
+  if(!c){ p.innerHTML='<div class="empty" style="margin:auto">Выберите кандидата в списке</div>'; return; }
   const act=c.st==="pending"||c.st==="review";
-  const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>';
+  const cnt={docs:c.docs.length, media:c.media.length, svcs:c.svcs.length};
   p.innerHTML=
-    '<button class="p-close" id="pClose" aria-label="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'+
-    '<div class="p-body" style="display:flex;flex-direction:column;flex:1">'+
-    '<div class="p-head"><span class="ava lg">'+initials(c)+'</span><div style="min-width:0">'+
-      '<h3>'+esc(c.fn+" "+c.ln)+'</h3><div class="pr">'+esc(c.prof.replace(/\s*\(\d+\)$/,""))+'</div><div class="gr">'+c.grade+'</div></div></div>'+
-    '<div class="kv-grid">'+
-      kv("Дата рождения",c.dob)+kv("Страна",c.country)+
-      kv("Пол",c.sex)+kv("Номер Aadhaar",c.aad)+
-      kv("Общий стаж, лет",c.total)+kv("Опыт по специальности, лет",c.spec)+
-      kv("Номер телефона",c.phone)+kv("Почта",c.mail)+
+    '<div class="p-bar"><span>Обновлено '+updated(c)+'</span><span class="sp"></span>'+
+      '<button class="ibtn" data-open title="Открыть карточку кандидата" aria-label="Открыть карточку кандидата">'+ICO.open+'</button>'+
+      '<button class="ibtn p-close" id="pClose" aria-label="Закрыть">'+ICO.x+'</button></div>'+
+    '<div class="p-head"><span class="ava lg">'+initials(c)+'</span>'+
+      '<div class="p-who"><div class="p-title"><h3>'+esc(c.fn+" "+c.ln)+'</h3>'+'<span class="status"><span class="dot '+ST[c.st].dot+'"></span>'+ST[c.st].chip+'</span></div>'+
+        '<div class="pr">'+esc(profName(c))+'</div></div>'+
+      (act?'<div class="p-acts"><button class="btn ok" data-act="done">Одобрить</button><button class="btn" data-act="rejected">Отклонить</button></div>':'')+
     '</div>'+
-    (act? '<div class="p-acts"><button class="btn" data-act="rejected">Отклонить</button><button class="btn primary" data-act="done">Одобрить</button></div>'
-        : '<div class="p-note">Статус: '+chip(c.st)+'</div>')+
-    '</div>';
+    '<div class="p-tabs" role="tablist">'+TABS.map(t=>
+      '<button class="tab" role="tab" data-tab="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(cnt[t[0]]?'<span class="n">'+cnt[t[0]]+'</span>':'')+'</button>').join("")+'</div>'+
+    '<div class="p-body" role="tabpanel">'+renderTab(c)+'</div>';
   if(anim){ p.classList.remove("fade"); void p.offsetWidth; p.classList.add("fade"); }
 }
 
-function render(){ renderPipeline(); renderSel(); renderTable(); renderPreview(false); }
+function renderTab(c){
+  const kv=(k,v)=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>';
+  if(S.tab==="info"){
+    const last=c.hist.length-1;
+    return '<div class="blk"><h4>Основная информация</h4>'+
+        kv("Имя",c.fn+" "+c.ln)+kv("Дата рождения",c.dob)+kv("Страна",c.country)+kv("Пол",c.sex)+kv("Номер Aadhaar",c.aad)+'</div>'+
+      '<div class="blk"><h4>Данные по профессии</h4>'+kv("Профессия",c.prof)+'</div>'+
+      '<div class="blk"><div class="blk-h"><h4>История статусов</h4><button class="ibtn chev-btn" data-hist aria-expanded="'+S.histOpen+'" aria-label="Свернуть историю">'+ICO.chev+'</button></div>'+
+        (S.histOpen?'<div class="hist">'+c.hist.map((h,i)=>{
+          const lbl=h.st==="draft"?"Черновик":ST[h.st].chip, dot=h.st==="draft"?"d-cancelled":ST[h.st].dot;
+          return '<div class="row"><span class="status sm'+(i<last?" past":"")+'"><span class="dot '+dot+'"></span>'+lbl+'</span><span>'+fmtDT(h.at)+'</span></div>';}).join("")+'</div>':'')+
+      '</div>';
+  }
+  if(S.tab==="docs"){
+    return '<div class="up-row"><div class="grow"><label class="fld-l" for="docType">Тип документа <span class="req">*</span></label>'+
+        '<select class="fsel" id="docType" required><option value="" disabled'+(S.docType?"":" selected")+' hidden>Выберите тип документа</option>'+
+        DOC_TYPES.map(t=>'<option'+(t===S.docType?" selected":"")+'>'+esc(t)+'</option>').join("")+'</select></div>'+
+        '<button class="btn sm teal" data-add="doc"'+(S.docType?"":" disabled")+'>'+ICO.plus+'Добавить</button></div>'+
+      '<div class="dz" data-add="doc" role="button" tabindex="0">'+'<div class="up">'+ICO.up+'</div><div class="t">Перетащите или выберите файл</div><div class="s">Форматы: PDF, JPG, PNG. Макс. размер: 20 МБ</div></div>'+
+      '<div class="lst-h">Загруженные <span class="n">'+c.docs.length+'</span></div>'+
+      (c.docs.length? c.docs.map((d,i)=>'<div class="file"><span class="fic">'+ICO.file+'</span><span class="fm"><span class="fn">'+esc(d.type)+'</span><span class="fs">'+esc(d.name)+' · '+d.size+' · '+d.at+'</span></span>'+
+          '<button class="ibtn" data-dl aria-label="Скачать">'+ICO.dl+'</button><button class="ibtn" data-deldoc="'+i+'" aria-label="Удалить">'+ICO.del+'</button></div>').join("")
+        : '<div class="es">'+ILL.docs+'<div class="t">Документов пока нет</div></div>');
+  }
+  if(S.tab==="media"){
+    return '<div class="up-row"><h4>Загрузить фото и видео</h4><button class="btn sm teal" data-add="media">'+ICO.plus+'Добавить</button></div>'+
+      '<div class="dz" data-add="media" role="button" tabindex="0"><div class="up">'+ICO.up+'</div><div class="t">Перетащите или выберите файл</div><div class="s">Форматы: JPG, PNG, MP4, MOV, AVI. Фото до 5 МБ, видео до 500 МБ</div></div>'+
+      '<div class="lst-h">Добавленные <span class="n">'+c.media.length+'</span></div>'+
+      (c.media.length? '<div class="media">'+c.media.map(m=>'<div class="thumb'+(m.v?" v":"")+'">'+(m.v?ICO.play:ICO.img)+(m.v?'<span class="dur">'+m.dur+'</span>':'')+'<span class="cap">'+esc(m.name)+'</span></div>').join("")+'</div>'
+        : '<div class="es">'+ILL.media+'<div class="t">Фото и видео пока нет</div><div class="s">Загрузите файл выше</div></div>');
+  }
+  // svcs
+  const list=c.svcs.filter(s=>(S.svcF==="all"||s.st===S.svcF)&&(!S.svcQ||s.name.toLowerCase().includes(S.svcQ.toLowerCase())));
+  return '<div class="sv-head"><h4>Услуги <span class="n">'+c.svcs.length+'</span></h4>'+
+      '<label class="sv-f">Статус <select id="svcF" aria-label="Состояние услуги"><option value="all">Все</option>'+
+        Object.keys(SVC_ST).map(k=>'<option value="'+k+'"'+(S.svcF===k?" selected":"")+'>'+SVC_ST[k].t+'</option>').join("")+'</select></label>'+
+      '<span class="srch">'+ICO.search+'<input id="svcQ" type="search" placeholder="Поиск по услугам" value="'+esc(S.svcQ)+'"></span></div>'+
+    (!c.svcs.length? '<div class="es" style="padding-top:40px">'+ILL.svc+'<div class="t">Услуги не назначены</div></div>'
+     : list.length? '<div class="svc-list">'+list.map(s=>'<div class="svc"><span class="sm1"><span class="sn">'+esc(s.name)+'</span><span class="sd2">План: '+s.plan+'</span></span>'+
+          '<span class="status sm"><span class="dot '+SVC_ST[s.st].dot+'"></span>'+SVC_ST[s.st].t+'</span></div>').join("")+'</div>'
+     : '<div class="empty">Ничего не найдено</div>');
+}
+
+function render(){ renderPipeline(); renderSel(); renderList(); renderPreview(false); }
 
 function select(id,{focus=false,open=true}={}){
   if(id===S.sel && !narrow()) return;
+  if(id!==S.sel){ S.docType=""; S.svcF="all"; S.svcQ=""; }
   S.sel=id;
-  document.querySelectorAll("#tbody .tr").forEach(tr=>{const on=+tr.dataset.id===id; tr.setAttribute("aria-selected",on); tr.tabIndex=on?0:-1; if(on&&focus){tr.focus(); tr.scrollIntoView({block:"nearest"});}});
+  document.querySelectorAll("#clist .ccard").forEach(el=>{const on=+el.dataset.id===id; el.setAttribute("aria-selected",on); el.tabIndex=on?0:-1; if(on&&focus){el.focus(); el.scrollIntoView({block:"nearest"});}});
   renderPreview(true);
   if(narrow()&&open) openSheet();
 }
@@ -508,58 +701,90 @@ function openSheet(){ $("#prev").classList.add("open"); $("#scrim").hidden=false
 function closeSheet(){ $("#prev").classList.remove("open"); $("#scrim").hidden=true; }
 
 function setStatus(ids,st){
-  ids.forEach(id=>{const c=S.data.find(x=>x.id===id); if(c) c.st=st;});
-  renderPipeline(); renderSel(); renderTable(); renderPreview(true);
+  ids.forEach(id=>{const c=S.data.find(x=>x.id===id); if(c){ c.st=st; c.hist.push({st,at:new Date()}); }});
+  renderPipeline(); renderSel(); renderList(); renderPreview(true);
 }
 
 /* ---------- события ---------- */
-$("#tbody").addEventListener("click",e=>{
-  const tr=e.target.closest(".tr"); if(!tr) return;
-  const id=+tr.dataset.id;
-  if(e.target.matches(".cb")){ e.target.checked?S.checked.add(id):S.checked.delete(id); renderTable(); return; }
+$("#clist").addEventListener("click",e=>{
+  const el=e.target.closest(".ccard"); if(!el) return;
+  const id=+el.dataset.id;
+  if(e.target.closest(".cc-cb")){ if(e.target.matches(".cb")){ e.target.checked?S.checked.add(id):S.checked.delete(id); renderList(); } return; }
   select(id);
 });
-$("#tbody").addEventListener("keydown",e=>{
-  const tr=e.target.closest(".tr"); if(!tr||e.target.matches(".cb")) return;
+$("#clist").addEventListener("keydown",e=>{
+  const el=e.target.closest(".ccard"); if(!el||e.target.matches(".cb")) return;
   if(e.key==="ArrowDown"||e.key==="ArrowUp"){
     e.preventDefault();
-    const nx=e.key==="ArrowDown"?tr.nextElementSibling:tr.previousElementSibling;
-    if(nx&&nx.classList.contains("tr")) select(+nx.dataset.id,{focus:true,open:false});
-  } else if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(+tr.dataset.id); }
+    const nx=e.key==="ArrowDown"?el.nextElementSibling:el.previousElementSibling;
+    if(nx&&nx.classList.contains("ccard")) select(+nx.dataset.id,{focus:true,open:false});
+  } else if(e.key==="Enter"||e.key===" "){ e.preventDefault(); select(+el.dataset.id); }
 });
-$("#cbAll").addEventListener("change",e=>{
-  visible().forEach(c=>e.target.checked?S.checked.add(c.id):S.checked.delete(c.id)); renderTable();
+$("#listTools").addEventListener("change",e=>{
+  if(e.target.id!=="cbAll") return;
+  visible().forEach(c=>e.target.checked?S.checked.add(c.id):S.checked.delete(c.id)); renderList();
 });
-$("#bulk").addEventListener("click",e=>{
+$("#listTools").addEventListener("click",e=>{
   const b=e.target.closest("[data-bulk]"); if(!b) return;
-  if(b.dataset.bulk==="clear"){ S.checked.clear(); renderTable(); return; }
   const ids=[...S.checked].filter(id=>{const c=S.data.find(x=>x.id===id); return c.st==="pending"||c.st==="review";});
   const skipped=S.checked.size-ids.length;
   S.checked.clear(); setStatus(ids,b.dataset.bulk);
   toast((b.dataset.bulk==="done"?"Одобрено: ":"Отклонено: ")+ids.length+(skipped?" · пропущено "+skipped+" (статус уже финальный)":""));
 });
 $("#prev").addEventListener("click",e=>{
+  const c=S.data.find(x=>x.id===S.sel); if(!c) return;
   if(e.target.closest("#pClose")){ closeSheet(); return; }
+  if(e.target.closest("[data-open]")){ toast("Полная карточка кандидата в прототипе не реализована"); return; }
+  const t=e.target.closest("[data-tab]");
+  if(t){ S.tab=t.dataset.tab; renderPreview(false); const nt=$('#prev [data-tab="'+S.tab+'"]'); if(nt) nt.focus(); return; }
+  if(e.target.closest("[data-hist]")){ S.histOpen=!S.histOpen; renderPreview(false); return; }
+  const add=e.target.closest("[data-add]");
+  if(add){
+    if(add.dataset.add==="doc"){
+      if(!S.docType){ toast("Сначала выберите тип документа"); const s=$("#docType"); if(s) s.focus(); return; }
+      c.docs.unshift({type:S.docType, name:"scan_"+c.ln.toLowerCase()+".pdf", size:"1,2 МБ", at:fmtDT(new Date())});
+      S.docType=""; renderPreview(false); renderList(); toast("Документ загружен");
+    } else {
+      const v=c.media.length%3===2; c.media.push({v, name:(v?"video_":"photo_")+(c.media.length+1)+(v?".mp4":".jpg"), dur:v?"0:24":""});
+      renderPreview(false); toast(v?"Видео загружено":"Фото загружено");
+    }
+    return;
+  }
+  const dd=e.target.closest("[data-deldoc]");
+  if(dd){ c.docs.splice(+dd.dataset.deldoc,1); renderPreview(false); toast("Документ удалён"); return; }
+  if(e.target.closest("[data-dl]")){ toast("Скачивание в прототипе не реализовано"); return; }
   const b=e.target.closest("[data-act]"); if(!b) return;
-  const c=S.data.find(x=>x.id===S.sel);
   setStatus([c.id],b.dataset.act);
   toast((b.dataset.act==="done"?"Кандидат одобрен: ":"Кандидат отклонён: ")+c.fn+" "+c.ln);
+});
+$("#prev").addEventListener("change",e=>{
+  if(e.target.id==="docType"){ S.docType=e.target.value; const b=$('#prev .btn[data-add="doc"]'); if(b) b.disabled=!S.docType; }
+  if(e.target.id==="svcF"){ S.svcF=e.target.value; renderPreview(false); }
+});
+$("#prev").addEventListener("input",e=>{
+  if(e.target.id!=="svcQ") return;
+  S.svcQ=e.target.value; const pos=e.target.selectionStart; renderPreview(false);
+  const q=$("#svcQ"); q.focus(); q.setSelectionRange(pos,pos);
+});
+$("#prev").addEventListener("keydown",e=>{
+  if(e.target.matches(".dz")&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); e.target.click(); return; }
+  const t=e.target.closest("[data-tab]"); if(!t||(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")) return;
+  const i=TABS.findIndex(x=>x[0]===t.dataset.tab), n=TABS[(i+(e.key==="ArrowRight"?1:TABS.length-1))%TABS.length][0];
+  S.tab=n; renderPreview(false); $('#prev [data-tab="'+n+'"]').focus();
 });
 $("#scrim").addEventListener("click",closeSheet);
 $("#pipeline").addEventListener("click",e=>{
   const b=e.target.closest(".scard"); if(!b) return;
-  S.filter=S.filter===b.dataset.st?"all":b.dataset.st; renderPipeline(); renderSel(); renderTable(); renderPreview(true);
+  S.filter=S.filter===b.dataset.st?"all":b.dataset.st; renderPipeline(); renderSel(); renderList(); renderPreview(true);
 });
 (function(){
   const w=$("#sel"), btn=w.querySelector(".sel-btn"), pop=w.querySelector(".sel-pop");
   const cl=()=>{pop.hidden=true; btn.setAttribute("aria-expanded","false");};
   btn.addEventListener("click",e=>{e.stopPropagation(); pop.hidden=!pop.hidden; btn.setAttribute("aria-expanded",String(!pop.hidden));});
-  pop.addEventListener("click",e=>{const o=e.target.closest("[data-st]"); if(!o) return; S.filter=o.dataset.st; cl(); renderPipeline(); renderSel(); renderTable(); renderPreview(true);});
+  pop.addEventListener("click",e=>{const o=e.target.closest("[data-st]"); if(!o) return; S.filter=o.dataset.st; cl(); renderPipeline(); renderSel(); renderList(); renderPreview(true);});
   document.addEventListener("click",e=>{if(!w.contains(e.target)) cl();});
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){cl(); closeSheet();}});
 })();
-document.querySelectorAll(".tab[data-soon]").forEach(t=>t.addEventListener("click",()=>toast("Вкладка «"+t.textContent+"» в прототипе не реализована")));
-var _r=$("#reset"); if(_r) _r.addEventListener("click",()=>{reset(); toast("Данные сброшены");});
 
 /* ================= меню прототипов ================= */
 (function(){
