@@ -119,10 +119,10 @@
   .ftabs{display:flex; align-items:center; gap:6px; margin:24px 0 20px; overflow-x:auto; scrollbar-width:none}
   .ftabs::-webkit-scrollbar{display:none}
   .ftab{appearance:none; border:0; background:none; cursor:pointer; flex:none; display:inline-flex; align-items:center; justify-content:center; gap:4px;
-    padding:6px 12px; border-radius:var(--r-pill); font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff;
+    padding:6px 12px; border-radius:var(--r-pill); font-family:inherit; font-size:14px; line-height:20px; font-weight:500; color:#fff;   /* размер текста — как у табов заявки */
     opacity:.8; white-space:nowrap}
   .ftab[aria-selected="true"]{opacity:1; padding:7px 13px; background:rgba(255,255,255,.10)}   /* без обводки — решение Ильи 21.10 */
-  .ftab .n{font-weight:400; line-height:22px; color:var(--label); font-variant-numeric:tabular-nums}
+  .ftab .n{font-weight:400; line-height:20px; color:var(--label); font-variant-numeric:tabular-nums}
   .dot{width:8px; height:8px; border-radius:50%; flex:none; background:var(--st-none)}
   .d-pending{background:var(--st-pending)} .d-review{background:var(--st-work)} .d-done{background:var(--st-done)}
   .d-rejected{background:var(--st-error)} .d-cancelled{background:var(--st-none)} .d-employ{background:var(--primary)}
