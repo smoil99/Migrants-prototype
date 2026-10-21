@@ -129,9 +129,10 @@
     border-radius:20px; color:#fff; animation:slide .18s ease-out; outline:none}
   @keyframes slide{from{transform:translateX(24px); opacity:0}}
   .np-h{flex:none; padding:28px 24px 12px}
-  .np-top{display:flex; align-items:center; justify-content:space-between; gap:12px}
-  .np-top h2{margin:0; font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.12px}
-  .np-x{appearance:none; display:none; place-items:center; width:40px; height:40px; flex:none; border:0; border-radius:50%; padding:0; cursor:pointer;
+  .np-top{display:flex; align-items:center; gap:12px; min-height:40px; padding-right:52px}
+  .np-top h2{margin:0; font-size:24px; line-height:32px; font-weight:600; letter-spacing:-.12px; outline:none}
+  /* крестик — справа в шапке, но последний в порядке Tab (D-11) */
+  .np-x{appearance:none; position:absolute; top:28px; right:24px; display:grid; place-items:center; width:40px; height:40px; border:0; border-radius:50%; padding:0; cursor:pointer;
     color:#fff; background:rgba(255,255,255,.10)}
   .np-x:hover{background:rgba(255,255,255,.16)}
   .np-x svg{width:20px; height:20px}
@@ -142,7 +143,7 @@
     background:transparent; color:#fff; font-size:16px; line-height:20px; font-weight:500; opacity:.8; transition:opacity .12s, background .12s}
   .tab:hover{opacity:1; background:rgba(255,255,255,.06)}
   .tab[aria-selected="true"]{opacity:1; background:rgba(255,255,255,.10); border-color:#fff}
-  .tab .n{font-variant-numeric:tabular-nums}
+  .tab .n{font-variant-numeric:tabular-nums; opacity:.6}
   /* «Прочитать все» — единственное место действия; при 0 непрочитанных disabled (opacity 40%) */
   .mark{appearance:none; flex:none; border:0; background:none; cursor:pointer; padding:6px 4px; border-radius:6px;
     color:var(--teal); font-size:16px; line-height:20px; font-weight:500; white-space:nowrap}
@@ -153,15 +154,14 @@
   .alert{display:flex; gap:10px; align-items:flex-start; border-radius:12px; padding:12px 14px; font-size:14px; font-weight:500; line-height:20px;
     background:var(--err-bg); color:var(--err)}
   .alert svg{width:20px; height:20px; flex:none}
-  .np-b{position:relative; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding:0 12px 24px}
-  /* плашка «Новые уведомления: N — Показать»: поверх списка, список сам не прыгает */
-  .np-new{position:sticky; top:8px; z-index:3; height:0; display:flex; justify-content:center; overflow:visible}
-  .np-new button{appearance:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px; height:36px; padding:0 14px; border-radius:var(--r-pill); border:0;
-    background:#2f3437; color:#fff; font-size:14px; font-weight:500; white-space:nowrap; animation:drop .2s ease-out;
-    box-shadow:inset 0 0 0 1px rgba(17,213,203,.45), 0 12px 30px -10px rgba(0,0,0,.8)}
-  .np-new button:hover{background:#363c40}
-  .np-new button span{color:var(--teal); font-weight:600}
-  .np-new svg{width:16px; height:16px; color:var(--teal)}
+  .np-b{position:relative; flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding:0 12px 8px}
+  /* «Показать новые уведомления (N)» — кнопка под вкладками; список сам не меняется, пока не нажали */
+  .np-newb{flex:none; padding:0 24px 8px}
+  .np-newb button{appearance:none; cursor:pointer; width:100%; height:40px; display:flex; align-items:center; justify-content:center; gap:8px;
+    border:0; border-radius:var(--r-pill); background:rgba(255,255,255,.10); color:#fff; font-size:14px; font-weight:500;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10); animation:drop .2s ease-out}
+  .np-newb button:hover{background:rgba(255,255,255,.15)}
+  .np-newb svg{width:16px; height:16px}
   @keyframes drop{from{transform:translateY(-8px); opacity:0}}
   /* группы СЕГОДНЯ / ВЧЕРА / РАНЕЕ */
   .np-gl{margin:0; padding:14px 12px 6px; font-size:12px; line-height:16px; font-weight:600; letter-spacing:.08em; color:var(--dim)}
@@ -183,22 +183,25 @@
   .n-d{display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere;
     font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
   .n-m{display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:6px; font-size:14px; line-height:20px; color:var(--dim)}
+  .n-refs{display:flex; flex-wrap:wrap; gap:4px 6px}
+  .n-time{margin-left:auto}
   .n-ref{display:inline-block; padding:0 8px; border-radius:6px; background:rgba(255,255,255,.08); color:rgba(255,255,255,.6);
     font-variant-numeric:tabular-nums; white-space:nowrap}
   .n-time{white-space:nowrap; font-variant-numeric:tabular-nums}
   .n-chev{flex:none; align-self:center; width:20px; height:20px; color:var(--dim); transition:color .12s}
   .n-chev svg{width:20px; height:20px; display:block}
   .nrow:hover .n-chev,.nrow:focus-visible .n-chev{color:#fff}
-  /* actions: «Показать ещё» / спиннер подгрузки */
-  .np-more{display:flex; justify-content:center; padding:16px 12px 0}
+  /* actions: «Показать ещё» в футере панели; при подгрузке — «Загружаем…» со спиннером */
+  .np-f{flex:none; display:flex; justify-content:flex-end; padding:12px 24px 24px}
   .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
     height:40px; padding:0 20px; border:0; border-radius:var(--r-pill); font-size:16px; font-weight:500; color:#fff;
     background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
     white-space:nowrap; transition:background .12s}
   .btn:hover{background:rgba(255,255,255,.15)}
+  .btn[aria-disabled="true"]{cursor:default; background:rgba(255,255,255,.10)}
   .spin{width:24px; height:24px; border-radius:50%; border:2.5px solid rgba(255,255,255,.18); border-top-color:var(--teal); animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .np-more .spin{margin:8px 0}
+  .spin.sm{width:16px; height:16px; border-width:2px}
   /* скелетоны */
   .sk{display:flex; gap:16px; padding:14px 12px}
   .sk .c{width:40px; height:40px; border-radius:50%; flex:none}
@@ -227,12 +230,14 @@
   @media (max-width:599px){
     .np{inset:0; width:100%; border-radius:0; padding-top:env(safe-area-inset-top,0px); animation-name:slideup}
     .np-h{padding:16px 16px 12px}
-    .np-x{display:grid}
+    .np-x{top:16px; right:16px}
+    .np-newb{padding:0 16px 8px}
+    .np-f{padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px))}
     .np-bar{gap:8px 4px}
     .tab{font-size:15px; padding:6px 10px}
     .mark{font-size:15px}
     .np-alert{padding:0 16px 8px}
-    .np-b{padding:0 4px calc(24px + env(safe-area-inset-bottom,0px))}
+    .np-b{padding:0 4px 8px}
     .who .nm,.who .rl,.brand-links span{display:none}
     .topnav-in{gap:16px}
   }
@@ -369,12 +374,12 @@ const IC={
 };
 /* иконки видов уведомлений (40×40, глиф 20) */
 const TIC={
-  U1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14h6"/></svg>',
-  U3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M5 3.5L2.5 6M19 3.5L21.5 6"/></svg>',
-  U4:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12.5h18"/></svg>',
+  U1:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12.5h18"/></svg>',
+  U3:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.3"/></svg>',
+  U4:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.5 12.5A8.5 8.5 0 1 1 12 3.5"/><path d="M12 7.5V12l3 2"/><path d="M15.5 3.5l3 2.5-3 2.5M19 3.5l3 2.5-3 2.5"/></svg>',
   U5:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>',
-  U6:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 13l2 2 4-4"/></svg>',
-  U7:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/></svg>'
+  U6:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>',
+  U7:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.6-3.6 3.2-5.5 6.5-5.5 1.3 0 2.5.3 3.5.9"/><path d="M15.5 18l2 2 4-4.5"/></svg>'
 };
 
 /* ================= тексты ================= */
@@ -382,21 +387,25 @@ const L={
   ru:{title:"Уведомления", all:"Все", unread:"Непрочитанные", markAll:"Прочитать все", close:"Закрыть",
     gToday:"СЕГОДНЯ", gYest:"ВЧЕРА", gEarlier:"РАНЕЕ", today:"Сегодня", yest:"Вчера",
     months:["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"],
-    more:"Показать ещё", loadingMore:"Загружаем ещё уведомления", loaded:n=>"Загружено уведомлений: "+n,
+    more:"Показать ещё", moreLoading:"Загружаем…", loaded:n=>"Загружено уведомлений: "+n,
     emptyT:"Уведомлений пока нет", emptyP:"Здесь появятся события по вашим заявкам и кандидатам",
-    unreadEmptyT:"Непрочитанных нет", errT:"Не удалось загрузить уведомления", retry:"Повторить",
-    markErr:"Не удалось отметить как прочитанные. Попробуйте ещё раз.", markedAll:"Все уведомления отмечены прочитанными",
-    newPill:n=>"Новые уведомления: "+n, show:"Показать", unreadSr:"Непрочитанное: ", loading:"Загрузка уведомлений",
+    unreadEmptyT:"Непрочитанных нет", unreadEmptyP:"Новые события по вашим заявкам появятся здесь",
+    errT:"Не удалось загрузить уведомления", errP:"Проверьте подключение и попробуйте ещё раз.", retry:"Повторить",
+    markErr:"Не удалось отметить уведомления как прочитанные. Попробуйте ещё раз.", markedAll:"Все уведомления отмечены прочитанными",
+    newPill:n=>"Новые уведомления: "+n, newBtn:n=>"Показать новые уведомления ("+n+")", unreadSr:"Не прочитано. ", loading:"Загрузка уведомлений",
+    refsSr:(r,rest)=>(r.length>1?"Заявки ":"Заявка ")+r.join(", ")+(rest?" и ещё "+rest:"")+".",
     bell:n=>n?"Уведомления, непрочитанных: "+n:"Уведомления", ref:r=>"№"+r,
     goReq:r=>"Переход: карточка заявки №"+r, goCand:r=>"Переход: карточка заявки №"+r+" — раздел Кандидаты", goList:"Переход: список заявок"},
   en:{title:"Notifications", all:"All", unread:"Unread", markAll:"Mark all as read", close:"Close",
     gToday:"TODAY", gYest:"YESTERDAY", gEarlier:"EARLIER", today:"Today", yest:"Yesterday",
     months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-    more:"Show more", loadingMore:"Loading more notifications", loaded:n=>"Notifications loaded: "+n,
+    more:"Show more", moreLoading:"Loading…", loaded:n=>"Notifications loaded: "+n,
     emptyT:"No notifications yet", emptyP:"Events on your requests will appear here",
-    unreadEmptyT:"No unread notifications", errT:"Couldn't load notifications", retry:"Retry",
-    markErr:"Couldn't mark as read. Try again.", markedAll:"All notifications marked as read",
-    newPill:n=>"New notifications: "+n, show:"Show", unreadSr:"Unread: ", loading:"Loading notifications",
+    unreadEmptyT:"No unread notifications", unreadEmptyP:"New events on your requests will appear here",
+    errT:"Couldn't load notifications", errP:"Check your connection and try again.", retry:"Retry",
+    markErr:"Couldn't mark notifications as read. Try again.", markedAll:"All notifications marked as read",
+    newPill:n=>"New notifications: "+n, newBtn:n=>"Show new notifications ("+n+")", unreadSr:"Unread. ", loading:"Loading notifications",
+    refsSr:(r,rest)=>(r.length>1?"Requests ":"Request ")+r.join(", ")+(rest?" and "+rest+" more":"")+".",
     bell:n=>n?"Notifications, unread: "+n:"Notifications", ref:r=>"#"+r,
     goReq:r=>"Go to: request card #"+r, goCand:r=>"Go to: request card #"+r+" — Candidates section", goList:"Go to: requests list"}
 };
@@ -537,14 +546,18 @@ function renderContent(){
 /* ================= панель ================= */
 function renderPanel(){
   const x=tx(), n=unreadCount(), np=$("#np");
+  /* без вкладок: ошибка загрузки и пустая панель (как в макете) */
+  const noBar=S.state==="error"||(S.state==="ok"&&S.tab==="all"&&!S.items.some(i=>!i.hidden));
   np.innerHTML=
-    '<header class="np-h"><div class="np-top"><h2 id="npT">'+x.title+'</h2>'+
-      '<button class="np-x" data-act="close" aria-label="'+x.close+'">'+IC.x+'</button></div>'+
-    '<div class="np-bar"><div class="np-tabs" role="tablist" aria-label="'+x.title+'">'+
-      tabBtn("all",x.all)+tabBtn("unread",x.unread+' <span class="n">('+tabTxt(n)+')</span>')+'</div>'+
-      '<button class="mark" data-act="markall"'+(n&&S.state==="ok"?"":" disabled")+'>'+x.markAll+'</button></div></header>'+
+    '<header class="np-h"><div class="np-top"><h2 id="npT" tabindex="-1">'+x.title+'</h2></div>'+
+    (noBar?'':'<div class="np-bar"><div class="np-tabs" role="tablist" aria-label="'+x.title+'">'+
+      tabBtn("all",x.all)+tabBtn("unread",x.unread+' <span class="n"'+(n?'':' hidden')+'>('+tabTxt(n)+')</span>')+'</div>'+
+      '<button class="mark" data-act="markall"'+(n&&S.state==="ok"?"":" disabled")+'>'+x.markAll+'</button></div>')+'</header>'+
     '<div class="np-alert" id="npAlert"'+(S.markErr?"":" hidden")+'><div class="alert" role="alert">'+IC.err+'<span>'+x.markErr+'</span></div></div>'+
-    '<div class="np-b" id="npBody" role="tabpanel" aria-labelledby="tab-'+S.tab+'"></div>';
+    '<div class="np-newb" id="npNew" hidden></div>'+
+    '<div class="np-b" id="npBody" role="tabpanel" aria-labelledby="tab-'+S.tab+'"></div>'+
+    '<div class="np-f" id="npFoot" hidden></div>'+
+    '<button class="np-x" data-act="close" aria-label="'+x.close+'">'+IC.x+'</button>';
   renderBody();
 }
 function tabBtn(k,label){
@@ -554,46 +567,51 @@ function tabBtn(k,label){
 function renderBody(){
   const x=tx(), b=$("#npBody"); if(!b) return;
   const st=b.scrollTop;
-  let h="";
+  let h="", foot="";
+  const p=S.state==="ok"?pendingCount():0, nb=$("#npNew");
+  nb.hidden=!p; nb.innerHTML=p?'<button data-act="shownew">'+IC.up+x.newBtn(p)+'</button>':"";
   if(S.state==="loading"){
-    h='<div role="status" aria-label="'+x.loading+'">'+'<div class="sk"><span class="c"></span><span class="ls"><span class="b" style="width:46%"></span><span class="b" style="width:88%"></span><span class="b" style="width:34%"></span></span></div>'.repeat(4)+'</div>';
+    h='<div role="status" aria-label="'+x.loading+'">'+'<div class="sk"><span class="c"></span><span class="ls"><span class="b" style="width:46%"></span><span class="b" style="width:88%"></span><span class="b" style="width:34%"></span></span></div>'.repeat(9)+'</div>';
   } else if(S.state==="error"){
-    h='<div class="np-st"><div class="bubble err">'+IC.err+'</div><h3>'+x.errT+'</h3><button class="btn" data-act="retry">'+x.retry+'</button></div>';
+    h='<div class="np-st"><div class="bubble">'+IC.bell+'</div><h3>'+x.errT+'</h3><p>'+x.errP+'</p><button class="btn" data-act="retry">'+x.retry+'</button></div>';
   } else {
     const all=viewAll(), shown=all.slice(0,S.loaded[S.tab]), more=all.length>shown.length;
-    const p=pendingCount();
-    if(p) h+='<div class="np-new"><button data-act="shownew">'+IC.up+x.newPill(p)+' <span>'+x.show+'</span></button></div>';
     if(!shown.length){
-      h+= S.tab==="unread"
-        ? '<div class="np-st"><div class="bubble">'+IC.check+'</div><h3>'+x.unreadEmptyT+'</h3></div>'
+      h= S.tab==="unread"
+        ? '<div class="np-st"><div class="bubble">'+IC.bell+'</div><h3>'+x.unreadEmptyT+'</h3><p>'+x.unreadEmptyP+'</p></div>'
         : '<div class="np-st"><div class="bubble">'+IC.bell+'</div><h3>'+x.emptyT+'</h3><p>'+x.emptyP+'</p></div>';
     } else {
       const groups=[[x.gToday,[]],[x.gYest,[]],[x.gEarlier,[]]];
       shown.forEach(i=>{const d=dayDiff(i.t); groups[d<=0?0:d===1?1:2][1].push(i);});
       groups.forEach(([lab,arr],gi)=>{ if(!arr.length) return;
         h+='<section aria-labelledby="g'+gi+'"><h3 class="np-gl" id="g'+gi+'">'+lab+'</h3><ul class="np-l">'+arr.map(rowHtml).join("")+'</ul></section>'; });
-      if(S.moreLoading) h+='<div class="np-more" role="status" aria-label="'+x.loadingMore+'"><span class="spin"></span></div>';
-      else if(more) h+='<div class="np-more"><button class="btn" data-act="more">'+x.more+'</button></div>';
+      if(S.moreLoading) foot='<button class="btn" data-act="more" aria-disabled="true"><span class="spin sm" aria-hidden="true"></span>'+x.moreLoading+'</button>';
+      else if(more) foot='<button class="btn" data-act="more">'+x.more+'</button>';
     }
   }
   b.innerHTML=h; b.scrollTop=st;
+  const f=$("#npFoot"), had=f.contains(document.activeElement);
+  f.hidden=!foot; f.innerHTML=foot;
+  if(had&&foot) f.querySelector("button").focus({preventScroll:true});
 }
 function rowHtml(i){
   const x=tx(), k=KIND[i.type][S.lang], refs=i.refs||[];
   const shownRefs=i.type==="U3"?refs.slice(0,2):refs.slice(0,1), rest=refs.length-shownRefs.length;
-  const d=new Date(i.t);
-  return '<li><button class="nrow'+(i.read?"":" unread")+'" data-id="'+i.id+'">'+
+  const d=new Date(i.t), title=k.t, desc=k.d(i), when=fmtWhen(i.t);
+  /* диктор (D-11): «Не прочитано. ‹заголовок›. ‹описание› Заявка ‹номер›. ‹дата›» */
+  const sr=(i.read?"":x.unreadSr)+title+". "+desc+" "+x.refsSr(shownRefs,rest)+" "+when;
+  return '<li><button class="nrow'+(i.read?"":" unread")+'" data-id="'+i.id+'" aria-label="'+esc(sr)+'">'+
     '<span class="n-ic">'+TIC[i.type]+'<span class="n-dot"></span></span>'+
-    '<span class="n-tx"><span class="n-t">'+(i.read?"":'<span class="sr">'+x.unreadSr+'</span>')+esc(k.t)+'</span>'+
-      '<span class="n-d">'+esc(k.d(i))+'</span>'+
-      '<span class="n-m">'+shownRefs.map(r=>'<span class="n-ref">'+esc(x.ref(r))+'</span>').join("")+(rest>0?'<span class="n-ref">+'+rest+'</span>':"")+
-      '<time class="n-time" datetime="'+d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())+'">'+fmtWhen(i.t)+'</time></span></span>'+
+    '<span class="n-tx"><span class="n-t">'+esc(title)+'</span>'+
+      '<span class="n-d">'+esc(desc)+'</span>'+
+      '<span class="n-m"><span class="n-refs">'+shownRefs.map(r=>'<span class="n-ref">'+esc(x.ref(r))+'</span>').join("")+(rest>0?'<span class="n-ref">+'+rest+'</span>':"")+'</span>'+
+      '<time class="n-time" datetime="'+d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())+'">'+when+'</time></span></span>'+
     '<span class="n-chev" aria-hidden="true">'+IC.chev+'</span></button></li>';
 }
 /* счётчики: бейдж колокольчика, вкладка, «Прочитать все» — без перерисовки списка */
 function renderCounts(){
   const n=unreadCount(), t=$("#tab-unread .n"), m=$("#np .mark");
-  if(t) t.textContent="("+tabTxt(n)+")";
+  if(t){ t.textContent="("+tabTxt(n)+")"; t.hidden=!n; }
   if(m) m.disabled=!(n&&S.state==="ok");
   renderBell();
 }
@@ -604,7 +622,7 @@ function openPanel(){
   S.open=true; placeLayer(); $("#npLayer").hidden=false; document.body.classList.add("locked");
   S.items.forEach(i=>{delete i.stick;});
   renderPanel(); renderBell();
-  const f=$("#np .tab[aria-selected='true']"); (f||$("#np")).focus({preventScroll:true});
+  $("#npT").focus({preventScroll:true});   // D-11: фокус на заголовок панели
 }
 /* панель и затемнение — под харнессом прототипа, чтобы роль и сценарий переключались при открытой панели */
 function placeLayer(){ $("#npLayer").style.top=(EMBED?0:Math.max(0,Math.round($(".harness").getBoundingClientRect().bottom)))+"px"; }
@@ -625,7 +643,7 @@ function openItem(id){
   const x=tx();
   if(!i.read){
     i.read=true; if(S.tab==="unread") i.stick=true;
-    const row=$('.nrow[data-id="'+id+'"]'); row.classList.remove("unread"); const sr=row.querySelector(".n-t .sr"); sr&&sr.remove();
+    const row=$('.nrow[data-id="'+id+'"]'); row.classList.remove("unread"); row.setAttribute("aria-label",row.getAttribute("aria-label").replace(x.unreadSr,""));
     renderCounts();
   }
   toast(i.type==="U3"&&i.refs.length>1?x.goList:i.type==="U7"?x.goCand(i.refs[0]):x.goReq(i.refs[0]));
@@ -635,10 +653,10 @@ function markAll(){
   S.markErr=false; S.items.forEach(i=>{i.read=true; delete i.stick;});
   const foc=document.activeElement&&document.activeElement.classList.contains("mark");
   renderPanel(); renderBell(); say(tx().markedAll);
-  if(foc) $("#tab-"+S.tab).focus();
+  if(foc) ($("#tab-"+S.tab)||$("#npT")).focus();
 }
 function loadMore(){
-  if(S.moreLoading) return;
+  if(S.moreLoading) return;   // aria-disabled: кнопка остаётся в фокусе во время подгрузки
   const before=$("#npBody").querySelectorAll(".nrow").length;
   S.moreLoading=true; renderBody();
   if(S.freezeMore) return;
@@ -651,7 +669,7 @@ function loadMore(){
 }
 function retry(){
   S.state="loading"; renderPanel();
-  later(()=>{S.state="ok"; renderPanel(); const f=$("#np .tab[aria-selected='true']"); f&&f.focus();},600);
+  later(()=>{S.state="ok"; renderPanel(); $("#npT").focus();},600);
 }
 function showNew(){
   const fresh=S.items.filter(i=>i.hidden);
@@ -690,8 +708,8 @@ $("#np").addEventListener("keydown",e=>{
   if(t.classList.contains("tab")&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){
     e.preventDefault(); setTab(t.dataset.tab==="all"?"unread":"all",true); return;
   }
-  if(t.classList.contains("nrow")||t.dataset.act==="more"){
-    const rows=[...$("#npBody").querySelectorAll(".nrow, [data-act='more']")], i=rows.indexOf(t);
+  if(t.classList.contains("nrow")){
+    const rows=[...$("#npBody").querySelectorAll(".nrow")], i=rows.indexOf(t);
     let j=-1;
     if(e.key==="ArrowDown") j=Math.min(rows.length-1,i+1);
     else if(e.key==="ArrowUp") j=Math.max(0,i-1);
@@ -708,12 +726,12 @@ const HINTS={
   allread:"<b>Всё прочитано:</b> бейджа на колокольчике нет, «Непрочитанные (0)», «Прочитать все» неактивна (40%).",
   empty:"<b>Пусто:</b> уведомлений ещё не было — иллюстрация и пояснение.",
   "unread-empty":"<b>Непрочитанных нет:</b> открыта вкладка «Непрочитанные», всё прочитано.",
-  loading:"<b>Загрузка:</b> скелетоны 4 строк (застыло для просмотра).",
-  error:"<b>Ошибка загрузки:</b> «Повторить» → загрузка → список.",
+  loading:"<b>Загрузка:</b> скелетоны на всю высоту панели (застыло для просмотра).",
+  error:"<b>Ошибка загрузки:</b> без вкладок; «Повторить» → загрузка → список.",
   "markall-error":"<b>Ошибка «Прочитать все»:</b> inline-alert под шапкой; повторное нажатие «Прочитать все» срабатывает.",
-  "new":"<b>Пришло новое (pull):</b> через ~1,5 с при открытой панели — плашка «Новые уведомления: 1 — Показать», бейдж растёт; список сам не прыгает, по клику событие встаёт в начало «Сегодня».",
+  "new":"<b>Пришло новое (pull):</b> через ~1,5 с при открытой панели под вкладками появляется «Показать новые уведомления (1)», бейдж и счётчик растут; список сам не меняется, по клику событие встаёт в начало «Сегодня».",
   long:"<b>Длинные тексты:</b> заголовок — 1 строка с «…», описание — до 2 строк с «…», длинный номер в плашке, сводный U3 — 2 номера + «+N».",
-  more:"<b>Подгрузка:</b> «Показать ещё» нажата — спиннер внизу списка (застыло). В остальных сценариях кнопка догружает по 20 за ~600 мс и пропадает, когда больше нет.",
+  more:"<b>Подгрузка:</b> «Показать ещё» нажата — в кнопке «Загружаем…» со спиннером (застыло). В остальных сценариях кнопка догружает по 20 за ~600 мс и пропадает, когда больше нет.",
   many:"<b>120 непрочитанных:</b> бейдж «9+», вкладка «Непрочитанные (99+)». Из ежедневных U3 / U7 непрочитанным остаётся только последнее (Q-09 А).",
   newyear:"<b>Начало года:</b> «сегодня» — 5 января; у событий прошлого года в дате есть год — «20 дек 2026, 11:00» (D-10). Старше 90 дней в списке ничего нет (Q-05).",
   mobile:"<b>Телефон:</b> страница в рамке 380 px — панель на всю ширину, в шапке крестик."
