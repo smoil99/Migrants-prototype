@@ -90,7 +90,7 @@
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
 
   /* DS «Filter tab» (Figma 1152:2890): Default — opacity .8, 6/12; Active — white@10%, тот же 6/12 (обводку и +1px компонента не используем, чтобы табы не сдвигались) */
-  .ftabs{display:flex; align-items:center; gap:6px; margin:24px 0 20px; overflow-x:auto; scrollbar-width:none}
+  .ftabs{display:flex; align-items:center; gap:6px; min-height:38px; margin:24px 0 20px; overflow-x:auto; scrollbar-width:none}   /* высота строки = строке табов + поиска на «Услугах» — табы не прыгают при переключении */
   .ftabs::-webkit-scrollbar{display:none}
   .ftab{appearance:none; border:0; background:none; cursor:pointer; flex:none; display:inline-flex; align-items:center; justify-content:center; gap:4px;
     padding:6px 12px; border-radius:var(--r-pill); font-family:inherit; font-size:14px; line-height:20px; font-weight:500; color:#fff;   /* размер текста — как у табов заявки */

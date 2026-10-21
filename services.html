@@ -249,7 +249,7 @@
     background:transparent; border:0; font-family:inherit; cursor:pointer; padding:18px 20px; text-align:left; color:#fff}
   .cat-head h3{margin:0; font-size:15.5px; font-weight:600}
   .cat-head .cn{color:var(--muted); font-weight:500; font-size:14px; margin-left:6px}
-  .cat-head .cv{color:var(--muted); transition:transform .18s; flex:none}
+  .cat-head .cv{width:16px; height:16px; color:var(--muted); transition:transform .18s; flex:none}   /* шеврон — как у профиля в шапке */
   .cat-head[aria-expanded="true"] .cv{transform:rotate(180deg)}
   .cat-body{padding:0 20px 10px}
   .srow{display:grid; grid-template-columns:minmax(0,1fr) 170px 110px minmax(120px,1.1fr) 130px; gap:16px;
@@ -428,10 +428,10 @@
   </div>
   <div class="sv-empty" id="svEmpty" hidden>Ничего не найдено</div>
     <div class="cat">
-      <button class="cat-head" type="button" data-collapse aria-expanded="true" aria-controls="cat-Подборипрове">
-        <h3>Подбор и проверка кандидатов<span class="cn">(1 из 3)</span></h3><span class="cv">⌄</span>
+      <button class="cat-head" type="button" data-collapse aria-expanded="false" aria-controls="cat-Подборипрове">
+        <h3>Подбор и проверка кандидатов<span class="cn">(1 из 3)</span></h3><svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
-      <div class="cat-body" id="cat-Подборипрове">
+      <div class="cat-body" id="cat-Подборипрове" hidden>
       <div class="srow shead"><div>Услуга</div><div>Статус</div><div>План</div><div>Комментарий</div><div class="r">Действия</div></div>
       <div class="srow">
         <div class="su-name">Проверка истории приводов в полицию, административных и уголовных правонарушений, а также судимости<small>Исполнитель №1</small></div>
@@ -458,7 +458,7 @@
     </div>
     <div class="cat">
       <button class="cat-head" type="button" data-collapse aria-expanded="false" aria-controls="cat-Процедурыпол">
-        <h3>Процедуры получения разрешений на работу и въездных виз<span class="cn">(3 из 3)</span></h3><span class="cv">⌄</span>
+        <h3>Процедуры получения разрешений на работу и въездных виз<span class="cn">(3 из 3)</span></h3><svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="cat-body" id="cat-Процедурыпол" hidden>
       <div class="srow shead"><div>Услуга</div><div>Статус</div><div>План</div><div>Комментарий</div><div class="r">Действия</div></div>
@@ -487,7 +487,7 @@
     </div>
     <div class="cat">
       <button class="cat-head" type="button" data-collapse aria-expanded="false" aria-controls="cat-Транспортное">
-        <h3>Транспортное обеспечение и логистическая поддержка сотрудников<span class="cn">(1 из 5)</span></h3><span class="cv">⌄</span>
+        <h3>Транспортное обеспечение и логистическая поддержка сотрудников<span class="cn">(1 из 5)</span></h3><svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="cat-body" id="cat-Транспортное" hidden>
       <div class="srow shead"><div>Услуга</div><div>Статус</div><div>План</div><div>Комментарий</div><div class="r">Действия</div></div>
