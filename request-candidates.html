@@ -111,7 +111,7 @@
     position:sticky; top:calc(var(--topnav-h,54px) + 8px); z-index:32; background:var(--glass); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
     -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
     max-height:160px; overflow:hidden;
-    transition:max-height .28s ease, min-height .28s ease, padding .28s ease, margin-bottom .28s ease, opacity .22s ease, transform .28s ease}
+    transition:max-height .14s ease, min-height .14s ease, padding .14s ease, margin-bottom .14s ease, opacity .11s ease, transform .14s ease}
   /* без выбора — свёрнута; появление/исчезновение плавное */
   .list-tools:not(.on){max-height:0; min-height:0; padding-top:0; padding-bottom:0; margin-bottom:0; opacity:0; transform:translateY(-8px); pointer-events:none}
   /* превью встаёт под закреплённой панелью (56 + 8) */
@@ -172,7 +172,7 @@
 
   /* ---------- превью карточки кандидата (содержимое — как на стенде /requests/{id}/candidates/{id}) ---------- */
   .prev{position:sticky; top:calc(var(--stack-h,230px) + 16px); height:calc(100vh - var(--stack-h,230px) - 32px); min-height:360px; display:flex; flex-direction:column; overflow:hidden;
-    transition:top .28s ease, height .28s ease}   /* плавный сдвиг под плашку «Выбрано» */
+    transition:top .14s ease, height .14s ease}   /* плавный сдвиг под плашку «Выбрано» */
   .ibtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--text-2); width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex:none}
   .ibtn:hover{background:rgba(255,255,255,.08); color:#fff}
   .ibtn svg{width:18px; height:18px}
@@ -579,9 +579,12 @@ function buildData(){
   const r=rng(7);
   const pick=a=>a[Math.floor(r()*a.length)];
   const dig=n=>{let s="";for(let i=0;i<n;i++)s+=Math.floor(r()*10);return s;};
-  // первый — кандидат со стенда (Raja Pani), следующие 7 — как в макете
+  // первый — кандидат со стенда (Raja Pani), затем 3 с длинными именами (проверка переносов), дальше 7 — как в макете
   const head=[
     ["Raja","Pani",8,"review","1231 2312 3111"],
+    ["Venkata Satya Narayana","Subrahmanyam Chakravarthy",0,"review","4410 7782 1956"],
+    ["Mohammed Abdul Rahman","Shaikh Siddiqui",1,"pending","3018 6624 9071"],
+    ["Thirumalai Srinivasa","Ramakrishnan Iyengar",2,"employ","5527 1093 8846"],
     ["Rajesh","Kumar",0,"pending","4827 6193 5041"],["Vikram","Patel",1,"pending","3105 8927 6640"],
     ["Sunil","Yadav",2,"done","9842 1730 5529"],["Amit","Sharma",3,"review","7291 4056 1832"],
     ["Arjun","Singh",1,"pending","5610 2287 9043"],["Ravi","Verma",2,"done","6038 4471 2195"],
@@ -680,7 +683,7 @@ function renderList(){
     '<label><input type="checkbox" class="cb" id="cbAll" aria-label="Выбрать всех"'+(n>0&&n===vis.length?" checked":"")+'>Выбрано: <b>'+S.checked.size+'</b></label><span class="sp"></span>'+
     '<button class="lnk" data-bulk="clear">Снять выбор</button><button class="btn" data-bulk="rejected">Отклонить</button><button class="btn primary" data-bulk="done">Одобрить</button>';
   // пока плашка раскрывается/сворачивается, каждый кадр возвращаем карточку на её место
-  if(aId){ const end=performance.now()+420; (function keep(){
+  if(aId){ const end=performance.now()+210; (function keep(){
     const el=document.querySelector('#clist .ccard[data-id="'+aId+'"]');
     if(el){ const d=el.getBoundingClientRect().top-aTop; if(Math.abs(d)>.5) window.scrollBy(0,d); }
     if(performance.now()<end) requestAnimationFrame(keep); })(); }
