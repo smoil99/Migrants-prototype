@@ -471,14 +471,13 @@
     color:#fff; font:inherit; font-size:14px; font-weight:500; cursor:pointer; white-space:nowrap}
   .dup-btn:hover{background:rgba(255,255,255,.15)}
   .dup-btn > svg{width:16px; height:16px; flex:none}
-  .dup-btn > svg.dup-i{width:15px; height:15px; opacity:.55; margin-left:-2px}
   .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:360px}
   .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
   .dup-btn.busy{cursor:progress}
   .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--primary); animation:spin .8s linear infinite}
   .dup-btn .tf-tip{left:auto; right:0}
   .dup-btn:hover .tf-tip,.dup-btn:focus-visible .tf-tip{opacity:1; transform:none}
-  @media (max-width:640px){ .dup-btn{width:32px; padding:0} .dup-btn .lbl,.dup-btn .dup-i{display:none} }
+  @media (max-width:640px){ .dup-btn{width:32px; padding:0} .dup-btn .lbl{display:none} }
   #dupAlert:not(:empty){margin-bottom:24px}
   #dupAlert .alert{align-items:center}
   #dupAlert .alert .body{color:#fff; font-weight:400}
@@ -792,7 +791,6 @@
     <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
       <span class="lbl">Дублировать</span>
-      <svg class="dup-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>
       <span class="tf-tip" id="dupTip" role="tooltip"></span>
     </button>
   </div>
@@ -1244,7 +1242,7 @@ function dupBusy(on){
   S.dupBusy=on; const b=$("#dupBtn");
   b.classList.toggle("busy",on);
   b.querySelector(".lbl").textContent=on?"Дублирование…":"Дублировать";
-  const ic=b.querySelector(":scope > svg:not(.dup-i), :scope > .spin");
+  const ic=b.querySelector(":scope > svg, :scope > .spin");
   if(on){ const sp=document.createElement("span"); sp.className="spin"; ic.replaceWith(sp); }
   else if(ic.classList.contains("spin")){ ic.outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; }
   renderHead();

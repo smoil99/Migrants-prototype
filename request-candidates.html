@@ -185,6 +185,8 @@
   .p-acts{display:flex; gap:12px; flex:none}
   .p-acts .btn{height:46px; font-weight:600}
   .p-head .p-acts .btn{height:32px; padding:0 14px; font-size:14px; font-weight:500}   /* превью: размер как у «Дублировать» */
+  /* превью: кнопки по строке имени — центр совпадает с чипом статуса (отступ = (аватар 64 − блок имени 58) / 2) */
+  @media (min-width:1181px){ .p-head > .p-acts{align-self:flex-start; margin-top:3px} }
   .p-tabs{flex:none; display:flex; gap:24px; margin:20px 24px 0; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
   .p-tabs::-webkit-scrollbar{display:none}
   .p-tabs .tab{white-space:nowrap}
