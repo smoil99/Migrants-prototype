@@ -125,7 +125,7 @@
   .lnk.chev{display:inline-flex; align-items:flex-start; gap:0}   /* «Открыть полностью» — с шевроном вправо, чтобы читалась как кнопка */
   /* шеврон высотой строчных (x-height 8px): штрих y 5–12 + скругления 0.8 → 4.2–12.8; margin-top 4 ставит низ на базовую линию
      (16px Commissioner, line-height 20: базовая линия в 16.5px от верха строки) с перелётом как у «о»; видимый отступ от текста 5px */
-  .lnk.chev svg{width:16px; height:16px; flex:none; margin:4px 0 0 -1px; transition:transform .12s}
+  .lnk.chev svg{width:16px; height:16px; flex:none; margin:2px 0 0 -1px; transition:transform .12s}   /* поднят на 2px от базовой линии — оптически ровнее (решение Ильи 22.10) */
   .lnk.chev:hover svg{transform:translateX(2px)}
   .list-tools .lnk{margin-right:14px}
   .list-tools .sp{flex:1}
