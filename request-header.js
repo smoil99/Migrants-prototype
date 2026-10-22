@@ -19,7 +19,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
   const box=document.getElementById("supMenu");
   if(box){
     const SUP={email:"Zarkadr@rabota.ru", phone:"+7 (495) 123-45-67", tel:"+74951234567", user:"ivanov@company.ru"};
-    const scn={clipboard:"ok", send:"ok"};
+    const scn={clipboard:"ok", send:"ok", upload:"ok"};
     const ICON_COPY='<svg class="ic-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.75 0-1.12.15-1.41.13-.25.33-.45.58-.58.29-.15.66-.15 1.41-.15h5.07c.75 0 1.12 0 1.4.15.25.13.46.33.59.58.14.29.14.66.14 1.41v5.06c0 .75 0 1.12-.14 1.41-.13.25-.34.45-.59.58-.28.15-.65.15-1.4.15h-1.87M3.47 14.67h5.06c.75 0 1.12 0 1.41-.15.25-.13.45-.33.58-.58.15-.29.15-.66.15-1.41V7.47c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H3.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41v5.06c0 .75 0 1.12.15 1.41.13.25.33.45.58.58.29.15.66.15 1.41.15z"/></svg>'
       +'<svg class="ic-done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
     const copyRow=(href,text,tip,manual)=>
@@ -85,6 +85,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
     const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
     const ICON_TRASH24='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M3 6h18m-2 0-.7 10.52c-.1 1.58-.16 2.37-.5 2.97a3 3 0 0 1-1.3 1.21c-.62.3-1.41.3-2.99.3h-3.02c-1.58 0-2.37 0-2.99-.3a3 3 0 0 1-1.3-1.21c-.34-.6-.4-1.39-.5-2.97L5 6"/></svg>';
+    const ICON_RETRY16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M.67 2.67v4h4M15.33 13.33v-4h-4"/><path d="M13.66 6A6 6 0 0 0 3.76 3.76L.67 6.67m14.66 2.66-3.09 2.91A6 6 0 0 1 2.34 10"/></svg>';   // 16 px / refresh-cw-01
     const ICON_X16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.33 4.67l-6.66 6.66M4.67 4.67l6.66 6.66"/></svg>';   // отмена загрузки (16 px / x)
     const ICON_XFILL='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25A9.75 9.75 0 1 0 21.75 12 9.76 9.76 0 0 0 12 2.25Zm3.53 12.22a.75.75 0 1 1-1.06 1.06L12 13.06l-2.47 2.47a.75.75 0 0 1-1.06-1.06L10.94 12 8.47 9.53a.75.75 0 0 1 1.06-1.06L12 10.94l2.47-2.47a.75.75 0 0 1 1.06 1.06L13.06 12Z"/></svg>';
     /* тост ошибки отправки — как в колокольчике: 6 с, пауза при наведении/фокусе, повторная ошибка заменяет тост */
@@ -111,10 +112,11 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     const closeX='<button class="sm-x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>';
     /* файлы загружаются сразу при прикреплении (решение 22.10): у строки — прогресс; «Отправить» ждёт окончания загрузок */
     let fid=0;
-    const busy=()=>files.some(f=>f.st==="up");
+    const busy=()=>files.some(f=>f.st==="up"||f.st==="fail");   // загрузка идёт или оборвалась — отправка ждёт
     const fileRow=f=>{
       const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="bad"?ICON_TRASH24:f.st==="up"?ICON_X16:ICON_TRASH16}</button>`;
       if(f.st==="up") return `<div class="sm-file up" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fr"><span class="fn">${esc(f.name)}</span><span class="pc">${f.p}%</span></div><div class="bar" role="progressbar" aria-label="Загрузка ${esc(f.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.p}"><i style="width:${f.p}%"></i></div></div>${del}</div>`;
+      if(f.st==="fail") return `<div class="sm-file fail" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">Не удалось загрузить файл</div></div><button class="sm-del" type="button" data-retry="${f.id}" aria-label="Загрузить снова" title="Загрузить снова">${ICON_RETRY16}</button>${del}</div>`;
       return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
     };
     function syncSend(){
@@ -128,13 +130,19 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         const i=files.findIndex(f=>f.id===+b.dataset.del); if(i<0) return;
         clearInterval(files[i].t); files.splice(i,1); renderFiles();
       }));
+      box.querySelectorAll("[data-retry]").forEach(b=>b.addEventListener("click",()=>{
+        const f=files.find(x=>x.id===+b.dataset.retry); if(!f) return;
+        f.st="up"; f.p=0; f.failAt=null; startUpload(f); renderFiles();
+      }));
       syncSend();
     }
     function startUpload(f){
       const total=Math.min(6000,900+f.size/1.5e6*1000), step=100;   // имитация: ~1,5 МБ/с, не дольше 6 с
+      if(scn.upload==="fail" && f.failAt==null) f.failAt=30+Math.floor(Math.random()*40);   // «Обрыв»: остановка на 30–70%
       f.t=setInterval(()=>{
         f.p=Math.min(100,f.p+Math.max(1,Math.round(step/total*100)));
         const row=sm.querySelector(`.sm-file[data-fid="${f.id}"]`);
+        if(f.failAt!=null && f.p>=f.failAt){ clearInterval(f.t); f.st="fail"; renderFiles(); return; }
         if(f.p>=100){ clearInterval(f.t); f.st="ok"; renderFiles(); return; }
         if(row){ row.querySelector(".pc").textContent=f.p+"%"; row.querySelector(".bar i").style.width=f.p+"%"; row.querySelector(".bar").setAttribute("aria-valuenow",f.p); }
       },step);
@@ -231,7 +239,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const row=document.querySelector(".harness-row"); if(!row||row.querySelector(".sup-scn")) return;
       const seg=(label,key,opts)=>`<span class="sup-scn-g"><span class="sup-scn-l">${label}</span><span class="sup-seg">${opts.map(([v,t])=>`<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${scn[key]===v}">${t}</button>`).join("")}</span></span>`;
       const w=document.createElement("div"); w.className="sup-scn";
-      w.innerHTML=seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]]);
+      w.innerHTML=seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]])+seg("Загрузка файла","upload",[["ok","Успешно"],["fail","Обрыв"]]);
       row.appendChild(w);
       w.addEventListener("click",e=>{ const b=e.target.closest("button[data-k]"); if(!b) return; e.stopPropagation();
         scn[b.dataset.k]=b.dataset.v; w.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
