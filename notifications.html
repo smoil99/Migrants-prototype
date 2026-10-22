@@ -244,9 +244,12 @@
     width:min(741px,calc(100vw - 32px)); min-height:56px; display:flex; align-items:center; gap:10px; padding:12px 12px 12px 16px; border-radius:12px;
     background:linear-gradient(100deg,rgba(255,102,116,.20),rgba(255,102,116,0) 55%),rgba(40,44,47,.86);
     -webkit-backdrop-filter:blur(24px) saturate(1.3); backdrop-filter:blur(24px) saturate(1.3);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12), 0 16px 40px -12px rgba(0,0,0,.7);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);
     color:var(--err); font-size:14px; line-height:20px; font-weight:500; animation:etin .2s ease-out}
   @keyframes etin{from{opacity:0; transform:translate(-50%,-8px)}}
+  /* закрытие — обратная анимация открытия */
+  .etoast.out{animation:etout .2s ease-in forwards}
+  @keyframes etout{to{opacity:0; transform:translate(-50%,-8px)}}
   .etoast > svg{width:24px; height:24px; flex:none}
   .etoast span{flex:1; min-width:0}
   .etoast button{appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:8px; padding:0; cursor:pointer;
@@ -692,6 +695,7 @@ function showCard(i){
 function showReadErr(){
   const e=$("#etoast"), x=tx();
   e.innerHTML=IC.xfill+'<span>'+x.readErr+'</span><button data-act="eclose" aria-label="'+x.close+'">'+IC.x+'</button>';
+  clearTimeout(S.etOut); e.classList.remove("out");
   e.hidden=false; e.style.animation="none"; void e.offsetWidth; e.style.animation="";
   placeToast();
   clearTimeout(S.etT); S.etLeft=6000; S.etStart=Date.now();
@@ -705,7 +709,13 @@ window.addEventListener("scroll",()=>{ if(!$("#etoast").hidden) placeToast(); },
 window.addEventListener("resize",placeToast);
 if(window.ResizeObserver) new ResizeObserver(placeToast).observe($(".harness"));
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placeToast);   // харнесс меняет высоту (шрифт, перенос строк)
-function hideReadErr(){ clearTimeout(S.etT); $("#etoast").hidden=true; }
+function hideReadErr(instant){
+  const e=$("#etoast"); clearTimeout(S.etT); clearTimeout(S.etOut);
+  if(e.hidden) return;
+  if(instant||matchMedia("(prefers-reduced-motion: reduce)").matches){ e.classList.remove("out"); e.hidden=true; return; }
+  e.classList.add("out");
+  S.etOut=setTimeout(()=>{ e.hidden=true; e.classList.remove("out"); },200);   // = длительность etout
+}
 /* пока курсор над тостом или в нём фокус — таймер на паузе */
 function etPause(){ if($("#etoast").hidden) return; clearTimeout(S.etT); S.etLeft-=Date.now()-S.etStart; }
 function etResume(){ if($("#etoast").hidden||$("#etoast").matches(":hover")||$("#etoast").contains(document.activeElement)) return; S.etStart=Date.now(); S.etT=setTimeout(hideReadErr,Math.max(1500,S.etLeft)); }
@@ -890,7 +900,7 @@ function runScenario(k){
   S.scen=k; S.lang=ROLES[S.role].lang; setClock(k==="newyear"); document.documentElement.lang=S.lang;
   S.tab=k==="unread-empty"?"unread":"all"; S.loaded={all:PAGE, unread:PAGE};
   S.state=k==="loading"?"loading":k==="error"?"error":"ok";
-  S.moreLoading=false; S.freezeMore=k==="more"; S.readFail=k==="read-error"; S.failed=new Set(); hideReadErr(); S.markFail=k==="markall-error"; S.markTried=false; S.markErr=false;
+  S.moreLoading=false; S.freezeMore=k==="more"; S.readFail=k==="read-error"; S.failed=new Set(); hideReadErr(true); S.markFail=k==="markall-error"; S.markTried=false; S.markErr=false;
   seed(k); setPressed(); renderNav(); renderContent();
   if(k!=="mobile") openPanel();
   if(k==="markall-error") markAll();
