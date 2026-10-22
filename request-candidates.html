@@ -150,6 +150,14 @@
   .cb:indeterminate::after{content:""; width:8px; height:2px; background:#fff; border-radius:1px}
   .cc-cb{position:relative; z-index:1; padding:6px; margin:-6px}
   .cb:disabled{opacity:.3; cursor:not-allowed}   /* статус финальный — «Одобрить / Отклонить» недоступны */
+  /* подсказка у неактивного чекбокса — Tooltip кита: glass, r8, 14px, стрелка вниз; над чекбоксом, от его левого края */
+  .cb-tip{position:absolute; bottom:calc(100% + 6px); left:-6px; z-index:5; width:max-content; max-width:min(300px,calc(100vw - 32px));
+    background:rgba(28,31,36,.5); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); box-shadow:0 4px 16px rgba(0,0,0,.25);
+    border-radius:8px; padding:8px 12px; font-size:14px; line-height:20px; font-weight:400; color:#fff; text-align:left; white-space:normal;
+    opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .14s, transform .14s}
+  .cb-tip::after{content:""; position:absolute; top:100%; left:14px; border:6px solid transparent; border-bottom:0; border-top-color:#1c1f24}
+  .cc-cb.dis{cursor:not-allowed}
+  .cc-cb.dis:hover .cb-tip{opacity:1; transform:none}
 
   /* «Icon bubble» — аватар-инициалы */
   .ava{flex:none; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:14px; font-weight:600; letter-spacing:.2px;
@@ -178,17 +186,19 @@
   .ibtn{appearance:none; border:0; background:none; cursor:pointer; color:var(--text-2); width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex:none}
   .ibtn:hover{background:rgba(255,255,255,.08); color:#fff}
   .ibtn svg{width:18px; height:18px}
-  .p-head{flex:none; display:flex; align-items:center; gap:16px; padding:24px 24px 0}
+  .p-head{flex:none; display:flex; align-items:flex-start; gap:16px; padding:24px 24px 0}   /* аватар — по верхнему краю имени (имя может быть в 2+ строки) */
   .p-who{flex:1; min-width:0}
-  .p-title{display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px}
+  .p-title{display:flex; align-items:flex-start; gap:12px}   /* статус всегда справа от имени: длинное имя переносится, чип — нет */
+  .p-title h3{min-width:0; overflow-wrap:anywhere}
+  .p-title .status{flex:none; margin-top:1px}
   .p-title h3{margin:0; font-size:26px; line-height:32px; font-weight:600; letter-spacing:-.3px}
   .p-who .pr{margin-top:4px; font-size:16px; line-height:22px; color:var(--label); font-variant-numeric:tabular-nums}
   /* кнопки превью — как в шапке карточки кандидата (Figma 2200:35085): Secondary «Отклонить» + Primary «Одобрить», 46px, 16 Semibold */
   .p-acts{display:flex; gap:12px; flex:none}
   .p-acts .btn{height:46px; font-weight:600}
   .p-head .p-acts .btn{height:32px; padding:0 14px; font-size:14px; font-weight:500}   /* превью: размер как у «Дублировать» */
-  /* превью: кнопки по строке имени — центр совпадает с чипом статуса (отступ = (аватар 64 − блок имени 58) / 2) */
-  @media (min-width:1181px){ .p-head > .p-acts{align-self:flex-start; margin-top:3px} }
+  /* превью: кнопки по первой строке имени — на одной высоте с чипом статуса */
+  @media (min-width:1181px){ .p-head > .p-acts{align-self:flex-start; margin-top:0} }   /* центр кнопок 32 = центр чипа в первой строке имени */
   .p-tabs{flex:none; display:flex; gap:24px; margin:20px 24px 0; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
   .p-tabs::-webkit-scrollbar{display:none}
   .p-tabs .tab{white-space:nowrap}
@@ -691,7 +701,10 @@ function renderList(){
   $("#clist").innerHTML=rows.length? rows.map(c=>{
     return '<div class="glass ccard" role="option" tabindex="'+(c.id===S.sel?0:-1)+'" data-id="'+c.id+'" aria-selected="'+(c.id===S.sel)+'">'+
       '<div class="cc-top">'+
-        '<label class="cc-cb"><input type="checkbox" class="cb" aria-label="Выбрать '+esc(c.fn+" "+c.ln)+'"'+(S.checked.has(c.id)?" checked":"")+(actable(c)?"":" disabled")+'></label>'+
+        (actable(c)
+          ? '<label class="cc-cb"><input type="checkbox" class="cb" aria-label="Выбрать '+esc(c.fn+" "+c.ln)+'"'+(S.checked.has(c.id)?" checked":"")+'></label>'
+          : '<label class="cc-cb dis"><input type="checkbox" class="cb" disabled aria-label="Выбрать '+esc(c.fn+" "+c.ln)+' нельзя" aria-describedby="cbt'+c.id+'">'+
+            '<span class="cb-tip" role="tooltip" id="cbt'+c.id+'">Нельзя выбрать: статус «'+ST[c.st].chip+'». Одобрить или отклонить можно кандидатов в статусах «На рассмотрении» и «Ожидание»</span></label>')+
         '<span class="ava">'+initials(c)+'</span>'+
         '<div class="cc-main"><span class="cc-name">'+esc(c.fn+" "+c.ln)+'</span><span class="cc-aad">'+c.aad+'</span></div>'+
         chip(c.st,"s-sm")+'</div>'+
