@@ -153,6 +153,13 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-file .fn{font-size:16px; line-height:20px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sm-file .fs{margin-top:4px; font-size:14px; line-height:17px; color:rgba(255,255,255,.6)}
 .sm-file.bad .fs{color:#FF6674}
+/* загрузка — Type=Loading: имя и % в строку, под ними полоса 6 px */
+.sm-file.up{background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
+.sm-file .fr{display:flex; align-items:baseline; gap:12px}
+.sm-file .fr .fn{flex:1; min-width:0}
+.sm-file .pc{flex:none; font-size:14px; line-height:20px; color:rgba(255,255,255,.6); font-variant-numeric:tabular-nums}
+.sm-file .bar{margin-top:8px; height:6px; border-radius:9999px; background:rgba(255,255,255,.1); overflow:hidden}
+.sm-file .bar i{display:block; height:100%; border-radius:inherit; background:var(--primary,#07BBB2); transition:width .1s linear}
 /* «Удалить файл»: Button / Icon ghost 32 (trash-02 16, white@60%) / у ошибки — Button / Icon 40 (trash-04 24) */
 .sm-del{position:relative; appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:32px; padding:0; display:grid; place-items:center;
   background:transparent; color:rgba(255,255,255,.6); cursor:pointer; transition:background .12s, color .12s}

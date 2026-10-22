@@ -108,6 +108,37 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
     const fmtSize=n=>n<1024*1024? Math.max(1,Math.round(n/1024))+" КБ" : (n/1024/1024).toFixed(1).replace(".",",")+" МБ";
     const closeX='<button class="sm-x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>';
+    /* файлы загружаются сразу при прикреплении (решение 22.10): у строки — прогресс; «Отправить» ждёт окончания загрузок */
+    let fid=0;
+    const busy=()=>files.some(f=>f.st==="up");
+    const fileRow=f=>{
+      const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="bad"?ICON_TRASH24:ICON_TRASH16}</button>`;
+      if(f.st==="up") return `<div class="sm-file up" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fr"><span class="fn">${esc(f.name)}</span><span class="pc">${f.p}%</span></div><div class="bar" role="progressbar" aria-label="Загрузка ${esc(f.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.p}"><i style="width:${f.p}%"></i></div></div>${del}</div>`;
+      return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
+    };
+    function syncSend(){
+      const send=sm.querySelector("[data-send]"), ta=sm.querySelector("textarea"); if(!send||!ta) return;
+      send.disabled=!ta.value.trim()||sending||hasBad()||busy();
+    }
+    function renderFiles(){
+      const box=sm.querySelector(".sm-files"); if(!box) return;
+      box.innerHTML=files.map(fileRow).join("");
+      box.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{
+        const i=files.findIndex(f=>f.id===+b.dataset.del); if(i<0) return;
+        clearInterval(files[i].t); files.splice(i,1); renderFiles();
+      }));
+      syncSend();
+    }
+    function startUpload(f){
+      const total=Math.min(6000,900+f.size/1.5e6*1000), step=100;   // имитация: ~1,5 МБ/с, не дольше 6 с
+      f.t=setInterval(()=>{
+        f.p=Math.min(100,f.p+Math.max(1,Math.round(step/total*100)));
+        const row=sm.querySelector(`.sm-file[data-fid="${f.id}"]`);
+        if(f.p>=100){ clearInterval(f.t); f.st="ok"; renderFiles(); return; }
+        if(row){ row.querySelector(".pc").textContent=f.p+"%"; row.querySelector(".bar i").style.width=f.p+"%"; row.querySelector(".bar").setAttribute("aria-valuenow",f.p); }
+      },step);
+    }
+    const stopUploads=()=>files.forEach(f=>clearInterval(f.t));
     function renderForm(){
       const text=sm.querySelector("textarea")?.value||"", keep=sm.querySelector(".sm-body")?.scrollTop||0;   // перерисовка не сбрасывает прокрутку тела
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Написать в поддержку</h2>${closeX}</div>
@@ -123,10 +154,11 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             <span><b>Прикрепите файлы (необязательно)</b><small>PDF, JPG, JPEG, PNG, HEIC · до 10 МБ</small></span>
             <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" hidden>
           </div>
-          <div class="sm-files">${files.map((f,i)=>`<div class="sm-file${f.err?" bad":""}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.err||fmtSize(f.size)}</div></div><button class="sm-del" type="button" data-del="${i}" aria-label="Удалить файл" title="Удалить файл" ${sending?"disabled":""}>${f.err?ICON_TRASH24:ICON_TRASH16}</button></div>`).join("")}</div>
+          <div class="sm-files"></div>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${sending?"disabled":""}>Отмена</button>
-          <button class="sm-btn pri" type="button" data-send ${(!text.trim()||sending||hasBad())?"disabled":""}>${sending?"Отправляем…":"Отправить"}</button></div>`;
+          <button class="sm-btn pri" type="button" data-send disabled>${sending?"Отправляем…":"Отправить"}</button></div>`;
+      renderFiles();
       sm.querySelector(".sm-body").scrollTop=keep;
       wireForm();
     }
@@ -140,33 +172,35 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     function addFiles(list){
       for(const f of list){
         const ext=(f.name.split(".").pop()||"").toLowerCase();
-        files.push({name:f.name, size:f.size, err: !FORMATS.includes(ext)?"Неподдерживаемый формат" : f.size>MAX?"Размер файла превышает допустимый лимит" : ""});
+        const err=!FORMATS.includes(ext)?"Неподдерживаемый формат" : f.size>MAX?"Размер файла превышает допустимый лимит" : "";
+        const item={id:++fid, name:f.name, size:f.size, err, st:err?"bad":"up", p:0};
+        files.push(item); if(!err) startUpload(item);
       }
-      renderForm();
+      renderFiles();
     }
     function wireForm(){
       const ta=sm.querySelector("textarea"), field=sm.querySelector(".sm-field"), send=sm.querySelector("[data-send]");
       const drop=sm.querySelector(".sm-drop"), inp=drop.querySelector("input");
-      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); send.disabled=!ta.value.trim()||sending||hasBad(); };
+      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); syncSend(); };
       ta.addEventListener("input",sync); ta.addEventListener("focus",sync); ta.addEventListener("blur",sync);
       drop.addEventListener("click",()=>inp.click());
       drop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inp.click(); } });
-      inp.addEventListener("change",()=>addFiles(inp.files));
+      inp.addEventListener("change",()=>{ addFiles(inp.files); inp.value=""; });
       drop.addEventListener("dragover",e=>{ e.preventDefault(); drop.classList.add("drag"); });
       drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
       drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("drag"); addFiles(e.dataTransfer.files); });
-      sm.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{ files.splice(+b.dataset.del,1); renderForm(); }));
+      /* файлы уже на сервере — отправка короткая: письмо с текстом и вложениями */
       send.addEventListener("click",()=>{
         sending=true; hideToast(true); renderForm();
         setTimeout(()=>{ sending=false;
           if(scn.send==="fail"){ renderForm(); showToast("Не удалось отправить сообщение. Попробуйте ещё раз."); }
           else { files=[]; renderSent(); }
-        },1200);
+        },900);
       });
     }
     function openForm(){
       setOpen(false); lastFocus=document.activeElement;
-      files=[]; sending=false; hideToast(true); sm.innerHTML=""; renderForm();
+      stopUploads(); files=[]; sending=false; hideToast(true); sm.innerHTML=""; renderForm();
       const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
       fade(ov,true); document.documentElement.style.overflow="hidden";
       sm.querySelector("textarea").focus();
