@@ -138,7 +138,10 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-drop{display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; border:2px dashed rgba(255,255,255,.12); border-radius:16px; text-align:center; cursor:pointer; transition:background-color .12s}
 .sm-drop:hover,.sm-drop.drag{background-color:rgba(255,255,255,.05)}
 .sm-drop:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px}
-.sm-drop.off{pointer-events:none; opacity:.5}
+/* Type=Disabled: без заливки, текст и иконка white@35%, кнопка white@6% */
+.sm-drop.off{pointer-events:none; cursor:default}
+.sm-drop.off b,.sm-drop.off small{color:rgba(255,255,255,.35)}
+.sm-drop.off .sm-upbtn{background:rgba(255,255,255,.06); color:rgba(255,255,255,.35)}
 .sm-upbtn{position:relative; width:40px; height:40px; border-radius:32px; background:rgba(255,255,255,.1); display:grid; place-items:center}
 .sm-upbtn svg{width:24px; height:24px}
 .sm-drop b{display:block; font-size:16px; line-height:20px; font-weight:500}
@@ -175,6 +178,11 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-btn{position:relative; appearance:none; border:0; height:46px; padding:0 20px; border-radius:32px; font-family:inherit; font-size:16px; line-height:20px; font-weight:500;
   color:#fff; cursor:pointer; white-space:nowrap; transition:background .12s}
 .sm-btn.pri{background:#07BBB2}
+.sm-btn{display:inline-flex; align-items:center; justify-content:center; gap:8px}
+/* «Отправляем…»: Loading circle 16 px — бирюзовое кольцо с угловым градиентом */
+.sm-spin{width:16px; height:16px; flex:none; border-radius:50%; background:conic-gradient(from 90deg,#07BBB2,rgba(7,187,178,0));
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px)); mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px));
+  animation:rh-spin .8s linear infinite}
 .sm-btn.pri:hover{background:#0CD5CB}
 .sm-btn.sec{background:rgba(255,255,255,.1)}
 .sm-btn.sec:hover{background:rgba(255,255,255,.14)}

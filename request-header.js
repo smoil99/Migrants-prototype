@@ -85,6 +85,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
     const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
     const ICON_TRASH24='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M3 6h18m-2 0-.7 10.52c-.1 1.58-.16 2.37-.5 2.97a3 3 0 0 1-1.3 1.21c-.62.3-1.41.3-2.99.3h-3.02c-1.58 0-2.37 0-2.99-.3a3 3 0 0 1-1.3-1.21c-.34-.6-.4-1.39-.5-2.97L5 6"/></svg>';
+    const ICON_X16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.33 4.67l-6.66 6.66M4.67 4.67l6.66 6.66"/></svg>';   // отмена загрузки (16 px / x)
     const ICON_XFILL='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25A9.75 9.75 0 1 0 21.75 12 9.76 9.76 0 0 0 12 2.25Zm3.53 12.22a.75.75 0 1 1-1.06 1.06L12 13.06l-2.47 2.47a.75.75 0 0 1-1.06-1.06L10.94 12 8.47 9.53a.75.75 0 0 1 1.06-1.06L12 10.94l2.47-2.47a.75.75 0 0 1 1.06 1.06L13.06 12Z"/></svg>';
     /* тост ошибки отправки — как в колокольчике: 6 с, пауза при наведении/фокусе, повторная ошибка заменяет тост */
     const toast=document.createElement("div"); toast.className="sm-toast"; toast.setAttribute("role","alert"); toast.hidden=true; document.body.appendChild(toast);
@@ -112,7 +113,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     let fid=0;
     const busy=()=>files.some(f=>f.st==="up");
     const fileRow=f=>{
-      const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="bad"?ICON_TRASH24:ICON_TRASH16}</button>`;
+      const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="bad"?ICON_TRASH24:f.st==="up"?ICON_X16:ICON_TRASH16}</button>`;
       if(f.st==="up") return `<div class="sm-file up" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fr"><span class="fn">${esc(f.name)}</span><span class="pc">${f.p}%</span></div><div class="bar" role="progressbar" aria-label="Загрузка ${esc(f.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.p}"><i style="width:${f.p}%"></i></div></div>${del}</div>`;
       return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
     };
@@ -157,7 +158,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
           <div class="sm-files"></div>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${sending?"disabled":""}>Отмена</button>
-          <button class="sm-btn pri" type="button" data-send disabled>${sending?"Отправляем…":"Отправить"}</button></div>`;
+          <button class="sm-btn pri" type="button" data-send disabled>${sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
       renderFiles();
       sm.querySelector(".sm-body").scrollTop=keep;
       wireForm();
