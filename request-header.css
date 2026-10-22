@@ -38,25 +38,119 @@ body.scrolled .topnav{background:var(--glass,rgba(24,28,31,.62));
 .sup-pop[hidden]{display:none}
 .sup-label{padding:10px 10px 6px; font-size:13px; font-weight:600; line-height:16px; letter-spacing:.3px; color:rgba(255,255,255,.5)}
 .sup-item{display:flex; align-items:center; gap:10px; min-height:36px; padding:0 10px; box-sizing:border-box; border-radius:8px}
-.sup-mail{flex:1; min-width:0; font-size:16px; line-height:20px; color:var(--primary,#07BBB2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-decoration:none}
-.sup-mail:hover{text-decoration:underline; text-underline-offset:3px}
-.sup-mail:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px; border-radius:4px}
+.sup-link{flex:1; min-width:0; font-size:16px; line-height:20px; color:var(--primary,#07BBB2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-decoration:none}
+.sup-link:hover{text-decoration:underline; text-underline-offset:3px}
+.sup-link:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px; border-radius:4px}
+.sup-sep{height:1px; margin:5px 0; background:rgba(255,255,255,.1)}
+/* Menu item кита 667:750: Default → Hover white@8% */
+.sup-act{appearance:none; display:flex; align-items:center; width:100%; min-height:36px; padding:8px 10px; box-sizing:border-box; border:0; border-radius:8px;
+  background:transparent; color:#fff; font-family:inherit; font-size:16px; line-height:20px; text-align:left; cursor:pointer}
+.sup-act:hover{background:rgba(255,255,255,.08)}
+.sup-act:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:-2px}
 .copy-btn{position:relative; appearance:none; flex:none; width:32px; height:32px; margin:-8px; display:grid; place-items:center;
-  border:0; border-radius:8px; background:transparent; color:#fff; cursor:pointer; padding:0; transition:background .12s}
-.copy-btn:hover{background:rgba(255,255,255,.08)}
+  border:0; border-radius:8px; background:transparent; color:#fff; cursor:pointer; padding:0}
 .copy-btn:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:-2px}
 .copy-btn svg{width:16px; height:16px}
 .copy-btn .ic-done{display:none; color:var(--primary,#07BBB2)}
 .copy-btn.copied .ic-copy{display:none}
 .copy-btn.copied .ic-done{display:block}
-.copy-tip{position:absolute; bottom:calc(100% + 6px); right:0; width:max-content; max-width:240px;
-  background:#2A2D30; border:1px solid rgba(255,255,255,.09); border-radius:8px; padding:7px 10px;
-  font-size:12px; line-height:1.35; font-weight:400; color:#dbe6e8; text-align:left; white-space:nowrap;
-  opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .14s, transform .14s; z-index:2}
-.copy-btn:hover .copy-tip,.copy-btn:focus-visible .copy-tip,.copy-btn.copied .copy-tip{opacity:1; transform:none}
+/* Tooltip кита 849:4077 «Стрелка=Вниз»: #1C1F24@50% + blur, r8, 8/12, 14/20; вторая строка — Subtitle.
+   --tip-dx сдвигает пузырь внутрь экрана, стрелка остаётся над иконкой */
+.copy-tip{--tip-dx:0px; position:absolute; bottom:calc(100% + 8px); left:50%; width:max-content; max-width:min(320px,calc(100vw - 16px));
+  background:rgba(28,31,36,.5); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); box-shadow:0 4px 16px rgba(0,0,0,.25);
+  border-radius:8px; padding:8px 12px; font-size:14px; line-height:20px; font-weight:400; color:#fff; text-align:left; white-space:nowrap;
+  opacity:0; transform:translate(calc(-50% + var(--tip-dx)),4px); pointer-events:none; transition:opacity .14s, transform .14s; z-index:2}
+.copy-tip::after{content:""; position:absolute; top:100%; left:calc(50% - var(--tip-dx)); margin-left:-6px; border:6px solid transparent; border-bottom:0; border-top-color:#1c1f24}
+.copy-tip span{display:block}
+.copy-btn:hover .copy-tip,.copy-btn:focus-visible .copy-tip,.copy-btn.copied .copy-tip,.copy-btn.failed .copy-tip{opacity:1; transform:translate(calc(-50% + var(--tip-dx)),0)}
 .sup-scrim{position:fixed; inset:0; z-index:34; background:rgba(0,0,0,.5)}
 .sup-scrim[hidden]{display:none}
 .rh-sr{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}
+
+/* харнесс: сценарии меню «?» и окна (появляются при #support*) */
+.harness:has(.sup-scn){position:relative; z-index:50}   /* сценарии — поверх затемнения меню; окно открывается под харнессом */
+html{overflow-x:clip}   /* скрытые подсказки и меню у правого края не расширяют страницу на телефоне */
+.sup-scn{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center}
+.sup-scn-g{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--muted,#8A9092)}
+.sup-seg{display:inline-flex; background:rgba(255,255,255,.05); border:1px solid var(--line,rgba(255,255,255,.08)); border-radius:9px; padding:2px}
+.sup-seg button{appearance:none; border:0; background:transparent; color:#dbe6e8; font-family:inherit; font-size:12px; padding:4px 10px; border-radius:7px; cursor:pointer}
+.sup-seg button[aria-pressed="true"]{background:var(--primary,#07BBB2); color:#04231f; font-weight:600}
+
+/* ---------- окно «Написать в поддержку» (Figma 8084:6850, Modal small 2174:23175) ---------- */
+.sm-overlay{position:fixed; inset:0; z-index:80; display:flex; padding:16px; background:rgba(0,0,0,.5); overflow:auto}
+.sm-overlay[hidden]{display:none}
+.sm{position:relative; margin:auto; width:560px; max-width:100%; box-sizing:border-box; padding:32px; border-radius:20px; display:flex; flex-direction:column; gap:24px;
+  background:rgba(255,255,255,.1); -webkit-backdrop-filter:blur(60px); backdrop-filter:blur(60px); color:#fff; font-family:inherit}
+.sm::after,.sm-btn.sec::after,.sm-x::after,.sm-upbtn::after,.sm-file.bad .sm-del::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+  background:var(--rh-kit-stroke); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
+.sm-head{display:flex; align-items:flex-start; gap:12px}
+.sm-head h2{flex:1; margin:4px 0 0; font-size:24px; line-height:32px; font-weight:600}
+.sm-x{position:relative; appearance:none; flex:none; width:40px; height:40px; border:0; border-radius:32px; background:rgba(255,255,255,.1); color:#fff; display:grid; place-items:center; cursor:pointer}
+.sm-x:hover{background:rgba(255,255,255,.14)}
+.sm-x svg{width:24px; height:24px}
+.sm-body{display:flex; flex-direction:column; gap:24px}
+.sm-intro{margin:0; font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
+.sm-ok{width:60px; height:60px; border-radius:32px; background:rgba(255,255,255,.1); display:grid; place-items:center; color:#00E887}
+.sm-ok svg{width:26px; height:26px}
+/* Alert кита 2754:49116 */
+.sm-alert{display:flex; gap:10px; padding:16px; border-radius:12px; font-size:14px; line-height:20px; font-weight:500}
+.sm-alert svg{width:15px; height:15px; flex:none; margin-top:2.5px}
+.sm-alert.is-info{background:rgba(97,199,214,.1); color:#61C7D6}
+.sm-alert.is-error{background:rgba(255,102,116,.1); color:#FF6674}
+/* Textarea (dynamic input) 1934:6261: плейсхолдер → метка на рамке при фокусе/вводе */
+.sm-field{position:relative}
+.sm-field textarea{display:block; width:100%; box-sizing:border-box; min-height:140px; resize:vertical; padding:12px 14px; border:1px solid transparent; border-radius:12px;
+  background:rgba(255,255,255,.1); color:#fff; font-family:inherit; font-size:16px; line-height:22px; outline:none; transition:background .12s, border-color .12s}
+.sm-field textarea:hover{background:rgba(255,255,255,.12)}
+.sm-field textarea:focus{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+.sm-field textarea:disabled{background:rgba(255,255,255,.06); color:rgba(255,255,255,.35); resize:none}
+.sm-field label{position:absolute; left:15px; top:13px; font-size:16px; line-height:22px; color:rgba(255,255,255,.6); pointer-events:none; transition:top .14s, font-size .14s}
+.sm-field label i{font-style:normal; color:#FF6674}
+.sm-field label .lb{display:none}
+.sm-field.up label{top:-9px; left:12px; padding:0 4px; font-size:14px; line-height:17px; background:#303336; border-radius:4px}
+.sm-field.up label .ph{display:none}
+.sm-field.up label .lb{display:inline}
+.sm-field.off label{color:rgba(255,255,255,.35)}
+/* зона загрузки — set «Frame» 1701:6178 Default/Hover: пунктир 2px white@12%, r16 */
+.sm-drop{display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; border:2px dashed rgba(255,255,255,.12); border-radius:16px; text-align:center; cursor:pointer; transition:background-color .12s}
+.sm-drop:hover,.sm-drop.drag{background-color:rgba(255,255,255,.05)}
+.sm-drop:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px}
+.sm-drop.off{pointer-events:none; opacity:.5}
+.sm-upbtn{position:relative; width:40px; height:40px; border-radius:32px; background:rgba(255,255,255,.1); display:grid; place-items:center}
+.sm-upbtn svg{width:24px; height:24px}
+.sm-drop b{display:block; font-size:16px; line-height:20px; font-weight:500}
+.sm-drop small{display:block; margin-top:4px; font-size:14px; line-height:17px; color:rgba(255,255,255,.6)}
+/* строка файла — Type=Minimized (uploaded) / Type=Error */
+.sm-files{display:flex; flex-direction:column; gap:12px}
+.sm-files:empty{display:none}
+.sm-file{display:flex; align-items:center; gap:12px; padding:16px; border-radius:16px; background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
+.sm-file > svg{width:24px; height:24px; flex:none; color:rgba(255,255,255,.6)}
+.sm-file .fm{flex:1; min-width:0}
+.sm-file .fn{font-size:16px; line-height:20px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sm-file .fs{margin-top:4px; font-size:14px; line-height:17px; color:rgba(255,255,255,.6)}
+.sm-file.bad .fs{color:#FF6674}
+.sm-del{position:relative; appearance:none; flex:none; border:0; background:transparent; padding:0; color:#fff; font-family:inherit; font-size:16px; line-height:20px; font-weight:500;
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+.sm-del:disabled{opacity:.35; cursor:default}
+.sm-file.bad .sm-del{text-decoration:none; padding:12px 20px; border-radius:32px; background:rgba(255,255,255,.1)}
+/* кнопки — Button / Primary 1576:8544 (без обводки) и Button / Secondary 1576:8600 */
+.sm-acts{display:flex; justify-content:space-between; gap:12px; padding-top:12px}
+.sm-acts.one{justify-content:center}
+.sm-btn{position:relative; appearance:none; border:0; height:46px; padding:0 20px; border-radius:32px; font-family:inherit; font-size:16px; line-height:20px; font-weight:500;
+  color:#fff; cursor:pointer; white-space:nowrap; transition:background .12s}
+.sm-btn.pri{background:#07BBB2}
+.sm-btn.pri:hover{background:#0CD5CB}
+.sm-btn.sec{background:rgba(255,255,255,.1)}
+.sm-btn.sec:hover{background:rgba(255,255,255,.14)}
+.sm-btn:disabled,.sm-btn:disabled:hover{background:rgba(255,255,255,.06); color:rgba(255,255,255,.35); cursor:default}
+.sm-btn:focus-visible,.sm-x:focus-visible,.sm-del:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px}
+@media (max-width:600px){
+  .sm{padding:24px 20px; gap:20px; max-height:100%}
+  .sm-head h2{font-size:20px; line-height:28px; margin-top:6px}
+  .sm-body{gap:16px; min-height:0; overflow:auto; margin:0 -4px; padding:4px 4px 0}
+  .sm-acts{padding-top:4px}
+  .sm-acts .sm-btn{flex:1}
+}
 
 /* ---------- шапка заявки ----------
    По умолчанию прокручивается со страницей (решение 21.10.2026). Закреп под навигацией + стекло при скролле —
