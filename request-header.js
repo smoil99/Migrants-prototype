@@ -144,7 +144,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Написать в поддержку</h2>${closeX}</div>
         <div class="sm-body">
           <p class="sm-intro">Ответ придёт на вашу почту ${SUP.user}.</p>
-          <div class="sm-alert is-info">${ICON_INFO}<span>Форма — для технических и других вопросов по работе платформы. Не прикладывайте документы кандидатов.</span></div>
+          <div class="sm-alert is-info">${ICON_INFO}<span>Расскажите, что не получается в работе с платформой — поможем. Пожалуйста, не прикладывайте документы кандидатов.</span></div>
           <div class="sm-field${text?" up":""}${sending?" off":""}">
             <textarea id="smText" ${sending?"disabled":""}>${esc(text)}</textarea>
             <label for="smText"><span class="ph">Опишите вопрос или проблему</span><span class="lb">Сообщение</span> <i>*</i></label>
