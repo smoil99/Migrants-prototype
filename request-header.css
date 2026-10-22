@@ -155,6 +155,8 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-file .fn{font-size:16px; line-height:20px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sm-file .fs{margin-top:4px; font-size:14px; line-height:17px; color:rgba(255,255,255,.6)}
 .sm-file.bad .fs,.sm-file.fail .fs{color:#FF6674}
+.sm-file > .ok-ic{animation:smok .2s ease-out}
+@keyframes smok{from{opacity:0; transform:scale(.6)}}
 .sm-file.fail [data-retry]{margin-right:-4px}   /* две кнопки рядом — 8 px, как у Document */
 /* загрузка — Type=Loading: имя и % в строку, под ними полоса 6 px */
 .sm-file.up{background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}

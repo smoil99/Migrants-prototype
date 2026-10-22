@@ -84,6 +84,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     let files=[], sending=false, lastFocus=null;
     const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
     const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
+    const ICON_OK='<svg class="ok-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.75" fill="#00E887"/><path d="M8.25 12.4l2.5 2.5 5-5.3" fill="none" stroke="#0B1214" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';   // 24 px / checkmark filled, #00E887
     const ICON_ALERT='<svg viewBox="0 0 24 24" fill="none" stroke="#FF6674" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4m0 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z"/></svg>';   // 24 px / alert-circle — строка с ошибкой
     const ICON_RETRY16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M.67 2.67v4h4M15.33 13.33v-4h-4"/><path d="M13.66 6A6 6 0 0 0 3.76 3.76L.67 6.67m14.66 2.66-3.09 2.91A6 6 0 0 1 2.34 10"/></svg>';   // 16 px / refresh-cw-01
     const ICON_X16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.33 4.67l-6.66 6.66M4.67 4.67l6.66 6.66"/></svg>';   // отмена загрузки (16 px / x)
@@ -117,7 +118,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="up"?ICON_X16:ICON_TRASH16}</button>`;
       if(f.st==="up") return `<div class="sm-file up" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fr"><span class="fn">${esc(f.name)}</span><span class="pc">${f.p}%</span></div><div class="bar" role="progressbar" aria-label="Загрузка ${esc(f.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.p}"><i style="width:${f.p}%"></i></div></div>${del}</div>`;
       if(f.st==="fail") return `<div class="sm-file fail" data-fid="${f.id}">${ICON_ALERT}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">Не удалось загрузить файл</div></div><button class="sm-del" type="button" data-retry="${f.id}" aria-label="Загрузить снова" title="Загрузить снова">${ICON_RETRY16}</button>${del}</div>`;
-      return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${f.st==="bad"?ICON_ALERT:ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
+      return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${f.st==="bad"?ICON_ALERT:f.fresh?ICON_OK:ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
     };
     function syncSend(){
       const send=sm.querySelector("[data-send]"), ta=sm.querySelector("textarea"); if(!send||!ta) return;
@@ -128,7 +129,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       box.innerHTML=files.map(fileRow).join("");
       box.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{
         const i=files.findIndex(f=>f.id===+b.dataset.del); if(i<0) return;
-        clearInterval(files[i].t); files.splice(i,1); renderFiles();
+        clearInterval(files[i].t); clearTimeout(files[i].t); files.splice(i,1); renderFiles();
       }));
       box.querySelectorAll("[data-retry]").forEach(b=>b.addEventListener("click",()=>{
         const f=files.find(x=>x.id===+b.dataset.retry); if(!f) return;
@@ -143,11 +144,17 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         f.p=Math.min(100,f.p+Math.max(1,Math.round(step/total*100)));
         const row=sm.querySelector(`.sm-file[data-fid="${f.id}"]`);
         if(f.failAt!=null && f.p>=f.failAt){ clearInterval(f.t); f.st="fail"; renderFiles(); return; }
-        if(f.p>=100){ clearInterval(f.t); f.st="ok"; renderFiles(); return; }
+        if(f.p>=100){   // полоса доходит до 100%, затем на 1,5 с зелёная галочка вместо иконки файла (Document / Type=Success)
+          clearInterval(f.t);
+          if(row){ row.querySelector(".pc").textContent="100%"; row.querySelector(".bar i").style.width="100%"; }
+          f.t=setTimeout(()=>{ f.st="ok"; f.fresh=true; renderFiles(); announce(`Файл «${f.name}» загружен`);
+            f.t=setTimeout(()=>{ f.fresh=false; const r=sm.querySelector(`.sm-file[data-fid="${f.id}"] > svg`); if(r) r.outerHTML=ICON_FILE; },1500); },200);
+          return; }
         if(row){ row.querySelector(".pc").textContent=f.p+"%"; row.querySelector(".bar i").style.width=f.p+"%"; row.querySelector(".bar").setAttribute("aria-valuenow",f.p); }
       },step);
     }
-    const stopUploads=()=>files.forEach(f=>clearInterval(f.t));
+    const stopUploads=()=>files.forEach(f=>{ clearInterval(f.t); clearTimeout(f.t); });
+    const announce=t=>{ const l=sm.querySelector("#smLive"); if(l){ l.textContent=""; setTimeout(()=>{ l.textContent=t; },50); } };   // для экранного диктора
     function renderForm(){
       const text=sm.querySelector("textarea")?.value||"", keep=sm.querySelector(".sm-body")?.scrollTop||0;   // перерисовка не сбрасывает прокрутку тела
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Написать в поддержку</h2>${closeX}</div>
@@ -164,6 +171,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" hidden>
           </div>
           <div class="sm-files"></div>
+          <span class="rh-sr" id="smLive" aria-live="polite"></span>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${sending?"disabled":""}>Отмена</button>
           <button class="sm-btn pri" type="button" data-send disabled>${sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
