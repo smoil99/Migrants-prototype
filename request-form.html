@@ -459,7 +459,7 @@
   .tf-tip small{display:block; color:var(--muted); font-size:12px}
   .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
   /* компактная шапка после скролла: заголовок 20px, крошки скрыты (до скролла шапка не меняется) */
-  .tf-title h1{transition:font-size .18s ease, line-height .18s ease}
+  .tf-title h1{transform-origin:0 0}   /* размер заголовка анимируется через FLIP (scale), см. headerFlip() */
   /* «Назад» остаётся 40px и выносится слева от заголовка и деталей черновика; они выравниваются по одному левому краю */
   body.scrolled .lk-header-in{position:relative}
   body.scrolled .lk-header-in > *{margin-left:52px}   /* 40 кнопка + 12 отступ */
@@ -1453,9 +1453,26 @@ let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
 /* ---------- glass-навигация при скролле ---------- */
 function onScroll(){
   const was=document.body.classList.contains("scrolled"), on=window.scrollY>$(".harness").offsetHeight-2;
-  document.body.classList.toggle("scrolled",on);
+  if(was!==on) headerFlip(()=>document.body.classList.toggle("scrolled",on));
   if(was!==on) setStackH();   /* высота шапки меняется — пересчитать отступы якорей и боковой панели */
   renderSteps();
+}
+/* smart animate шапки (FLIP): запоминаем положения, переключаем режим, плавно ведём элементы из старых позиций в новые.
+   Заголовок дополнительно масштабируется 28→20px; строка под ним (детали черновика / подзаголовок), чип, «Назад», «Дублировать» — сдвигом */
+function headerFlip(apply){
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const els=["#title","#draftChip","#sentRef","#meta","#sub","#backBtn","#dupBtn"].map(q=>$(q)).filter(e=>e&&!e.hidden&&e.offsetParent);
+  const first=els.map(e=>e.getBoundingClientRect());
+  els.forEach(e=>e.getAnimations().forEach(a=>a.cancel()));
+  apply();
+  if(reduce) return;
+  els.forEach((e,i)=>{
+    const f=first[i], l=e.getBoundingClientRect(); if(!l.width||!l.height) return;
+    const dx=f.left-l.left, dy=f.top-l.top, sc=e.id==="title"?f.width/l.width:1;   // ширина текста пропорциональна размеру шрифта
+    if(Math.abs(dx)<.5&&Math.abs(dy)<.5&&Math.abs(sc-1)<.01) return;
+    const base=getComputedStyle(e).transform, keep=base&&base!=="none"?base+" ":"";   // у «Назад» в компактной шапке — translateY(-50%)
+    e.animate([{transform:"translate("+dx+"px,"+dy+"px) "+keep+"scale("+sc+")"},{transform:keep||"none"}],{duration:260,easing:"cubic-bezier(.2,0,0,1)"});
+  });
 }
 $(".lk-header").addEventListener("transitionend",e=>{ if(/^(height|font-size|padding-top|padding-bottom)$/.test(e.propertyName)) setStackH(); });
 function setStackH(){
