@@ -168,7 +168,8 @@
   .status::after,.btn::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
     background:var(--kit-stroke);
     -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
-  .status.sm{padding:2px 10px; font-size:13px; gap:6px}
+  /* модификаторы s-sm / b-sm: класс .sm занят окном «Написать в поддержку» (request-header.css) */
+  .status.s-sm{padding:2px 10px; font-size:13px; gap:6px}
   .status.past{color:var(--label)}
 
   /* ---------- превью карточки кандидата (содержимое — как на стенде /requests/{id}/candidates/{id}) ---------- */
@@ -221,7 +222,7 @@
     background:rgba(255,255,255,.10) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 12px center / 14px no-repeat}
   .fsel:invalid{color:var(--label)}
   .fsel option{background:var(--panel-solid); color:#fff}
-  .btn.sm{height:32px; font-size:14px; padding:0 14px}
+  .btn.b-sm{height:32px; font-size:14px; padding:0 14px}
   .btn svg{width:14px; height:14px}
   .btn:disabled{opacity:.4; cursor:default; background:rgba(255,255,255,.10); filter:none}
   .btn.teal{background:var(--primary)}
@@ -693,7 +694,7 @@ function renderList(){
         '<label class="cc-cb"><input type="checkbox" class="cb" aria-label="Выбрать '+esc(c.fn+" "+c.ln)+'"'+(S.checked.has(c.id)?" checked":"")+(actable(c)?"":" disabled")+'></label>'+
         '<span class="ava">'+initials(c)+'</span>'+
         '<div class="cc-main"><span class="cc-name">'+esc(c.fn+" "+c.ln)+'</span><span class="cc-aad">'+c.aad+'</span></div>'+
-        chip(c.st,"sm")+'</div>'+
+        chip(c.st,"s-sm")+'</div>'+
     '</div>';}).join("")
     : '<div class="empty">Нет кандидатов в этом статусе</div>';
   const vis=rows.filter(actable).map(c=>c.id), n=vis.filter(id=>S.checked.has(id)).length;
@@ -743,7 +744,7 @@ function histBlock(c){
     return '<div class="blk"><div class="blk-h"><h4>История статусов</h4><button class="ibtn chev-btn" data-hist aria-expanded="'+S.histOpen+'" aria-label="Свернуть историю">'+ICO.chev+'</button></div>'+
         (S.histOpen?'<div class="hist">'+c.hist.map((h,i)=>{
           const lbl=h.st==="draft"?"Черновик":ST[h.st].chip, dot=h.st==="draft"?"d-cancelled":ST[h.st].dot;
-          return '<div class="row"><span class="status sm'+(i<last?" past":"")+'"><span class="dot '+dot+'"></span>'+lbl+'</span><span>'+fmtDT(h.at)+'</span></div>';}).join("")+'</div>':'')+
+          return '<div class="row"><span class="status s-sm'+(i<last?" past":"")+'"><span class="dot '+dot+'"></span>'+lbl+'</span><span>'+fmtDT(h.at)+'</span></div>';}).join("")+'</div>':'')+
       '</div>';
 }
 function tabContent(c){
@@ -751,7 +752,7 @@ function tabContent(c){
     return '<div class="up-row"><div class="grow">'+
         '<select class="fsel" id="docType" required aria-label="Тип документа"><option value="" disabled'+(S.docType?"":" selected")+' hidden>Выберите тип документа</option>'+
         DOC_TYPES.map(t=>'<option'+(t===S.docType?" selected":"")+'>'+esc(t)+'</option>').join("")+'</select></div>'+
-        '<button class="btn sm teal" data-add="doc"'+(S.docType?"":" disabled")+'>'+ICO.plus+'Добавить</button></div>'+
+        '<button class="btn b-sm teal" data-add="doc"'+(S.docType?"":" disabled")+'>'+ICO.plus+'Добавить</button></div>'+
       '<div class="dz" data-add="doc" role="button" tabindex="0">'+'<div class="up">'+ICO.up+'</div><div class="t">Перетащите или выберите файл</div><div class="s">Форматы: PDF, JPG, PNG. Макс. размер: 20 МБ</div></div>'+
       '<div class="lst-h">Загруженные <span class="n">'+c.docs.length+'</span></div>'+
       (c.docs.length? c.docs.map((d,i)=>'<div class="file"><span class="fic">'+ICO.file+'</span><span class="fm"><span class="fn">'+esc(d.type)+'</span><span class="fs">'+esc(d.name)+' · '+d.size+' · '+d.at+'</span></span>'+
@@ -759,7 +760,7 @@ function tabContent(c){
         : '<div class="es">'+ILL.docs+'<div class="t">Документов пока нет</div></div>');
   }
   if(S.tab==="media"){
-    return '<div class="up-row"><h4>Загрузить фото и видео</h4><button class="btn sm teal" data-add="media">'+ICO.plus+'Добавить</button></div>'+
+    return '<div class="up-row"><h4>Загрузить фото и видео</h4><button class="btn b-sm teal" data-add="media">'+ICO.plus+'Добавить</button></div>'+
       '<div class="dz" data-add="media" role="button" tabindex="0"><div class="up">'+ICO.up+'</div><div class="t">Перетащите или выберите файл</div><div class="s">Форматы: JPG, PNG, MP4, MOV, AVI. Фото до 5 МБ, видео до 500 МБ</div></div>'+
       '<div class="lst-h">Добавленные <span class="n">'+c.media.length+'</span></div>'+
       (c.media.length? '<div class="media">'+c.media.map(m=>'<div class="thumb'+(m.v?" v":"")+'">'+(m.v?ICO.play:ICO.img)+(m.v?'<span class="dur">'+m.dur+'</span>':'')+'<span class="cap">'+esc(m.name)+'</span></div>').join("")+'</div>'
@@ -771,9 +772,9 @@ function tabContent(c){
   const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   const row=(g,gi,x)=>{
     const ri=g.rows.indexOf(x);
-    const btn=x.st==="none"?'<button class="btn sm" data-svc="'+gi+':'+ri+'" data-do="start">Начать</button>'
-      : x.st==="prog"?'<button class="btn sm primary" data-svc="'+gi+':'+ri+'" data-do="finish">Завершить</button>'
-      : '<button class="btn sm" disabled>Завершить</button>';
+    const btn=x.st==="none"?'<button class="btn b-sm" data-svc="'+gi+':'+ri+'" data-do="start">Начать</button>'
+      : x.st==="prog"?'<button class="btn b-sm primary" data-svc="'+gi+':'+ri+'" data-do="finish">Завершить</button>'
+      : '<button class="btn b-sm" disabled>Завершить</button>';
     return '<div class="sv-row"><div class="sv-n">'+esc(x.n)+'<small>'+esc(x.ex)+'</small></div>'+
       '<div><span class="status"><span class="dot '+SVC_DOT[x.st]+'"></span>'+SVC_LBL[x.st]+(x.tip?' <i class="sv-i" title="'+esc(x.tip)+'">i</i>':'')+'</span></div>'+
       '<div class="sv-p">'+x.plan+'</div><div class="sv-c" title="'+(x.com==="—"?"":esc(x.com))+'">'+esc(x.com)+'</div><div class="sv-a">'+btn+'</div></div>';
