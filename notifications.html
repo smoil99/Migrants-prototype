@@ -60,6 +60,30 @@
   .harness{position:relative; z-index:85; transition:transform .25s ease}
   body.hh .harness{transform:translateY(-100%)}
   body.embed .harness{display:none}
+  /* сценарии — в меню слева (только на этой странице) */
+  .scn-trigger{appearance:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer; max-width:100%;
+    font-size:12.5px; font-weight:600; color:#fff; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:6px 11px}
+  .scn-trigger:hover,.scn-trigger[aria-expanded="true"]{border-color:var(--line-strong); background:rgba(255,255,255,.08)}
+  .scn-trigger span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .scn-burger{width:15px; height:15px; color:var(--muted); flex:none}
+  .scn-bg{position:fixed; inset:0; z-index:96; background:rgba(3,5,6,.45); animation:fade .14s ease-out}
+  .scn{position:fixed; top:0; left:0; bottom:0; z-index:97; width:min(340px,86vw); display:flex; flex-direction:column;
+    background:var(--panel-solid); border-right:1px solid var(--line-strong); box-shadow:20px 0 50px -20px rgba(0,0,0,.7); animation:scnin .18s ease-out}
+  @keyframes scnin{from{transform:translateX(-24px); opacity:0}}
+  .scn-h{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 16px 8px 20px}
+  .scn-h h2{margin:0; font-size:16px; font-weight:600}
+  .scn-x{appearance:none; width:32px; height:32px; border:0; border-radius:50%; padding:0; cursor:pointer; display:grid; place-items:center; color:#cfd6d8; background:rgba(255,255,255,.08)}
+  .scn-x:hover{background:rgba(255,255,255,.14)}
+  .scn-x svg{width:16px; height:16px}
+  .scn-list{flex:1; min-height:0; overflow-y:auto; padding:4px 10px 20px}
+  .scn-g{margin:14px 10px 6px; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2)}
+  .scn-list button{appearance:none; display:block; width:100%; text-align:left; cursor:pointer; border:0; border-radius:8px; padding:8px 10px;
+    background:transparent; color:#fff; font-size:13.5px; font-weight:500; line-height:1.35}
+  .scn-list button:hover{background:rgba(255,255,255,.06)}
+  .scn-list button[aria-current="true"]{background:var(--primary-dim)}
+  .scn-list small{display:block; margin-top:3px; font-size:11.5px; font-weight:400; color:var(--muted)}
+  .scn-list button[aria-current="true"] small{color:var(--text-2)}
+  .scn-list small b{font-weight:600; color:#fff}
 
   /* ---------- меню переключения прототипов (общее для страниц) ---------- */
   .proto-menu{position:relative; flex:none}
@@ -323,26 +347,21 @@
     </div>
     <div class="ctl">
       <span class="lbl">Сценарий</span>
-      <div class="seg" id="scenSeg" role="group" aria-label="Сценарий">
-        <button data-scen="filled" aria-pressed="true">Есть новые</button>
-        <button data-scen="allread" aria-pressed="false">Всё прочитано</button>
-        <button data-scen="empty" aria-pressed="false">Пусто</button>
-        <button data-scen="unread-empty" aria-pressed="false">Непрочитанных нет</button>
-        <button data-scen="loading" aria-pressed="false">Загрузка</button>
-        <button data-scen="error" aria-pressed="false">Ошибка</button>
-        <button data-scen="markall-error" aria-pressed="false">Ошибка «Прочитать все»</button>
-        <button data-scen="read-error" aria-pressed="false">Ошибка прочтения</button>
-        <button data-scen="new" aria-pressed="false">Пришло новое</button>
-        <button data-scen="long" aria-pressed="false">Длинные тексты</button>
-        <button data-scen="more" aria-pressed="false">Подгрузка</button>
-        <button data-scen="many" aria-pressed="false">120 непрочитанных</button>
-        <button data-scen="newyear" aria-pressed="false">Начало года</button>
-        <button data-scen="mobile" aria-pressed="false">Телефон</button>
-      </div>
+      <button class="scn-trigger" id="scnBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="scnMenu">
+        <svg class="scn-burger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        <span id="scnCur">Есть новые</span>
+      </button>
     </div>
-    <p class="hint" id="hint"></p>
   </div>
 </div>
+
+<!-- ============ МЕНЮ СЦЕНАРИЕВ (слева) ============ -->
+<div class="scn-bg" id="scnBg" hidden></div>
+<aside class="scn" id="scnMenu" role="dialog" aria-modal="true" aria-labelledby="scnT" hidden>
+  <div class="scn-h"><h2 id="scnT">Сценарии</h2><button class="scn-x" id="scnX" aria-label="Закрыть">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <nav class="scn-list" id="scnList" aria-label="Сценарии"></nav>
+</aside>
 
 <!-- ============ ШАПКА КАБИНЕТА (зависит от роли) ============ -->
 <nav class="topnav"><div class="topnav-in" id="topnavIn"></div></nav>
@@ -830,11 +849,43 @@ function applyLong(){
     Object.assign(b,{type:"U3", read:false, n:14, refs:["260708_123","260711_118","260712_102","260715_2","260716_9","260718_11","260720_1","260722_4","260801_2","260802_3","260803_5","260805_7","260809_1","260810_2"]});
   }
 }
+/* меню сценариев: группы, у текущего — полное пояснение */
+const SCENS=[
+  ["Список",[["filled","Есть новые","3 непрочитанных вперемешку"],["allread","Всё прочитано","Без бейджа, «Прочитать все» неактивна"],["long","Длинные тексты","1 строка заголовка, 2 строки описания"],["many","120 непрочитанных","«9+» и «(99+)»"],["newyear","Начало года","Дата с годом"]]],
+  ["Пусто и загрузка",[["empty","Пусто","Уведомлений ещё не было"],["unread-empty","Непрочитанных нет","Пустая вкладка «Непрочитанные»"],["loading","Загрузка","Скелетоны"],["more","Подгрузка","«Загружаем…» в кнопке"]]],
+  ["Ошибки",[["error","Ошибка загрузки","«Повторить»"],["markall-error","Ошибка «Прочитать все»","Alert под шапкой панели"],["read-error","Ошибка прочтения","Тост сверху, 40 px (D-12)"]]],
+  ["События и устройства",[["new","Пришло новое","«Показать новые уведомления (1)»"],["mobile","Телефон","Рамка 380 px"]]]
+];
+const scnName=k=>{for(const [,l] of SCENS) for(const [kk,n] of l) if(kk===k) return n; return k;};
 function setPressed(){
   document.querySelectorAll("#roleSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.role===S.role)));
-  document.querySelectorAll("#scenSeg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.scen===S.scen)));
-  $("#hint").innerHTML=HINTS[S.scen]+" Роль: <b>"+({client:"Клиент",host:"Исполнитель РФ",provider:"Исполнитель Индии"})[S.role]+"</b> — "+ROLES[S.role].kinds+(S.lang==="en"?", весь UI панели на английском":"")+".";
+  $("#scnCur").textContent=scnName(S.scen);
+  const roleLine=" Роль: <b>"+({client:"Клиент",host:"Исполнитель РФ",provider:"Исполнитель Индии"})[S.role]+"</b> — "+ROLES[S.role].kinds+(S.lang==="en"?", весь UI панели на английском":"")+".";
+  $("#scnList").innerHTML=SCENS.map(([g,l])=>'<div class="scn-g">'+g+'</div>'+l.map(([k,n,d])=>{
+    const on=k===S.scen;
+    return '<button data-scen="'+k+'"'+(on?' aria-current="true"':'')+'>'+n+'<small>'+(on?HINTS[k]+roleLine:d)+'</small></button>';
+  }).join("")).join("");
 }
+function openScn(){
+  $("#scnBg").hidden=false; $("#scnMenu").hidden=false; $("#scnBtn").setAttribute("aria-expanded","true");
+  ($("#scnList [aria-current]")||$("#scnList button")).focus();
+}
+function closeScn(back){
+  if($("#scnMenu").hidden) return;
+  $("#scnBg").hidden=true; $("#scnMenu").hidden=true; $("#scnBtn").setAttribute("aria-expanded","false");
+  if(back) $("#scnBtn").focus();
+}
+$("#scnBtn").addEventListener("click",()=>$("#scnMenu").hidden?openScn():closeScn(true));
+$("#scnBg").addEventListener("click",()=>closeScn(true));
+$("#scnX").addEventListener("click",()=>closeScn(true));
+$("#scnList").addEventListener("click",e=>{ const b=e.target.closest("[data-scen]"); if(!b) return; closeScn(false); runScenario(b.dataset.scen); });
+$("#scnMenu").addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); closeScn(true); return; }
+  const items=[...$("#scnList").querySelectorAll("button")], i=items.indexOf(document.activeElement);
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); const j=i<0?0:(i+(e.key==="ArrowDown"?1:items.length-1))%items.length; items[j].focus(); }
+  if(e.key==="Tab"){ const f=[$("#scnX"),...items], a=f[0], z=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===a){e.preventDefault(); z.focus();} else if(!e.shiftKey&&document.activeElement===z){e.preventDefault(); a.focus();} }
+});
 function runScenario(k){
   S.timers.forEach(clearTimeout); S.timers=[];
   if(S.open){ S.open=false; $("#npLayer").hidden=true; document.body.classList.remove("locked"); }
@@ -854,7 +905,7 @@ function runScenario(k){
   if(!EMBED){ try{ history.replaceState(null,"",location.pathname+(S.role!=="client"?"?role="+S.role:"")+"#"+k); }catch(_){} }
 }
 document.querySelectorAll("#roleSeg button").forEach(b=>b.addEventListener("click",()=>{ S.role=b.dataset.role; runScenario(S.scen); }));
-document.querySelectorAll("#scenSeg button").forEach(b=>b.addEventListener("click",()=>{ runScenario(b.dataset.scen); }));
+
 window.addEventListener("hashchange",()=>{ const k=location.hash.slice(1); if(HINTS[k]&&k!==S.scen) runScenario(k); });
 
 /* ================= меню прототипов ================= */
