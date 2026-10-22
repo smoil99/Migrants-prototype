@@ -35,6 +35,11 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       +'<span class="rh-sr" id="copyLive" aria-live="polite"></span>';
     const live=document.getElementById("copyLive");
     const scrim=document.createElement("div"); scrim.className="sup-scrim"; scrim.hidden=true; document.body.appendChild(scrim);
+    /* плавное появление/скрытие: hidden снимается до анимации и ставится после неё */
+    const fade=(el,o)=>{ clearTimeout(el._ft);
+      if(o){ el.hidden=false; el.getBoundingClientRect(); el.classList.add("is-open"); }
+      else { el.classList.remove("is-open"); el._ft=setTimeout(()=>{ el.hidden=true; },300); } };
+    const menuOpen=()=>pop.classList.contains("is-open");
     const place=()=>{ pop.style.left=""; const over=pop.getBoundingClientRect().right-(document.documentElement.clientWidth-16); if(over>0) pop.style.left=(-13-over)+"px"; };
     /* пузырь подсказки не выходит за экран: сдвиг --tip-dx, стрелка остаётся над иконкой */
     const fitTip=b=>{ const t=b.querySelector(".copy-tip"); t.style.transition="none"; t.style.setProperty("--tip-dx","0px");
@@ -43,7 +48,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       t.style.setProperty("--tip-dx",dx+"px"); t.getBoundingClientRect(); requestAnimationFrame(()=>{ t.style.transition=""; }); };
     const resetCopy=b=>{ clearTimeout(b._t); b.classList.remove("copied","failed"); b.querySelector(".copy-tip").innerHTML=`<span>${b.dataset.tip}</span>`; };
     const copies=[...pop.querySelectorAll(".copy-btn")];
-    const setOpen=o=>{ pop.hidden=!o; scrim.hidden=!o; btn.setAttribute("aria-expanded",String(o)); if(o){ place(); copies.forEach(fitTip); } else { copies.forEach(resetCopy); live.textContent=""; } };
+    const setOpen=o=>{ fade(pop,o); fade(scrim,o); btn.setAttribute("aria-expanded",String(o)); if(o){ place(); copies.forEach(fitTip); } else { copies.forEach(resetCopy); live.textContent=""; } };
     async function write(text){
       if(scn.clipboard==="deny") throw new Error("denied");
       try{ await navigator.clipboard.writeText(text); }
@@ -64,9 +69,9 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         fitTip(b);
       });
     });
-    btn.addEventListener("click",e=>{ e.stopPropagation(); setOpen(pop.hidden); });
+    btn.addEventListener("click",e=>{ e.stopPropagation(); setOpen(!menuOpen()); });
     scrim.addEventListener("click",()=>setOpen(false));
-    document.addEventListener("click",e=>{ if(!pop.hidden&&!box.contains(e.target)) setOpen(false); });
+    document.addEventListener("click",e=>{ if(menuOpen()&&!box.contains(e.target)) setOpen(false); });
 
     /* ---------- окно «Написать в поддержку» ---------- */
     const FORMATS=["pdf","jpg","jpeg","png","heic"], MAX=10*1024*1024;
@@ -140,20 +145,20 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       setOpen(false); lastFocus=document.activeElement;
       files=[]; sending=false; failed=false; sm.innerHTML=""; renderForm();
       const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
-      ov.hidden=false; ov.scrollTop=0; document.documentElement.style.overflow="hidden";
+      fade(ov,true); document.documentElement.style.overflow="hidden";
       sm.querySelector("textarea").focus();
     }
     function closeForm(){
       if(sending) return;
-      ov.hidden=true; document.documentElement.style.overflow="";
+      fade(ov,false); document.documentElement.style.overflow="";
       (lastFocus&&lastFocus.isConnected?lastFocus:btn).focus();
     }
     sm.addEventListener("click",e=>{ if(e.target.closest("[data-close]")) closeForm(); });
     document.getElementById("supWrite").addEventListener("click",e=>{ e.stopPropagation(); openForm(); });
     document.addEventListener("keydown",e=>{
       if(e.key!=="Escape") return;
-      if(!ov.hidden){ closeForm(); return; }
-      if(!pop.hidden){ setOpen(false); btn.focus(); }
+      if(ov.classList.contains("is-open")){ closeForm(); return; }
+      if(menuOpen()){ setOpen(false); btn.focus(); }
     });
     /* фокус не уходит из окна */
     ov.addEventListener("keydown",e=>{
@@ -186,7 +191,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       if(location.hash==="#support-form") openForm(); else setOpen(true);
     }
     window.addEventListener("hashchange",fromHash);
-    window.addEventListener("resize",()=>{ if(!pop.hidden){ place(); copies.forEach(fitTip); } });
+    window.addEventListener("resize",()=>{ if(menuOpen()){ place(); copies.forEach(fitTip); } });
     fromHash();
   }
 
