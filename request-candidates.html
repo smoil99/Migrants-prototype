@@ -298,20 +298,29 @@
   .btn.primary::after,.btn.teal:not(:disabled)::after{display:none}   /* у Primary обводки нет */
   .btn.primary:hover{filter:brightness(1.08)}
 
-  #toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:90; transform:translate(-50%,16px);
-    background:var(--panel-solid); color:#fff; border-radius:12px; padding:11px 16px;
-    font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; max-width:calc(100vw - 32px)}
-  #toast.show{opacity:1; transform:translate(-50%,0)}
-  /* тост успеха «Одобрить / Отклонить» — glass сверху, заголовок + пояснение */
-  #okToast{position:fixed; left:50%; top:calc(var(--topnav-h,54px) + 16px + env(safe-area-inset-top,0px)); z-index:90;
-    display:flex; align-items:flex-start; gap:12px; width:max-content; max-width:min(440px, calc(100vw - 32px)); padding:14px 18px 14px 14px;
-    background:rgba(30,34,37,.55); -webkit-backdrop-filter:blur(20px) saturate(1.5); backdrop-filter:blur(20px) saturate(1.5);
-    border-radius:16px; box-shadow:0 18px 44px -14px rgba(0,0,0,.75);
-    color:#fff; opacity:0; transform:translate(-50%,-12px); pointer-events:none; transition:opacity .22s ease, transform .22s ease}
-  #okToast.show{opacity:1; transform:translate(-50%,0); pointer-events:auto}
-  #okToast img{flex:none; width:24px; height:24px; margin-top:1px}
-  #okToast b{display:block; font-size:15px; line-height:22px; font-weight:600}
-  #okToast span{display:block; margin-top:2px; font-size:13.5px; line-height:19px; color:rgba(255,255,255,.72)}
+  /* DS «Toast» (Figma 8066:87785): glass white@10% + blur, обводка кита, r12, p16; иконка 24 + текст 14 Medium цвета типа,
+     цветное свечение сверху слева; Neutral / Success / Negative / Warning; закрыть — Button / Icon ghost 32 */
+  #toast{position:fixed; left:50%; top:calc(var(--topnav-h,54px) + 16px + env(safe-area-inset-top,0px)); z-index:90;
+    width:min(741px, calc(100vw - 32px)); min-height:56px; display:flex; align-items:center; gap:10px; padding:12px 12px 12px 16px;
+    border-radius:12px; overflow:hidden; background:rgba(255,255,255,.10);
+    -webkit-backdrop-filter:blur(5.8px); backdrop-filter:blur(5.8px);
+    font-size:14px; line-height:20px; font-weight:500; color:var(--t-c);
+    opacity:0; transform:translate(-50%,-8px); pointer-events:none; transition:opacity .2s ease, transform .2s ease}
+  #toast.show{opacity:1; transform:translate(-50%,0); pointer-events:auto}
+  #toast[data-type="neutral"]{--t-c:#61C7D6; --t-g:2,157,213}
+  #toast[data-type="success"]{--t-c:#00E887; --t-g:23,217,139}
+  #toast[data-type="negative"]{--t-c:#FF6674; --t-g:217,55,23}
+  #toast[data-type="warning"]{--t-c:#F5CD06; --t-g:217,197,23}
+  #toast .tg{position:absolute; left:-25px; top:-155px; border-radius:9999px; filter:blur(64px); pointer-events:none}
+  #toast .tg1{width:466px; height:172px; background:rgba(var(--t-g),.15)}
+  #toast .tg2{width:695px; height:115px; background:rgba(var(--t-g),.25)}
+  #toast img{position:relative; flex:none; width:24px; height:24px}
+  #toast .tx{position:relative; flex:1; min-width:0}
+  #toast .tx b{font-weight:600}
+  #toast .tclose{position:relative; appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:32px; padding:0; cursor:pointer;
+    display:grid; place-items:center; background:transparent; color:rgba(255,255,255,.6)}
+  #toast .tclose:hover{background:rgba(255,255,255,.08); color:#fff}
+  #toast .tclose svg{width:16px; height:16px}
 
   @media (max-width:1180px){
     .split{grid-template-columns:minmax(280px,340px) minmax(0,1fr)}
@@ -365,7 +374,7 @@
   .ftb .n{margin-left:4px; color:var(--label)}
   .f-grid{display:grid; grid-template-columns:minmax(0,1fr) 416px; gap:20px; align-items:start; margin-top:24px}
   .f-card{position:relative; background:var(--panel); border-radius:16px; padding:24px; container-type:inline-size}
-  .f-card::before,#toast::after,#okToast::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+  .f-card::before,#toast::after{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
     background:var(--kit-stroke); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude}
   .fullv > .f-card{margin-top:24px}
   .f-card .blk h4{font-size:20px; font-weight:500}
@@ -499,26 +508,29 @@
 </main>
 <main class="wrap fullv" id="fullView" hidden></main>
 <div class="scrim" id="scrim" hidden></div>
-<div id="toast" role="status" aria-live="polite"></div>
-<div id="okToast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite" data-type="neutral"></div>
 
 <script>
 "use strict";
 const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2600);}
-/* тост успеха сверху: заголовок + подробности; клик — закрыть */
-function okToast(title,text){
-  const t=$("#okToast");
-  t.innerHTML='<img src="icons/check-circle-fill.svg" alt=""><div><b>'+esc(title)+'</b><span>'+esc(text)+'</span></div>';
-  t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),4500);
+/* DS «Toast»: type — neutral | success | negative | warning; title (необязательно) — жирным перед текстом.
+   Сверху по центру, 4,5 с; пока курсор над тостом — не закрывается; новый тост заменяет предыдущий. */
+function toast(m,type="neutral",title=""){
+  const t=$("#toast");
+  t.dataset.type=type;
+  t.innerHTML='<span class="tg tg1"></span><span class="tg tg2"></span><img src="icons/toast/'+type+'.svg" alt="">'+
+    '<span class="tx">'+(title?'<b>'+esc(title)+'.</b> ':'')+esc(m)+'</span>'+
+    '<button class="tclose" type="button" aria-label="Закрыть"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>';
+  t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>{ if(!t.matches(":hover")) t.classList.remove("show"); else t._t=setTimeout(()=>t.classList.remove("show"),2000); },4500);
 }
+function okToast(title,text,type="success"){ toast(text,type,title); }
 function actToast(st,names,skipped){
   const ok=st==="done", s=ST[st], n=names.length;
   const title=n===1 ? (ok?"Кандидат одобрен":"Кандидат отклонён") : (ok?"Одобрено кандидатов: ":"Отклонено кандидатов: ")+n;
   let text=(n===1?names[0]+" — статус":"Статус")+" «"+s.chip+"». "+(n===1?"Кандидат перемещён":"Кандидаты перемещены")+" во вкладку «"+s.card+"».";
   if(skipped) text+=" Пропущено: "+skipped+" — статус уже финальный.";
-  okToast(title,text);
+  okToast(title,text,ok?"success":"neutral");
 }
 
 /* статусы кандидата: chip — подпись в листе, превью и «Истории статусов» (как на стенде), card — подпись в сводке */
@@ -872,7 +884,7 @@ $("#listTools").addEventListener("click",e=>{
   const skipped=S.checked.size-ids.length;
   S.checked.clear(); setStatus(ids,b.dataset.bulk);
   if(ids.length) actToast(b.dataset.bulk, ids.map(id=>{const c=S.data.find(x=>x.id===id); return c.fn+" "+c.ln;}), skipped);
-  else toast("Нечего менять: у выбранных кандидатов статус уже финальный");
+  else toast("Нечего менять: у выбранных кандидатов статус уже финальный","warning");
 });
 function paneClick(e){
   const pane=e.currentTarget, c=S.data.find(x=>x.id===S.sel); if(!c) return;
@@ -887,24 +899,24 @@ function paneClick(e){
   const sv=e.target.closest("[data-svc]");
   if(sv){
     const [gi,ri]=sv.dataset.svc.split(":").map(Number), x=c.svcs[gi].rows[ri];
-    if(sv.dataset.do==="start"){ x.st="prog"; x.plan="28.10.2026"; x.tip="Начата: ИП Гаврилова, 21.10.2026"; toast("Услуга начата: "+x.n); }
-    else { x.st="done"; x.tip=(x.tip?x.tip+" · ":"")+"Завершена: ИП Гаврилова, 21.10.2026"; toast("Услуга завершена: "+x.n); }
+    if(sv.dataset.do==="start"){ x.st="prog"; x.plan="28.10.2026"; x.tip="Начата: ИП Гаврилова, 21.10.2026"; toast("Услуга начата: "+x.n,"success"); }
+    else { x.st="done"; x.tip=(x.tip?x.tip+" · ":"")+"Завершена: ИП Гаврилова, 21.10.2026"; toast("Услуга завершена: "+x.n,"success"); }
     keepScroll(); return;
   }
   const add=e.target.closest("[data-add]");
   if(add){
     if(add.dataset.add==="doc"){
-      if(!S.docType){ toast("Сначала выберите тип документа"); const s=pane.querySelector("#docType"); if(s) s.focus(); return; }
+      if(!S.docType){ toast("Сначала выберите тип документа","warning"); const s=pane.querySelector("#docType"); if(s) s.focus(); return; }
       c.docs.unshift({type:S.docType, name:"scan_"+c.ln.toLowerCase()+".pdf", size:"1,2 МБ", at:fmtDT(new Date())});
-      S.docType=""; renderPreview(false); renderList(); toast("Документ загружен");
+      S.docType=""; renderPreview(false); renderList(); toast("Документ загружен","success");
     } else {
       const v=c.media.length%3===2; c.media.push({v, name:(v?"video_":"photo_")+(c.media.length+1)+(v?".mp4":".jpg"), dur:v?"0:24":""});
-      renderPreview(false); toast(v?"Видео загружено":"Фото загружено");
+      renderPreview(false); toast(v?"Видео загружено":"Фото загружено","success");
     }
     return;
   }
   const dd=e.target.closest("[data-deldoc]");
-  if(dd){ c.docs.splice(+dd.dataset.deldoc,1); renderPreview(false); toast("Документ удалён"); return; }
+  if(dd){ c.docs.splice(+dd.dataset.deldoc,1); renderPreview(false); toast("Документ удалён","success"); return; }
   if(e.target.closest("[data-dl]")){ toast("Скачивание в прототипе не реализовано"); return; }
   const b=e.target.closest("[data-act]"); if(!b) return;
   setStatus([c.id],b.dataset.act);
@@ -953,6 +965,7 @@ window.addEventListener("scroll",onScroll,{passive:true});
 window.addEventListener("resize",()=>{ if(!narrow()) closeSheet(); });
 
 reset();
+$("#toast").addEventListener("click",e=>{ if(e.target.closest(".tclose")){ const t=$("#toast"); clearTimeout(t._t); t.classList.remove("show"); } });
 { const m=location.hash.match(/^#candidate-(\d+)$/); if(m&&S.data.some(x=>x.id===+m[1])){ S.sel=+m[1]; renderList(); openFull(false); } }
 </script>
 <script src="request-header.js"></script>
