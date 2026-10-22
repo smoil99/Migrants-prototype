@@ -227,6 +227,20 @@
     background:var(--panel-solid); border:1px solid var(--line-strong); color:#fff; border-radius:12px; padding:11px 16px;
     font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; width:max-content; max-width:calc(100vw - 32px)}
   #toast.show{opacity:1; transform:translate(-50%,0)}
+  /* ошибка прочтения уведомления (D-12): Toast Type=Negative, вверху по центру, 40 px от верхней границы экрана */
+  .etoast{position:fixed; left:50%; top:calc(40px + env(safe-area-inset-top,0px)); z-index:95; transform:translateX(-50%);
+    width:min(741px,calc(100vw - 32px)); min-height:56px; display:flex; align-items:center; gap:10px; padding:12px 12px 12px 16px; border-radius:12px;
+    background:linear-gradient(100deg,rgba(255,102,116,.20),rgba(255,102,116,0) 55%),rgba(40,44,47,.86);
+    -webkit-backdrop-filter:blur(24px) saturate(1.3); backdrop-filter:blur(24px) saturate(1.3);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12), 0 16px 40px -12px rgba(0,0,0,.7);
+    color:var(--err); font-size:14px; line-height:20px; font-weight:500; animation:etin .2s ease-out}
+  @keyframes etin{from{opacity:0; transform:translate(-50%,-8px)}}
+  .etoast > svg{width:24px; height:24px; flex:none}
+  .etoast span{flex:1; min-width:0}
+  .etoast button{appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:8px; padding:0; cursor:pointer;
+    display:grid; place-items:center; background:transparent; color:rgba(255,255,255,.6)}
+  .etoast button:hover{background:rgba(255,255,255,.08); color:#fff}
+  .etoast button svg{width:16px; height:16px}
 
   /* ---------- телефон: панель на всю ширину, шапка с крестиком ---------- */
   @media (max-width:599px){
@@ -317,6 +331,7 @@
         <button data-scen="loading" aria-pressed="false">Загрузка</button>
         <button data-scen="error" aria-pressed="false">Ошибка</button>
         <button data-scen="markall-error" aria-pressed="false">Ошибка «Прочитать все»</button>
+        <button data-scen="read-error" aria-pressed="false">Ошибка прочтения</button>
         <button data-scen="new" aria-pressed="false">Пришло новое</button>
         <button data-scen="long" aria-pressed="false">Длинные тексты</button>
         <button data-scen="more" aria-pressed="false">Подгрузка</button>
@@ -339,6 +354,7 @@
   <section class="np" id="np" role="dialog" aria-modal="true" aria-labelledby="npT" tabindex="-1"></section>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="etoast" class="etoast" role="status" aria-live="polite" hidden></div>
 <div id="live" class="sr" aria-live="polite"></div>
 
 <script>
@@ -371,6 +387,7 @@ const IC={
   bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>',
   chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  xfill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25A9.75 9.75 0 1 0 21.75 12 9.76 9.76 0 0 0 12 2.25Zm3.53 12.22a.75.75 0 1 1-1.06 1.06L12 13.06l-2.47 2.47a.75.75 0 0 1-1.06-1.06L10.94 12 8.47 9.53a.75.75 0 0 1 1.06-1.06L12 10.94l2.47-2.47a.75.75 0 0 1 1.06 1.06L13.06 12Z"/></svg>',
   err:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg>',
   up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>',
@@ -401,6 +418,7 @@ const L={
     newPill:n=>"Новые уведомления: "+n, newBtn:n=>"Показать новые уведомления ("+n+")", unreadSr:"Не прочитано. ", loading:"Загрузка уведомлений",
     refsSr:(r,rest)=>(r.length>1?"Заявки ":"Заявка ")+r.join(", ")+(rest?" и ещё "+rest:"")+".",
     bell:n=>n?"Уведомления, непрочитанных: "+n:"Уведомления", ref:r=>"№"+r,
+    readErr:"Не удалось отметить уведомление как прочитанное.", reqTitle:r=>"Заявка №"+r, reqCrumb:"Личный кабинет / Заявки",
     goReq:r=>"Переход: карточка заявки №"+r, goCand:r=>"Переход: карточка заявки №"+r+" — раздел Кандидаты", goList:"Переход: список заявок"},
   en:{title:"Notifications", all:"All", unread:"Unread", markAll:"Mark all as read", close:"Close",
     gToday:"TODAY", gYest:"YESTERDAY", gEarlier:"EARLIER", today:"Today", yest:"Yesterday",
@@ -413,6 +431,7 @@ const L={
     newPill:n=>"New notifications: "+n, newBtn:n=>"Show new notifications ("+n+")", unreadSr:"Unread. ", loading:"Loading notifications",
     refsSr:(r,rest)=>(r.length>1?"Requests ":"Request ")+r.join(", ")+(rest?" and "+rest+" more":"")+".",
     bell:n=>n?"Notifications, unread: "+n:"Notifications", ref:r=>"#"+r,
+    readErr:"Couldn't mark the notification as read.", reqTitle:r=>"Request #"+r, reqCrumb:"Personal account / Requests",
     goReq:r=>"Go to: request card #"+r, goCand:r=>"Go to: request card #"+r+" — Candidates section", goList:"Go to: requests list"}
 };
 /* заголовок / описание — по одному тексту на вид; название клиента — как в системе (по-русски и в EN) */
@@ -495,7 +514,7 @@ function freshFor(role){
 
 /* ================= состояние ================= */
 const PAGE=20, MORE=20;   // D-6: порции по 20 в той же панели
-const S={role:"client", lang:"ru", scen:"filled", items:[], tab:"all", loaded:{all:PAGE, unread:PAGE},
+const S={failed:new Set(), readFail:false, role:"client", lang:"ru", scen:"filled", items:[], tab:"all", loaded:{all:PAGE, unread:PAGE},
   state:"ok", moreLoading:false, freezeMore:false, markFail:false, markErr:false, open:false, timers:[]};
 const unreadCount=()=>S.items.filter(i=>!i.read).length;
 const pendingCount=()=>S.items.filter(i=>i.hidden).length;
@@ -658,9 +677,34 @@ function setTab(k,focus){
   renderPanel(); $("#npBody").scrollTop=0;
   if(focus) $("#tab-"+k).focus();
 }
+/* D-12: портал сразу открывает карточку заявки, а отметка «прочитано» не прошла (ошибка или нет ответа 10 с) —
+   уведомление остаётся непрочитанным, точка и счётчик не меняются, сверху тост ошибки */
+function failRead(i,pinned){
+  S.failed.add(i.id); closePanel(); showCard(i); showReadErr(pinned);
+}
+function showCard(i){
+  const x=tx(), many=i.type==="U3"&&i.refs.length>1, card='<div class="card"><i class="w1"></i><i class="w2"></i><i class="w3"></i></div>';
+  $("#content").innerHTML='<p class="crumbs">'+x.reqCrumb+'</p><h1>'+(many?(S.lang==="en"?"Requests":"Заявки"):esc(x.reqTitle(i.refs[0])))+'</h1>'+
+    '<p class="lead">'+esc(i.type==="U7"?(S.lang==="en"?"Candidates section":"Раздел «Кандидаты»"):(S.lang==="en"?"Request card":"Карточка заявки"))+'</p><div class="cards">'+card.repeat(3)+'</div>';
+}
+function showReadErr(pinned){
+  const e=$("#etoast"), x=tx();
+  e.innerHTML=IC.xfill+'<span>'+x.readErr+'</span><button data-act="eclose" aria-label="'+x.close+'">'+IC.x+'</button>';
+  e.hidden=false; e.style.animation="none"; void e.offsetWidth; e.style.animation="";
+  clearTimeout(S.etT); S.etLeft=pinned?Infinity:6000; S.etStart=Date.now();
+  if(!pinned) S.etT=setTimeout(hideReadErr,S.etLeft);   // 6 с; повторная ошибка заменяет тост
+}
+function hideReadErr(){ clearTimeout(S.etT); $("#etoast").hidden=true; }
+/* пока курсор над тостом или в нём фокус — таймер на паузе */
+function etPause(){ if(S.etLeft===Infinity||$("#etoast").hidden) return; clearTimeout(S.etT); S.etLeft-=Date.now()-S.etStart; }
+function etResume(){ if(S.etLeft===Infinity||$("#etoast").hidden||$("#etoast").matches(":hover")||$("#etoast").contains(document.activeElement)) return; S.etStart=Date.now(); S.etT=setTimeout(hideReadErr,Math.max(1500,S.etLeft)); }
+$("#etoast").addEventListener("mouseenter",etPause); $("#etoast").addEventListener("focusin",etPause);
+$("#etoast").addEventListener("mouseleave",etResume); $("#etoast").addEventListener("focusout",()=>setTimeout(etResume,0));
+$("#etoast").addEventListener("click",e=>{ if(e.target.closest("[data-act=eclose]")) hideReadErr(); });
 function openItem(id){
   const i=S.items.find(z=>z.id===id); if(!i) return;
   const x=tx();
+  if(S.readFail&&!i.read&&!S.failed.has(i.id)) return failRead(i,false);   // первая попытка не проходит, повтор через колокольчик — успех
   if(!i.read){
     i.read=true; if(S.tab==="unread") i.stick=true;
     const row=$('.nrow[data-id="'+id+'"]'); row.classList.remove("unread"); row.setAttribute("aria-label",row.getAttribute("aria-label").replace(x.unreadSr,""));
@@ -749,6 +793,7 @@ const HINTS={
   loading:"<b>Загрузка:</b> скелетоны на всю высоту панели (застыло для просмотра).",
   error:"<b>Ошибка загрузки:</b> без вкладок; «Повторить» → загрузка → список.",
   "markall-error":"<b>Ошибка «Прочитать все»:</b> inline-alert под шапкой; повторное нажатие «Прочитать все» срабатывает.",
+  "read-error":"<b>Ошибка прочтения (D-12):</b> нажали на уведомление — открылась карточка заявки, а отметка «прочитано» не прошла. Сверху тост ошибки (здесь закреплён для просмотра; при клике по уведомлению — 6 с, пауза под курсором и в фокусе, крестик). Уведомление осталось непрочитанным, счётчик тот же; повторное нажатие из колокольчика проходит.",
   "new":"<b>Пришло новое (pull):</b> через ~1,5 с при открытой панели под вкладками появляется «Показать новые уведомления (1)», бейдж и счётчик растут; список сам не меняется, по клику событие встаёт в начало «Сегодня».",
   long:"<b>Длинные тексты:</b> заголовок — 1 строка с «…», описание — до 2 строк с «…», длинный номер в плашке, сводный U3 — 2 номера + «+N».",
   more:"<b>Подгрузка:</b> «Показать ещё» нажата — в кнопке «Загружаем…» со спиннером (застыло). В остальных сценариях кнопка догружает по 20 за ~600 мс и пропадает, когда больше нет.",
@@ -798,12 +843,13 @@ function runScenario(k){
   S.scen=k; S.lang=ROLES[S.role].lang; setClock(k==="newyear"); document.documentElement.lang=S.lang;
   S.tab=k==="unread-empty"?"unread":"all"; S.loaded={all:PAGE, unread:PAGE};
   S.state=k==="loading"?"loading":k==="error"?"error":"ok";
-  S.moreLoading=false; S.freezeMore=k==="more"; S.markFail=k==="markall-error"; S.markTried=false; S.markErr=false;
+  S.moreLoading=false; S.freezeMore=k==="more"; S.readFail=k==="read-error"; S.failed=new Set(); hideReadErr(); S.markFail=k==="markall-error"; S.markTried=false; S.markErr=false;
   seed(k); setPressed(); renderNav(); renderContent();
   if(k!=="mobile") openPanel();
   if(k==="markall-error") markAll();
   if(k==="more") loadMore();
   if(k==="new") later(arrive,1500);
+  if(k==="read-error") failRead(S.items.find(i=>!i.read),true);
   if(k==="more"){ const b=$("#npBody"); b.scrollTop=b.scrollHeight; S.lastY=b.scrollTop; }   // программная прокрутка харнесс не прячет
   if(!EMBED){ try{ history.replaceState(null,"",location.pathname+(S.role!=="client"?"?role="+S.role:"")+"#"+k); }catch(_){} }
 }
