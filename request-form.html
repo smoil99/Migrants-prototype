@@ -458,10 +458,12 @@
     box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s; text-align:left; font-weight:400}
   .tf-tip small{display:block; color:var(--muted); font-size:12px}
   .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
-  /* компактная шапка после скролла: «Назад» вдвое меньше, заголовок 20px (до скролла шапка не меняется) */
-  .tf-back,.tf-back svg,.tf-title h1{transition:width .18s ease, height .18s ease, font-size .18s ease, line-height .18s ease}
-  body.scrolled .tf-back{width:20px; height:20px}
-  body.scrolled .tf-back svg{width:10px; height:10px}
+  /* компактная шапка после скролла: заголовок 20px, крошки скрыты (до скролла шапка не меняется) */
+  .tf-title h1{transition:font-size .18s ease, line-height .18s ease}
+  /* «Назад» остаётся 40px и выносится слева от заголовка и деталей черновика; они выравниваются по одному левому краю */
+  body.scrolled .lk-header-in{position:relative}
+  body.scrolled .lk-header-in > *{margin-left:52px}   /* 40 кнопка + 12 отступ */
+  body.scrolled .tf-back{position:absolute; left:clamp(16px,4vw,40px); top:50%; transform:translateY(-50%)}
   body.scrolled .tf-title h1{font-size:20px; line-height:26px}
   body.scrolled .tf-crumbs{display:none}
   body.scrolled .tf-tip{bottom:auto; top:calc(100% + 8px); transform:translateY(-4px)}
