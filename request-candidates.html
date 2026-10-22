@@ -122,6 +122,9 @@
   /* Button / Link / Secondary — «Снять выбор» */
   .lnk{appearance:none; border:0; border-radius:0; background:none; padding:0; cursor:pointer; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff; transition:color .12s, border-color .12s}
   .lnk:hover{color:rgba(255,255,255,.6); border-bottom-color:rgba(255,255,255,.6)}   /* Button / Link / Secondary (1576:8636): Hover — 60% */
+  .lnk.chev{display:inline-flex; align-items:center; gap:4px}   /* «Открыть полностью» — с шевроном вправо, чтобы читалась как кнопка */
+  .lnk.chev svg{width:16px; height:16px; flex:none; transition:transform .12s}
+  .lnk.chev:hover svg{transform:translateX(2px)}
   .list-tools .lnk{margin-right:14px}
   .list-tools .sp{flex:1}
   .clist{display:flex; flex-direction:column; gap:8px}
@@ -731,7 +734,7 @@ function renderPreview(anim){
     '<button class="ibtn p-close" id="pClose" aria-label="Закрыть">'+ICO.x+'</button>'+
     '<div class="p-head"><span class="ava lg">'+initials(c)+'</span>'+
       '<div class="p-who"><div class="p-title"><h3>'+esc(c.fn+" "+c.ln)+'</h3>'+'<span class="status"><span class="dot '+ST[c.st].dot+'"></span>'+ST[c.st].chip+'</span></div>'+
-        '<div class="pr"><button class="lnk" data-full>Открыть полностью</button></div></div>'+
+        '<div class="pr"><button class="lnk chev" data-full>Открыть полностью<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg></button></div></div>'+
       (act?'<div class="p-acts"><button class="btn" data-act="rejected">Отклонить</button><button class="btn primary" data-act="done">Одобрить</button></div>':'')+
     '</div>'+
     '<div class="p-tabs" role="tablist">'+TABS.map(t=>
