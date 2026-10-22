@@ -81,15 +81,37 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     ov.innerHTML='<div class="sm" role="dialog" aria-modal="true" aria-labelledby="smTitle"></div>';
     document.body.appendChild(ov);
     const sm=ov.firstElementChild;
-    let files=[], sending=false, failed=false, lastFocus=null;
+    let files=[], sending=false, lastFocus=null;
+    const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
+    const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
+    const ICON_TRASH24='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M3 6h18m-2 0-.7 10.52c-.1 1.58-.16 2.37-.5 2.97a3 3 0 0 1-1.3 1.21c-.62.3-1.41.3-2.99.3h-3.02c-1.58 0-2.37 0-2.99-.3a3 3 0 0 1-1.3-1.21c-.34-.6-.4-1.39-.5-2.97L5 6"/></svg>';
+    const ICON_XFILL='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25A9.75 9.75 0 1 0 21.75 12 9.76 9.76 0 0 0 12 2.25Zm3.53 12.22a.75.75 0 1 1-1.06 1.06L12 13.06l-2.47 2.47a.75.75 0 0 1-1.06-1.06L10.94 12 8.47 9.53a.75.75 0 0 1 1.06-1.06L12 10.94l2.47-2.47a.75.75 0 0 1 1.06 1.06L13.06 12Z"/></svg>';
+    /* тост ошибки отправки — как в колокольчике: 6 с, пауза при наведении/фокусе, повторная ошибка заменяет тост */
+    const toast=document.createElement("div"); toast.className="sm-toast"; toast.setAttribute("role","alert"); toast.hidden=true; document.body.appendChild(toast);
+    let tT, tOut, tLeft=0, tStart=0;
+    const placeToast=()=>{ const h=document.querySelector(".harness"); document.documentElement.style.setProperty("--app-top",(h?Math.max(0,Math.round(h.getBoundingClientRect().bottom)):0)+"px"); };
+    function hideToast(instant){
+      clearTimeout(tT); clearTimeout(tOut); if(toast.hidden) return;
+      if(instant||matchMedia("(prefers-reduced-motion: reduce)").matches){ toast.classList.remove("out"); toast.hidden=true; return; }
+      toast.classList.add("out"); tOut=setTimeout(()=>{ toast.hidden=true; toast.classList.remove("out"); },200);
+    }
+    function showToast(text){
+      toast.innerHTML=ICON_XFILL+`<span>${text}</span><button type="button" aria-label="Закрыть" data-tclose><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+      clearTimeout(tOut); toast.classList.remove("out"); toast.hidden=false; toast.style.animation="none"; void toast.offsetWidth; toast.style.animation="";
+      placeToast(); clearTimeout(tT); tLeft=6000; tStart=Date.now(); tT=setTimeout(hideToast,tLeft);
+    }
+    const tPause=()=>{ if(toast.hidden) return; clearTimeout(tT); tLeft-=Date.now()-tStart; };
+    const tResume=()=>{ if(toast.hidden||toast.matches(":hover")||toast.contains(document.activeElement)) return; tStart=Date.now(); tT=setTimeout(hideToast,Math.max(1500,tLeft)); };
+    toast.addEventListener("mouseenter",tPause); toast.addEventListener("focusin",tPause);
+    toast.addEventListener("mouseleave",tResume); toast.addEventListener("focusout",()=>setTimeout(tResume,0));
+    toast.addEventListener("click",e=>{ if(e.target.closest("[data-tclose]")) hideToast(); });
     const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
     const fmtSize=n=>n<1024*1024? Math.max(1,Math.round(n/1024))+" КБ" : (n/1024/1024).toFixed(1).replace(".",",")+" МБ";
     const closeX='<button class="sm-x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>';
     function renderForm(){
-      const text=sm.querySelector("textarea")?.value||"";
+      const text=sm.querySelector("textarea")?.value||"", keep=sm.querySelector(".sm-body")?.scrollTop||0;   // перерисовка не сбрасывает прокрутку тела
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Написать в поддержку</h2>${closeX}</div>
         <div class="sm-body">
-          ${failed?`<div class="sm-alert is-error" role="alert">${ICON_INFO}<span>Не удалось отправить сообщение. Попробуйте ещё раз.</span></div>`:""}
           <p class="sm-intro">Ответ придёт на вашу почту ${SUP.user}.</p>
           <div class="sm-alert is-info">${ICON_INFO}<span>Форма — для технических и других вопросов по работе платформы. Не прикладывайте документы кандидатов.</span></div>
           <div class="sm-field${text?" up":""}${sending?" off":""}">
@@ -101,10 +123,11 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             <span><b>Прикрепите файлы (необязательно)</b><small>PDF, JPG, JPEG, PNG, HEIC · до 10 МБ</small></span>
             <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" hidden>
           </div>
-          <div class="sm-files">${files.map((f,i)=>`<div class="sm-file${f.err?" bad":""}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.err||fmtSize(f.size)}</div></div><button class="sm-del" type="button" data-del="${i}" ${sending?"disabled":""}>Удалить</button></div>`).join("")}</div>
+          <div class="sm-files">${files.map((f,i)=>`<div class="sm-file${f.err?" bad":""}">${ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.err||fmtSize(f.size)}</div></div><button class="sm-del" type="button" data-del="${i}" aria-label="Удалить файл" title="Удалить файл" ${sending?"disabled":""}>${f.err?ICON_TRASH24:ICON_TRASH16}</button></div>`).join("")}</div>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${sending?"disabled":""}>Отмена</button>
-          <button class="sm-btn pri" type="button" data-send ${(!text.trim()||sending)?"disabled":""}>${sending?"Отправляем…":"Отправить"}</button></div>`;
+          <button class="sm-btn pri" type="button" data-send ${(!text.trim()||sending||hasBad())?"disabled":""}>${sending?"Отправляем…":"Отправить"}</button></div>`;
+      sm.querySelector(".sm-body").scrollTop=keep;
       wireForm();
     }
     function renderSent(){
@@ -117,14 +140,14 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     function addFiles(list){
       for(const f of list){
         const ext=(f.name.split(".").pop()||"").toLowerCase();
-        files.push({name:f.name, size:f.size, err: !FORMATS.includes(ext)?"Неподдерживаемый формат" : f.size>MAX?"Файл больше 10 МБ" : ""});
+        files.push({name:f.name, size:f.size, err: !FORMATS.includes(ext)?"Неподдерживаемый формат" : f.size>MAX?"Размер файла превышает допустимый лимит" : ""});
       }
       renderForm();
     }
     function wireForm(){
       const ta=sm.querySelector("textarea"), field=sm.querySelector(".sm-field"), send=sm.querySelector("[data-send]");
       const drop=sm.querySelector(".sm-drop"), inp=drop.querySelector("input");
-      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); send.disabled=!ta.value.trim()||sending; };
+      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); send.disabled=!ta.value.trim()||sending||hasBad(); };
       ta.addEventListener("input",sync); ta.addEventListener("focus",sync); ta.addEventListener("blur",sync);
       drop.addEventListener("click",()=>inp.click());
       drop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inp.click(); } });
@@ -134,16 +157,16 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("drag"); addFiles(e.dataTransfer.files); });
       sm.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{ files.splice(+b.dataset.del,1); renderForm(); }));
       send.addEventListener("click",()=>{
-        sending=true; failed=false; renderForm();
+        sending=true; hideToast(true); renderForm();
         setTimeout(()=>{ sending=false;
-          if(scn.send==="fail"){ failed=true; renderForm(); }
-          else { failed=false; files=[]; renderSent(); }
+          if(scn.send==="fail"){ renderForm(); showToast("Не удалось отправить сообщение. Попробуйте ещё раз."); }
+          else { files=[]; renderSent(); }
         },1200);
       });
     }
     function openForm(){
       setOpen(false); lastFocus=document.activeElement;
-      files=[]; sending=false; failed=false; sm.innerHTML=""; renderForm();
+      files=[]; sending=false; hideToast(true); sm.innerHTML=""; renderForm();
       const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
       fade(ov,true); document.documentElement.style.overflow="hidden";
       sm.querySelector("textarea").focus();

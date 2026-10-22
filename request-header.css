@@ -104,7 +104,22 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-alert{display:flex; gap:10px; padding:16px; border-radius:12px; font-size:14px; line-height:20px; font-weight:500}
 .sm-alert svg{width:15px; height:15px; flex:none; margin-top:2.5px}
 .sm-alert.is-info{background:rgba(97,199,214,.1); color:#61C7D6}
-.sm-alert.is-error{background:rgba(255,102,116,.1); color:#FF6674}
+/* ошибка отправки — Toast Type=Negative, как в колокольчике: вверху по центру, 40 px под харнессом,
+   сам закрывается через 6 с (пауза при наведении/фокусе), закрытие — обратная анимация */
+.sm-toast{position:fixed; left:50%; top:calc(var(--app-top,0px) + 40px + env(safe-area-inset-top,0px)); z-index:95; transform:translateX(-50%);
+  width:min(741px,calc(100vw - 32px)); min-height:56px; box-sizing:border-box; display:flex; align-items:center; gap:10px; padding:12px 12px 12px 16px; border-radius:12px;
+  background:linear-gradient(100deg,rgba(255,102,116,.20),rgba(255,102,116,0) 55%),rgba(40,44,47,.86);
+  -webkit-backdrop-filter:blur(24px) saturate(1.3); backdrop-filter:blur(24px) saturate(1.3);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12); color:#FF6674; font-size:14px; line-height:20px; font-weight:500; animation:smtin .2s ease-out}
+.sm-toast[hidden]{display:none}
+@keyframes smtin{from{opacity:0; transform:translate(-50%,-8px)}}
+.sm-toast.out{animation:smtout .2s ease-in forwards}
+@keyframes smtout{to{opacity:0; transform:translate(-50%,-8px)}}
+.sm-toast > svg{width:24px; height:24px; flex:none}
+.sm-toast span{flex:1; min-width:0}
+.sm-toast button{appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:8px; padding:0; cursor:pointer; display:grid; place-items:center; background:transparent; color:rgba(255,255,255,.6)}
+.sm-toast button:hover{background:rgba(255,255,255,.08); color:#fff}
+.sm-toast button svg{width:16px; height:16px}
 /* Textarea (dynamic input) 1934:6261: плейсхолдер → метка на рамке при фокусе/вводе */
 .sm-field{position:relative}
 .sm-field textarea{display:block; width:100%; box-sizing:border-box; min-height:140px; resize:vertical; padding:12px 14px; border:1px solid transparent; border-radius:12px;
@@ -131,16 +146,22 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 /* строка файла — Type=Minimized (uploaded) / Type=Error */
 .sm-files{display:flex; flex-direction:column; gap:12px}
 .sm-files:empty{display:none}
-.sm-file{display:flex; align-items:center; gap:12px; padding:16px; border-radius:16px; background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
+.sm-file{display:flex; align-items:center; gap:12px; padding:16px; border-radius:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.sm-file.bad{background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
 .sm-file > svg{width:24px; height:24px; flex:none; color:rgba(255,255,255,.6)}
 .sm-file .fm{flex:1; min-width:0}
 .sm-file .fn{font-size:16px; line-height:20px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sm-file .fs{margin-top:4px; font-size:14px; line-height:17px; color:rgba(255,255,255,.6)}
 .sm-file.bad .fs{color:#FF6674}
-.sm-del{position:relative; appearance:none; flex:none; border:0; background:transparent; padding:0; color:#fff; font-family:inherit; font-size:16px; line-height:20px; font-weight:500;
-  text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+/* «Удалить файл»: Button / Icon ghost 32 (trash-02 16, white@60%) / у ошибки — Button / Icon 40 (trash-04 24) */
+.sm-del{position:relative; appearance:none; flex:none; width:32px; height:32px; border:0; border-radius:32px; padding:0; display:grid; place-items:center;
+  background:transparent; color:rgba(255,255,255,.6); cursor:pointer; transition:background .12s, color .12s}
+.sm-del:hover{background:rgba(255,255,255,.08); color:#fff}
+.sm-del svg{width:16px; height:16px}
+.sm-file.bad .sm-del{width:40px; height:40px; background:rgba(255,255,255,.1); color:#fff}
+.sm-file.bad .sm-del:hover{background:rgba(255,255,255,.14)}
+.sm-file.bad .sm-del svg{width:24px; height:24px}
 .sm-del:disabled{opacity:.35; cursor:default}
-.sm-file.bad .sm-del{text-decoration:none; padding:12px 20px; border-radius:32px; background:rgba(255,255,255,.1)}
 /* кнопки — Button / Primary 1576:8544 (без обводки) и Button / Secondary 1576:8600 */
 .sm-acts{display:flex; justify-content:space-between; gap:12px; padding-top:12px}
 .sm-acts.one{justify-content:center}
