@@ -122,8 +122,8 @@
   /* Button / Link / Secondary — «Снять выбор» */
   .lnk{appearance:none; border:0; border-radius:0; background:none; padding:0; cursor:pointer; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; color:#fff; transition:color .12s, border-color .12s}
   .lnk:hover{color:rgba(255,255,255,.6); border-bottom-color:rgba(255,255,255,.6)}   /* Button / Link / Secondary (1576:8636): Hover — 60% */
-  .lnk.chev{display:inline-flex; align-items:center; gap:4px}   /* «Открыть полностью» — с шевроном вправо, чтобы читалась как кнопка */
-  .lnk.chev svg{width:16px; height:16px; flex:none; transition:transform .12s}
+  .lnk.chev{display:inline-flex; align-items:baseline; gap:0}   /* «Открыть полностью» — с шевроном вправо, чтобы читалась как кнопка */
+  .lnk.chev svg{width:16px; height:16px; flex:none; margin:0 0 -3.5px -1px; transition:transform .12s}   /* видимый отступ до шеврона 5px (было 10: gap 4 + поле иконки 6); низ шеврона (y 12.5 из 16) — по базовой линии текста */
   .lnk.chev:hover svg{transform:translateX(2px)}
   .list-tools .lnk{margin-right:14px}
   .list-tools .sp{flex:1}
