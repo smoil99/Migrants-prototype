@@ -74,13 +74,17 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     document.addEventListener("click",e=>{ if(menuOpen()&&!box.contains(e.target)) setOpen(false); });
 
     /* ---------- окно «Написать в поддержку» ---------- */
-    const FORMATS=["pdf","jpg","jpeg","png","heic"], MAX=10*1024*1024;
+    const FORMATS=["pdf","jpg","jpeg","png","heic"], MAX=10*1024*1024, MAX_TOTAL=20*1024*1024, MAX_FILES=5, MAX_TEXT=4000;   // лимиты — ответ SA, нота 53287
+    const HINT="PDF, JPG, JPEG, PNG, HEIC · до 10 МБ на файл, всего до 20 МБ, не больше 5 файлов", FULL="Можно прикрепить не больше 5 файлов";
     const ICON_FILE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>';
     const ICON_INFO='<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1.3a5.7 5.7 0 1 1 0 11.4A5.7 5.7 0 0 1 8 2.3zM7.35 7h1.3v4.5h-1.3zM8 4.4a.85.85 0 1 1 0 1.7.85.85 0 0 1 0-1.7z"/></svg>';
     const ov=document.createElement("div"); ov.className="sm-overlay"; ov.hidden=true;
     ov.innerHTML='<div class="sm" role="dialog" aria-modal="true" aria-labelledby="smTitle"></div>';
     document.body.appendChild(ov);
     const sm=ov.firstElementChild;
+    /* файл, брошенный мимо зоны (или на неактивную зону), не открывается браузером; при 5 файлах — тост */
+    ov.addEventListener("dragover",e=>e.preventDefault());
+    ov.addEventListener("drop",e=>{ e.preventDefault(); if(files.length>=MAX_FILES && e.dataTransfer?.files?.length && !sending) showToast(FULL); });
     let files=[], sending=false, lastFocus=null;
     const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
     const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
@@ -135,7 +139,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         const f=files.find(x=>x.id===+b.dataset.retry); if(!f) return;
         f.st="up"; f.p=0; f.failAt=null; startUpload(f); renderFiles();
       }));
-      syncSend();
+      syncSend(); syncZone();
     }
     function startUpload(f){
       const total=Math.min(6000,900+f.size/1.5e6*1000), step=100;   // имитация: ~1,5 МБ/с, не дольше 6 с
@@ -162,12 +166,13 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
           <p class="sm-intro">Ответ придёт на вашу почту ${SUP.user}.</p>
           <div class="sm-alert is-info">${ICON_INFO}<span>Расскажите, что не получается в работе с платформой — поможем. Не прикладывайте документы кандидатов.</span></div>
           <div class="sm-field${text?" up":""}${sending?" off":""}">
-            <textarea id="smText" ${sending?"disabled":""}>${esc(text)}</textarea>
+            <textarea id="smText" maxlength="${MAX_TEXT}" aria-describedby="smCount" ${sending?"disabled":""}>${esc(text)}</textarea>
             <label for="smText"><span class="ph">Опишите вопрос или проблему</span><span class="lb">Сообщение</span> <i>*</i></label>
+            <div class="sm-count" id="smCount" aria-live="polite"></div>
           </div>
           <div class="sm-drop${sending?" off":""}" tabindex="0" role="button" aria-label="Прикрепить файлы">
             <span class="sm-upbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 19h14"/></svg></span>
-            <span><b>Прикрепите файлы (необязательно)</b><small>PDF, JPG, JPEG, PNG, HEIC · до 10 МБ</small></span>
+            <span><b>Прикрепите файлы (необязательно)</b><small>${HINT}</small></span>
             <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" hidden>
           </div>
           <div class="sm-files"></div>
@@ -186,26 +191,46 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
       sm.querySelector("[data-close].sm-btn").focus();
     }
+    /* не больше 5 строк в списке; лишние не добавляются — тост. Файл сверх 20 МБ суммарно — строка с ошибкой */
     function addFiles(list){
+      let extra=0;
       for(const f of list){
+        if(files.length>=MAX_FILES){ extra++; continue; }
         const ext=(f.name.split(".").pop()||"").toLowerCase();
-        const err=!FORMATS.includes(ext)?"Неподдерживаемый формат" : f.size>MAX?"Размер файла превышает допустимый лимит" : "";
+        const total=files.filter(x=>!x.err).reduce((s,x)=>s+x.size,0);
+        const err=!FORMATS.includes(ext)?"Неподдерживаемый формат. Разрешены только: PDF, JPG, JPEG, PNG, HEIC"
+          : f.size>MAX?"Файл больше 10 МБ" : total+f.size>MAX_TOTAL?"Общий размер файлов — не больше 20 МБ" : "";
         const item={id:++fid, name:f.name, size:f.size, err, st:err?"bad":"up", p:0};
         files.push(item); if(!err) startUpload(item);
       }
       renderFiles();
+      if(extra) showToast(FULL);
+    }
+    /* зона загрузки неактивна, когда в списке 5 файлов (Frame / Type=Disabled) */
+    function syncZone(){
+      const z=sm.querySelector(".sm-drop"); if(!z) return;
+      const full=files.length>=MAX_FILES;
+      z.classList.toggle("off", sending||full);
+      z.setAttribute("aria-disabled", String(sending||full));
+      z.querySelector("small").textContent=full&&!sending?FULL:HINT;
+    }
+    /* счётчик «3650 / 4000» — когда осталось меньше 400 символов */
+    function syncCount(){
+      const ta=sm.querySelector("textarea"), c=sm.querySelector("#smCount"); if(!ta||!c) return;
+      const n=ta.value.length; c.textContent=MAX_TEXT-n<400?`${n} / ${MAX_TEXT}`:"";
     }
     function wireForm(){
       const ta=sm.querySelector("textarea"), field=sm.querySelector(".sm-field"), send=sm.querySelector("[data-send]");
       const drop=sm.querySelector(".sm-drop"), inp=drop.querySelector("input");
-      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); syncSend(); };
+      const sync=()=>{ field.classList.toggle("up", !!ta.value || document.activeElement===ta); syncSend(); syncCount(); };
+      syncCount();
       ta.addEventListener("input",sync); ta.addEventListener("focus",sync); ta.addEventListener("blur",sync);
       drop.addEventListener("click",()=>inp.click());
       drop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); inp.click(); } });
       inp.addEventListener("change",()=>{ addFiles(inp.files); inp.value=""; });
       drop.addEventListener("dragover",e=>{ e.preventDefault(); drop.classList.add("drag"); });
       drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
-      drop.addEventListener("drop",e=>{ e.preventDefault(); drop.classList.remove("drag"); addFiles(e.dataTransfer.files); });
+      drop.addEventListener("drop",e=>{ e.preventDefault(); e.stopPropagation(); drop.classList.remove("drag"); addFiles(e.dataTransfer.files); });
       /* файлы уже на сервере — отправка короткая: письмо с текстом и вложениями */
       send.addEventListener("click",()=>{
         sending=true; hideToast(true); renderForm();

@@ -134,6 +134,9 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field.up label .ph{display:none}
 .sm-field.up label .lb{display:inline}
 .sm-field.off label{color:rgba(255,255,255,.35)}
+/* Caption поля: счётчик символов */
+.sm-count{margin-top:8px; font-size:12px; line-height:15px; color:rgba(255,255,255,.6); font-variant-numeric:tabular-nums}
+.sm-count:empty{display:none}
 /* зона загрузки — set «Frame» 1701:6178 Default/Hover: пунктир 2px white@12%, r16 */
 .sm-drop{display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; border:2px dashed rgba(255,255,255,.12); border-radius:16px; text-align:center; cursor:pointer; transition:background-color .12s}
 .sm-drop:hover,.sm-drop.drag{background-color:rgba(255,255,255,.05)}
