@@ -134,9 +134,13 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field.up label .ph{display:none}
 .sm-field.up label .lb{display:inline}
 .sm-field.off label{color:rgba(255,255,255,.35)}
-/* Caption поля: счётчик символов */
-.sm-count{margin-top:8px; font-size:12px; line-height:15px; color:rgba(255,255,255,.6); font-variant-numeric:tabular-nums}
+/* счётчик символов — в правом нижнем углу поля, левее ручки растягивания (Textarea: Counter, Resize handle) */
+.sm-count{position:absolute; right:26px; bottom:8px; padding:0 4px; border-radius:4px; background:#303336; font-size:12px; line-height:15px; color:rgba(255,255,255,.6); font-variant-numeric:tabular-nums; pointer-events:none}   /* подложка как у метки на рамке — текст при прокрутке не просвечивает */
 .sm-count:empty{display:none}
+.sm-field.off .sm-count{color:rgba(255,255,255,.35)}
+.sm-field textarea{padding-bottom:28px}
+/* ручка растягивания: две диагонали white@35% в углу (Chrome/Safari; Firefox рисует свою) */
+.sm-field textarea::-webkit-resizer{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none'%3E%3Cpath d='M9 1 1 9M9 5 5 9' stroke='white' stroke-opacity='.35' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 4px bottom 4px; background-size:10px 10px}
 /* зона загрузки — set «Frame» 1701:6178 Default/Hover: пунктир 2px white@12%, r16 */
 .sm-drop{display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; border:2px dashed rgba(255,255,255,.12); border-radius:16px; text-align:center; cursor:pointer; transition:background-color .12s}
 .sm-drop:hover,.sm-drop.drag{background-color:rgba(255,255,255,.05)}
