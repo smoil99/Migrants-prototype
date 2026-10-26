@@ -277,6 +277,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     const tzDefault=()=>{ const off=-new Date().getTimezoneOffset(); return (TZS.find(t=>t[1]===off)||TZS[1])[0]; };
     const isoDay=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
     let cf={sending:false};
+    const ICON_CLOCK='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v4l2.67 1.33M14.67 8A6.67 6.67 0 1 1 1.33 8a6.67 6.67 0 0 1 13.34 0z"/></svg>';   // 16 px / clock
     const ICON_CHEV='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
     function callReset(){ cf={topic:null, comment:"", phone: scn.phone==="yes"?PROFILE_PHONE:"", timeOpen:false, date:"", slot:"", tz:tzDefault(), err:{}, tried:false, sending:false}; }
     const fieldCls=(val,err,extra="")=>`sm-field${val?" up":""}${err?" err":""}${cf.sending?" off":""}${extra}`;
@@ -317,7 +318,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             </div>
             <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
             <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
-          </div>`:cf.sending?"":`<div><button type="button" class="cf-link" data-time="on">+ Указать удобное время для звонка</button></div>`}
+          </div>`:cf.sending?"":`<div><button type="button" class="cf-link cf-link-ic" data-time="on">${ICON_CLOCK}<span>Указать удобное время для звонка</span></button></div>`}
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${dis}>Отмена</button>
           <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;

@@ -170,6 +170,10 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .cf-link{appearance:none; border:0; background:transparent; padding:0; color:#fff; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; cursor:pointer;
   text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; transition:color .12s}
 .cf-link:hover{color:rgba(255,255,255,.6)}
+/* ссылка с иконкой часов: подчёркнут только текст */
+.cf-link-ic{display:inline-flex; align-items:center; gap:8px; text-decoration:none}
+.cf-link-ic svg{width:16px; height:16px; flex:none}
+.cf-link-ic span{text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px}
 .cf-link:disabled{color:rgba(255,255,255,.35); cursor:default}
 .cf-time{display:flex; flex-direction:column; gap:12px}
 .cf-time-h{display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; line-height:20px; font-weight:500}
