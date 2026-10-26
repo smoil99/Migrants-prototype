@@ -14,12 +14,12 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
   window.addEventListener("load",setStack);
 
   /* меню «?» — связаться с техподдержкой (Figma 3050:21391, состояния 8077:6730).
-     #support открывает меню, #support-form — окно «Написать в поддержку» (8084:6850).
+     #support открывает меню, #support-form — окно «Написать в поддержку» (8084:6850), #call-form — «Запрос на звонок» (docs#320, 8170:6226).
      В харнессе при #support* — сценарии: буфер обмена запрещён, ошибка отправки. */
   const box=document.getElementById("supMenu");
   if(box){
     const SUP={email:"Zarkadr@rabota.ru", phone:"+7 (495) 123-45-67", tel:"+74951234567", user:"ivanov@company.ru"};
-    const scn={clipboard:"ok", send:"ok", upload:"ok"};
+    const scn={clipboard:"ok", send:"ok", upload:"ok", phone:"yes"};
     const ICON_COPY='<svg class="ic-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.75 0-1.12.15-1.41.13-.25.33-.45.58-.58.29-.15.66-.15 1.41-.15h5.07c.75 0 1.12 0 1.4.15.25.13.46.33.59.58.14.29.14.66.14 1.41v5.06c0 .75 0 1.12-.14 1.41-.13.25-.34.45-.59.58-.28.15-.65.15-1.4.15h-1.87M3.47 14.67h5.06c.75 0 1.12 0 1.41-.15.25-.13.45-.33.58-.58.15-.29.15-.66.15-1.41V7.47c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H3.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41v5.06c0 .75 0 1.12.15 1.41.13.25.33.45.58.58.29.15.66.15 1.41.15z"/></svg>'
       +'<svg class="ic-done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
     const copyRow=(href,text,tip,manual)=>
@@ -32,6 +32,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       +copyRow("tel:"+SUP.tel,SUP.phone,"Скопировать номер телефона","Выделите номер вручную")
       +'<div class="sup-sep" role="separator"></div>'
       +'<button class="sup-act" type="button" id="supWrite">Написать в поддержку</button>'
+      +'<button class="sup-act" type="button" id="supCall">Запрос на звонок</button>'
       +'<span class="rh-sr" id="copyLive" aria-live="polite"></span>';
     const live=document.getElementById("copyLive");
     const scrim=document.createElement("div"); scrim.className="sup-scrim"; scrim.hidden=true; document.body.appendChild(scrim);
@@ -248,7 +249,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       sm.querySelector("textarea").focus();
     }
     function closeForm(){
-      if(sending) return;
+      if(sending||cf.sending) return;
       fade(ov,false); document.documentElement.style.overflow="";
       (lastFocus&&lastFocus.isConnected?lastFocus:btn).focus();
     }
@@ -262,23 +263,138 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     /* фокус не уходит из окна */
     ov.addEventListener("keydown",e=>{
       if(e.key!=="Tab") return;
-      const f=[...sm.querySelectorAll("button:not(:disabled),textarea:not(:disabled),[tabindex='0']")]; if(!f.length) return;
+      const f=[...sm.querySelectorAll("button:not(:disabled),textarea:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex='0']")]; if(!f.length) return;
       if(e.shiftKey&&document.activeElement===f[0]){ e.preventDefault(); f[f.length-1].focus(); }
       else if(!e.shiftKey&&document.activeElement===f[f.length-1]){ e.preventDefault(); f[0].focus(); }
     });
+
+    /* ---------- «Запрос на звонок» (US-024, docs#320; макет 8170:6226) ---------- */
+    const TOPICS=["Коммерческое предложение","Договор","Заявка","Работа платформы","Другой вопрос"];
+    const SLOTS=["09:00–11:00","11:00–13:00","13:00–15:00","15:00–17:00","17:00–19:00"];   // рекомендация дизайна: по 2 ч в рабочее время
+    const TZS=[["Калининград, UTC+2",120],["Москва, UTC+3",180],["Самара, UTC+4",240],["Екатеринбург, UTC+5",300],["Индия, UTC+5:30",330],["Омск, UTC+6",360],["Новосибирск, UTC+7",420],["Иркутск, UTC+8",480],["Якутск, UTC+9",540],["Владивосток, UTC+10",600],["Магадан, UTC+11",660],["Камчатка, UTC+12",720]];
+    const CMAX=1000;   // рекомендация дизайна; лимит подтверждает SA
+    const PROFILE_PHONE="+7 (916) 123-45-67";
+    const tzDefault=()=>{ const off=-new Date().getTimezoneOffset(); return (TZS.find(t=>t[1]===off)||TZS[1])[0]; };
+    const isoDay=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+    let cf={sending:false};
+    const ICON_CHEV='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
+    function callReset(){ cf={topic:null, comment:"", phone: scn.phone==="yes"?PROFILE_PHONE:"", timeOpen:false, date:"", slot:"", tz:tzDefault(), err:{}, tried:false, sending:false}; }
+    const fieldCls=(val,err,extra="")=>`sm-field${val?" up":""}${err?" err":""}${cf.sending?" off":""}${extra}`;
+    const cap=(id,text,err)=>`<div class="cf-cap${err?" err":""}" id="${id}">${text}</div>`;
+    function renderCall(){
+      const keep=sm.querySelector(".sm-body")?.scrollTop||0, e=cf.err, dis=cf.sending?"disabled":"";
+      const today=new Date(), max=new Date(today.getTime()+14*864e5), isToday=cf.date===isoDay(today);
+      const slotOpts=SLOTS.map(s=>{ const past=isToday && +s.slice(6,8)<=today.getHours(); return `<option value="${s}"${cf.slot===s?" selected":""}${past?" disabled":""}>${s}${past?" — прошло":""}</option>`; }).join("");
+      sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запрос на звонок</h2>${closeX}</div>
+        <div class="sm-body">
+          <p class="sm-intro">Специалист РРУ свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
+          <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
+            <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
+            <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
+            ${e.topic?cap("cfTopicE",e.topic,true):""}
+          </div>
+          <div>
+            <div class="${fieldCls(cf.comment,e.comment)}">
+              <textarea id="cfComment" maxlength="${CMAX}" aria-describedby="cfCommentC" ${dis}>${esc(cf.comment)}</textarea>
+              <label for="cfComment"><span class="ph">Кратко опишите вопрос</span><span class="lb">Комментарий</span> <i>*</i></label>
+              <div class="sm-count" id="cfCount" aria-live="polite"></div>
+            </div>
+            ${cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
+          </div>
+          <div>
+            <div class="${fieldCls(cf.phone,e.phone," cf-in")}">
+              <input id="cfPhone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(cf.phone)}" aria-describedby="cfPhoneC" ${dis}>
+              <label for="cfPhone"><span class="ph">Телефон для связи</span><span class="lb">Телефон для связи</span> <i>*</i></label>
+            </div>
+            ${cap("cfPhoneC", e.phone||(cf.phone||cf.tried?"Номер изменится только для этого запроса — профиль не меняется":"Укажите номер, по которому вам удобно ответить"), !!e.phone)}
+          </div>
+          ${cf.timeOpen?`<div class="cf-time">
+            <div class="cf-time-h"><span>Удобное время (необязательно)</span><button type="button" class="cf-link" data-time="off" ${dis}>Убрать</button></div>
+            <div class="cf-row">
+              <div><div class="${fieldCls(true,e.date," cf-in")}"><input id="cfDate" type="date" min="${isoDay(today)}" max="${isoDay(max)}" value="${cf.date}" aria-describedby="cfDateC" ${dis}><label for="cfDate"><span class="lb">Дата</span></label></div>${e.date?cap("cfDateC",e.date,true):""}</div>
+              <div><div class="${fieldCls(cf.slot,e.slot," cf-in cf-sel")}"><select id="cfSlot" aria-describedby="cfSlotC" ${dis}><option value=""></option>${slotOpts}</select><label for="cfSlot"><span class="ph">Интервал</span><span class="lb">Интервал</span></label>${ICON_CHEV}</div>${e.slot?cap("cfSlotC",e.slot,true):""}</div>
+            </div>
+            <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
+            <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
+          </div>`:`<div><button type="button" class="cf-link" data-time="on" ${dis}>+ Указать удобное время для звонка</button></div>`}
+          <div class="sm-alert is-info">${ICON_INFO}<span>РРУ получит ваше имя, email, организацию и ИНН, телефон, тему, комментарий и время запроса.</span></div>
+        </div>
+        <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${dis}>Отмена</button>
+          <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
+      sm.querySelector(".sm-body").scrollTop=keep;
+      wireCall();
+    }
+    function callCount(){ const c=sm.querySelector("#cfCount"); if(!c) return; const n=cf.comment.length; c.textContent=CMAX-n<100?`${n} / ${CMAX}`:""; }
+    function validate(){
+      const e={};
+      if(cf.topic==null) e.topic="Выберите тему вопроса";
+      if(!cf.comment.trim()) e.comment="Опишите вопрос — без комментария запрос не отправить";
+      const digits=cf.phone.replace(/\D/g,"").length;
+      if(!digits) e.phone="Укажите номер, по которому вам удобно ответить"; else if(digits<11||digits>15) e.phone="Проверьте номер — в нём не хватает цифр";
+      if(cf.timeOpen && (cf.date||cf.slot)){ if(!cf.date) e.date="Выберите дату или уберите удобное время"; if(!cf.slot) e.slot="Выберите интервал или уберите удобное время"; }
+      return e;
+    }
+    function wireCall(){
+      const up=(el,v)=>el.closest(".sm-field").classList.toggle("up",!!v||document.activeElement===el);
+      const clr=k=>{ if(cf.tried && cf.err[k]){ const ne=validate(); if(!ne[k]){ delete cf.err[k]; renderCall(); return true; } } return false; };
+      sm.querySelectorAll("[data-topic]").forEach(b=>{
+        b.addEventListener("click",()=>{ cf.topic=+b.dataset.topic; if(cf.err.topic) delete cf.err.topic; renderCall(); sm.querySelector(`[data-topic="${cf.topic}"]`).focus(); });
+        b.addEventListener("keydown",ev=>{ const d={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[ev.key]; if(!d) return; ev.preventDefault();
+          cf.topic=((+b.dataset.topic)+d+TOPICS.length)%TOPICS.length; delete cf.err.topic; renderCall(); sm.querySelector(`[data-topic="${cf.topic}"]`).focus(); });
+      });
+      const ta=sm.querySelector("#cfComment");
+      ta.addEventListener("input",()=>{ cf.comment=ta.value; callCount(); if(!clr("comment")) up(ta,ta.value); });
+      ta.addEventListener("focus",()=>up(ta,ta.value)); ta.addEventListener("blur",()=>up(ta,ta.value)); callCount();
+      const ph=sm.querySelector("#cfPhone");
+      ph.addEventListener("input",()=>{ ph.value=ph.value.replace(/[^\d+()\-\s]/g,""); cf.phone=ph.value; if(!clr("phone")) up(ph,ph.value); });
+      ph.addEventListener("focus",()=>up(ph,ph.value)); ph.addEventListener("blur",()=>up(ph,ph.value));
+      sm.querySelectorAll("[data-time]").forEach(b=>b.addEventListener("click",()=>{
+        cf.timeOpen=b.dataset.time==="on"; if(!cf.timeOpen){ cf.date=""; cf.slot=""; cf.tz=tzDefault(); delete cf.err.date; delete cf.err.slot; }
+        renderCall(); const t=sm.querySelector(cf.timeOpen?"#cfDate":"[data-time=on]"); if(t) t.focus(); }));
+      const dt=sm.querySelector("#cfDate"), sl=sm.querySelector("#cfSlot"), tz=sm.querySelector("#cfTz");
+      if(dt) dt.addEventListener("change",()=>{ cf.date=dt.value; const past=cf.date===isoDay(new Date()) && cf.slot && +cf.slot.slice(6,8)<=new Date().getHours(); if(past) cf.slot=""; if(cf.tried) cf.err=validate(); renderCall(); sm.querySelector("#cfDate").focus(); });
+      if(sl) sl.addEventListener("change",()=>{ cf.slot=sl.value; if(cf.tried) cf.err=validate(); renderCall(); sm.querySelector("#cfSlot").focus(); });
+      if(tz) tz.addEventListener("change",()=>{ cf.tz=tz.value; });
+      sm.querySelector("[data-callsend]").addEventListener("click",()=>{
+        cf.tried=true; cf.err=validate();
+        if(Object.keys(cf.err).length){ renderCall();   // фокус — на первое поле с ошибкой
+          const first={topic:`[data-topic="0"]`,comment:"#cfComment",phone:"#cfPhone",date:"#cfDate",slot:"#cfSlot"}[Object.keys(cf.err)[0]];
+          const el=sm.querySelector(first); if(el){ el.focus(); el.scrollIntoView({block:"nearest"}); } return; }
+        cf.sending=true; hideToast(true); renderCall();
+        setTimeout(()=>{ cf.sending=false;
+          if(scn.send==="fail"){ renderCall(); showToast("Не удалось отправить запрос. Попробуйте ещё раз."); }
+          else renderCallSent();
+        },900);
+      });
+    }
+    function renderCallSent(){
+      sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div><span style="flex:1"></span>${closeX}</div>
+        <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Запрос принят</h2>
+        <p class="sm-intro">С вами свяжутся.</p>
+        <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
+      sm.querySelector("[data-close].sm-btn").focus();
+    }
+    function openCall(){
+      setOpen(false); lastFocus=document.activeElement;
+      stopUploads(); hideToast(true); callReset(); sm.innerHTML=""; renderCall();
+      const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
+      fade(ov,true); document.documentElement.style.overflow="hidden";
+      sm.querySelector("[data-topic]").focus();
+    }
+    document.getElementById("supCall").addEventListener("click",e=>{ e.stopPropagation(); openCall(); });
 
     /* ---------- харнесс: сценарии ---------- */
     function harness(){
       const row=document.querySelector(".harness-row"); if(!row||row.querySelector(".sup-scn")) return;
       const seg=(label,key,opts)=>`<span class="sup-scn-g"><span class="sup-scn-l">${label}</span><span class="sup-seg">${opts.map(([v,t])=>`<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${scn[key]===v}">${t}</button>`).join("")}</span></span>`;
       const w=document.createElement("div"); w.className="sup-scn";
-      w.innerHTML=seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]])+seg("Загрузка файла","upload",[["ok","Успешно"],["fail","Обрыв"]]);
+      w.innerHTML=seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]])+seg("Загрузка файла","upload",[["ok","Успешно"],["fail","Обрыв"]])+seg("Телефон в профиле","phone",[["yes","Есть"],["no","Нет"]]);
       row.appendChild(w);
       w.addEventListener("click",e=>{ const b=e.target.closest("button[data-k]"); if(!b) return; e.stopPropagation();
         scn[b.dataset.k]=b.dataset.v; w.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
     }
     function fromHash(){
-      if(!location.hash.startsWith("#support")) return;
+      if(!location.hash.startsWith("#support") && location.hash!=="#call-form") return;
       const pm=document.getElementById("protoMenu");
       if(pm){
         pm.querySelector(".pm-cur").textContent="Связаться с техподдержкой";
@@ -287,7 +403,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         pm.querySelector(".pm-pop").hidden=true; pm.querySelector(".pm-trigger").setAttribute("aria-expanded","false");
       }
       harness();
-      if(location.hash==="#support-form") openForm(); else setOpen(true);
+      if(location.hash==="#support-form") openForm(); else if(location.hash==="#call-form") openCall(); else setOpen(true);
     }
     window.addEventListener("hashchange",fromHash);
     window.addEventListener("resize",()=>{ if(menuOpen()){ place(); copies.forEach(fitTip); } });

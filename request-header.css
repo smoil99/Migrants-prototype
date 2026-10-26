@@ -141,6 +141,41 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field textarea{padding-bottom:28px}
 /* ручка растягивания: две диагонали white@35% в углу (Chrome/Safari; Firefox рисует свою) */
 .sm-field textarea::-webkit-resizer{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none'%3E%3Cpath d='M9 1 1 9M9 5 5 9' stroke='white' stroke-opacity='.35' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 4px bottom 4px; background-size:10px 10px}
+/* ---------- «Запрос на звонок»: поля Text field / Phone / Dropdown / Data picker (dynamic input), Choice chip panel ---------- */
+.sm-field input,.sm-field select{display:block; width:100%; box-sizing:border-box; height:46px; padding:12px 14px; border:1px solid transparent; border-radius:12px;
+  background:rgba(255,255,255,.1); color:#fff; font-family:inherit; font-size:16px; line-height:22px; outline:none; transition:background .12s, border-color .12s; color-scheme:dark}
+.sm-field input:hover,.sm-field select:hover{background:rgba(255,255,255,.12)}
+.sm-field input:focus,.sm-field select:focus{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+.sm-field input:disabled,.sm-field select:disabled{background:rgba(255,255,255,.06); color:rgba(255,255,255,.35)}
+.sm-field.err textarea,.sm-field.err input,.sm-field.err select{border-color:#FF6674}
+.sm-field.cf-sel select{appearance:none; -webkit-appearance:none; padding-right:40px; cursor:pointer}
+.sm-field.cf-sel select option{background:#26292c; color:#fff}
+.sm-field.cf-sel > svg{position:absolute; right:14px; top:15px; width:16px; height:16px; color:#fff; pointer-events:none}
+.sm-field.cf-in label{top:12px}
+.sm-field.cf-in.up label{top:-9px}
+.sm-field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1); opacity:.8; cursor:pointer}
+.cf-cap{margin-top:8px; font-size:12px; line-height:15px; color:rgba(255,255,255,.6)}
+.cf-cap.err{color:#FF6674}
+.cf-group{display:flex; flex-direction:column; gap:8px}
+.cf-label{font-size:14px; line-height:20px; color:rgba(255,255,255,.6)}
+.cf-label i{font-style:normal; font-size:16px; color:#FF6674}
+.cf-chips{display:flex; flex-wrap:wrap; gap:8px 12px}
+.cf-chip{appearance:none; border:0; border-radius:32px; padding:6px 12px; background:rgba(255,255,255,.1); color:#fff; font-family:inherit; font-size:16px; line-height:22px; cursor:pointer;
+  box-shadow:inset 0 0 0 1px transparent; transition:background .12s, box-shadow .12s}
+.cf-chip:hover{background:rgba(255,255,255,.14)}
+.cf-chip[aria-checked="true"]{background:rgba(255,255,255,.14); box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}
+.cf-chip:disabled{background:rgba(255,255,255,.06); color:rgba(255,255,255,.35); cursor:default}
+.cf-chip[aria-checked="true"]:disabled{background:rgba(255,255,255,.14); color:#fff}
+.cf-chip:focus-visible,.cf-link:focus-visible{outline:2px solid var(--accent,#61C7D6); outline-offset:2px}
+.cf-link{appearance:none; border:0; background:transparent; padding:0; color:#fff; font-family:inherit; font-size:16px; line-height:20px; font-weight:500; cursor:pointer;
+  text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; transition:color .12s}
+.cf-link:hover{color:rgba(255,255,255,.6)}
+.cf-link:disabled{color:rgba(255,255,255,.35); cursor:default}
+.cf-time{display:flex; flex-direction:column; gap:12px}
+.cf-time-h{display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; line-height:20px; font-weight:500}
+.cf-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start}
+@media (max-width:420px){ .cf-row{grid-template-columns:1fr} }
+
 /* зона загрузки — set «Frame» 1701:6178 Default/Hover: пунктир 2px white@12%, r16 */
 .sm-drop{display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; border:2px dashed rgba(255,255,255,.12); border-radius:16px; text-align:center; cursor:pointer; transition:background-color .12s}
 .sm-drop:hover,.sm-drop.drag{background-color:rgba(255,255,255,.05)}
