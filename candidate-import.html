@@ -259,7 +259,7 @@
   .drop .ibtn{pointer-events:none}
   .drop b{display:block; font-size:16px; font-weight:500; line-height:20px}
   .drop small{display:block; margin-top:4px; font-size:14px; color:var(--label); line-height:1.25}
-  .ex-cap{font-size:12px; color:var(--label); margin:0 0 16px}
+  .msm .ex-cap{font-size:12px; color:var(--label); margin:0 0 16px}
   .ex-scroll{overflow-x:auto}
   .ex{min-width:760px; border:1px solid rgba(255,255,255,.12); border-bottom:0; border-radius:12px 12px 0 0; overflow:hidden}
   .ex-r{display:flex}
@@ -282,7 +282,8 @@
   .mt-r.h{padding:16px 20px 14px; border:0; font-size:16px; line-height:20px}
   .m1{flex:0 0 340px} .m2{flex:0 0 40px; display:flex; justify-content:center} .m3{flex:0 0 220px; display:flex; gap:6px; font-size:16px; font-weight:500; line-height:20px}
   .m3 i{font-style:normal; color:#FF6673; font-size:14px; line-height:1}
-  .m4{flex:1 1 0; min-width:0; display:flex; gap:8px; overflow:hidden}
+  .m4{flex:1 1 0; min-width:0; display:flex; gap:8px; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; padding-bottom:4px; margin-bottom:-4px}
+  .mt-r.h .m4{overflow:visible; padding-bottom:0; margin-bottom:0}
   .m5{flex:0 0 86px; display:flex; justify-content:center}
   .mt-r.h .m5{flex:0 0 auto; min-width:86px}
   .smp{flex:none; border:1px solid rgba(255,255,255,.2); border-radius:6px; padding:3px 8px; font-size:16px; line-height:1.2; color:var(--label); white-space:nowrap}
@@ -471,7 +472,7 @@
         <button data-scen="gone">Запись недоступна</button>
       </div>
     </div>
-    <p class="hint">Подойдёт любой .csv/.xlsx — чтение файла имитируется. Файл больше 10 МБ или другого формата покажет ошибку загрузки.</p>
+    <p class="hint">Клик по зоне загрузки подставляет демо-файл Candidates.xlsx. Перетащенный файл больше 10 МБ или другого формата покажет ошибку загрузки.</p>
   </div>
 </div>
 
@@ -527,7 +528,6 @@
   </div></div>
 </main>
 
-<input type="file" id="fileIn" accept=".csv,.xlsx,.docx,.pdf" hidden>
 <div class="layer" id="lyMain" hidden><div class="scrim"></div><div class="host" id="hostMain"></div></div>
 <div class="layer l2" id="lyDrawer" hidden><div class="scrim"></div><div class="host dr" id="hostDrawer"></div></div>
 <div class="layer l3" id="lyDialog" hidden><div class="scrim"></div><div class="host" id="hostDialog"></div></div>
@@ -807,10 +807,13 @@ function openUpload(){
 function onFile(f){
   closeLayer("main"); stopTimer(); S.rows=[];
   const ext=(f.name.split(".").pop()||"").toLowerCase(), file={name:f.name, size:f.size, date:today()};
-  if(!EXT.includes(ext)){S.job={phase:"upload-error", file, err:"Unsupported file format. Upload a CSV, XLSX, DOCX or PDF file with one table."}; renderWidget(); return;}
-  if(f.size>MAX_SIZE){S.job={phase:"upload-error", file, err:"File size exceeds the allowed limit (10 MB)"}; renderWidget(); return;}
-  startUpload(file);
+  if(!EXT.includes(ext)) S.job={phase:"upload-error", file, err:"Unsupported file format. Upload a CSV, XLSX, DOCX or PDF file with one table."}, renderWidget();
+  else if(f.size>MAX_SIZE) S.job={phase:"upload-error", file, err:"File size exceeds the allowed limit (10 MB)"}, renderWidget();
+  else startUpload(file);
+  scrollToSlot();
 }
+/* после закрытия модалки — подвести страницу к плашке импорта */
+function scrollToSlot(){ requestAnimationFrame(()=>{const s=$("#importSlot"); if(!s.hidden) s.scrollIntoView({behavior:"smooth",block:"center"});}); }
 
 /* ================= сопоставление колонок (5935:22880) ================= */
 function openMapping(){ showLayer("main",'<div class="pane mlg" role="dialog" aria-modal="true" aria-labelledby="mpT" id="mapPane"></div>'); renderMapping(); }
@@ -1042,12 +1045,12 @@ document.addEventListener("click",e=>{
   switch(a){
     case "nyi": e.preventDefault(); toast("Not included in this prototype"); break;
     case "import": case "upload-again": requestUpload(); break;
-    case "pick": $("#fileIn").click(); break;
+    case "pick": onFile(demoFile()); break;
     case "up-close": closeLayer("main"); break;
     case "map-open": openMapping(); break;
     case "map-close": closeLayer("main"); break;
     case "map-cb": {const m=S.map[+t.dataset.i]; m.on=!m.on; renderMapping(); const b=$('[data-act="map-cb"][data-i="'+t.dataset.i+'"]'); b&&b.focus(); break;}
-    case "map-start": closeLayer("main"); startProgress(0); break;
+    case "map-start": closeLayer("main"); startProgress(0); scrollToSlot(); break;
     case "imp-cancel": cancelImport(); break;
     case "details": openDetails(); break;
     case "w-close": if(S.job){ if(S.job.phase==="upload-error") S.job=null; else S.job.closed=true; } renderWidget(); break;
@@ -1074,7 +1077,6 @@ document.addEventListener("change",e=>{
   const s=e.target.closest("[data-map]"); if(!s) return;
   const m=S.map[+s.dataset.map]; m.col=s.value; renderMapping(); const n=$('[data-map="'+s.dataset.map+'"]'); n&&n.focus();
 });
-$("#fileIn").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0]; e.target.value=""; if(f) onFile(f);});
 /* клик по затемнению и Esc закрывают верхний слой (Esc в диалоге = «Keep editing» / отмена) */
 document.addEventListener("keydown",e=>{
   if(e.key!=="Escape") return;
