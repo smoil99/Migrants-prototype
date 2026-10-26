@@ -593,23 +593,30 @@ function renderConsumer(r){
     return `<span class="v">${esc(primaryText)}</span>`;
   }
 
-  // inline / hover: иконка перевода + тултип — только у переведённых для зрителя полей
-  const isTranslated = r.src !== vl;
-  if(!isTranslated){
-    return `<span class="v">${esc(primaryText)}</span>`;   // зритель видит оригинал — переводить нечего
-  }
+  // inline / hover: иконка перевода на КАЖДОМ свободном поле — одинаково у клиента и провайдера
   const open = openSet.has(r.id);
-  const origLang = r.src.toUpperCase();                    // язык оригинала (EN для полей профиля, RU для полей заявки)
-  const tipSub = open ? "Нажмите, чтобы скрыть оригинал" : "Нажмите, чтобы показать оригинал";
+  const isTranslated = r.src !== vl;        // зритель читает перевод (true) или свой оригинал (false)
+  const otherLbl = ol.toUpperCase(), srcLbl = r.src.toUpperCase();
   const cls = pattern==="hover" ? "ft hovermode" : "ft";
+
+  let tipTitle, tipSub, boxLbl, boxText, aria;
+  if(isTranslated){                          // поле переведено для зрителя → можно открыть оригinal
+    tipTitle = "Переведено с помощью ИИ";
+    tipSub   = open ? "Нажмите, чтобы скрыть оригинал" : "Нажмите, чтобы показать оригинал";
+    boxLbl   = "Оригинал · " + srcLbl;  boxText = r.v[r.src];  aria = "Переведено ИИ — показать оригинал";
+  } else {                                   // зритель видит свой оригинал → можно открыть перевод (что видит другая сторона)
+    tipTitle = "Перевод · " + otherLbl;
+    tipSub   = open ? "Нажмите, чтобы скрыть перевод" : "Нажмите, чтобы показать перевод";
+    boxLbl   = "Перевод · " + otherLbl;  boxText = r.v[ol];  aria = "Показать перевод";
+  }
   const otherBox = open
-    ? `<div class="other"><span class="o-lbl">Оригинал · ${origLang}</span>${esc(r.v[r.src])}</div>` : "";
+    ? `<div class="other"><span class="o-lbl">${boxLbl}</span>${esc(boxText)}</div>` : "";
   return `<div class="${cls}">
      <div class="ft-main">
        <span class="v txt">${esc(primaryText)}</span>
-       <button class="tr-icon${open?" is-open":""}" data-toggle="${r.id}" aria-expanded="${open}" aria-label="Переведено ИИ — показать оригинал">
+       <button class="tr-icon${open?" is-open":""}" data-toggle="${r.id}" aria-expanded="${open}" aria-label="${aria}">
          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
-         <span class="tip" role="tooltip"><b>Переведено с помощью ИИ</b><i>${tipSub}</i></span>
+         <span class="tip" role="tooltip"><b>${tipTitle}</b><i>${tipSub}</i></span>
        </button>
      </div>${otherBox}</div>`;
 }
