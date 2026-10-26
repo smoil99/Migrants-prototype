@@ -14,7 +14,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
   window.addEventListener("load",setStack);
 
   /* меню «?» — связаться с техподдержкой (Figma 3050:21391, состояния 8077:6730).
-     #support открывает меню, #support-form — окно «Написать в поддержку» (8084:6850), #call-form — «Запрос на звонок» (docs#320, 8170:6226).
+     #support открывает меню, #support-form — окно «Написать в поддержку» (8084:6850), #call-form — «Запросить звонок» (docs#320, 8170:6226).
      В харнессе при #support* — сценарии: буфер обмена запрещён, ошибка отправки. */
   const box=document.getElementById("supMenu");
   if(box){
@@ -32,7 +32,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       +copyRow("tel:"+SUP.tel,SUP.phone,"Скопировать номер телефона","Выделите номер вручную")
       +'<div class="sup-sep" role="separator"></div>'
       +'<button class="sup-act" type="button" id="supWrite">Написать в поддержку</button>'
-      +'<button class="sup-act" type="button" id="supCall">Запрос на звонок</button>'
+      +'<button class="sup-act" type="button" id="supCall">Запросить звонок</button>'
       +'<span class="rh-sr" id="copyLive" aria-live="polite"></span>';
     const live=document.getElementById("copyLive");
     const scrim=document.createElement("div"); scrim.className="sup-scrim"; scrim.hidden=true; document.body.appendChild(scrim);
@@ -268,7 +268,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       else if(!e.shiftKey&&document.activeElement===f[f.length-1]){ e.preventDefault(); f[0].focus(); }
     });
 
-    /* ---------- «Запрос на звонок» (US-024, docs#320; макет 8170:6226) ---------- */
+    /* ---------- «Запросить звонок» (US-024, docs#320; макет 8170:6226) ---------- */
     const TOPICS=["Коммерческое предложение","Договор","Заявка","Работа платформы","Другой вопрос"];
     const SLOTS=["09:00–11:00","11:00–13:00","13:00–15:00","15:00–17:00","17:00–19:00"];   // рекомендация дизайна: по 2 ч в рабочее время
     const TZS=[["Калининград, UTC+2",120],["Москва, UTC+3",180],["Самара, UTC+4",240],["Екатеринбург, UTC+5",300],["Индия, UTC+5:30",330],["Омск, UTC+6",360],["Новосибирск, UTC+7",420],["Иркутск, UTC+8",480],["Якутск, UTC+9",540],["Владивосток, UTC+10",600],["Магадан, UTC+11",660],["Камчатка, UTC+12",720]];
@@ -285,9 +285,9 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const keep=sm.querySelector(".sm-body")?.scrollTop||0, e=cf.err, dis=cf.sending?"disabled":"";
       const today=new Date(), max=new Date(today.getTime()+14*864e5), isToday=cf.date===isoDay(today);
       const slotOpts=SLOTS.map(s=>{ const past=isToday && +s.slice(6,8)<=today.getHours(); return `<option value="${s}"${cf.slot===s?" selected":""}${past?" disabled":""}>${s}${past?" — прошло":""}</option>`; }).join("");
-      sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запрос на звонок</h2>${closeX}</div>
+      sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запросить звонок</h2>${closeX}</div>
         <div class="sm-body">
-          <p class="sm-intro">Специалист РРУ свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
+          <p class="sm-intro">Специалист поддержки свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
           <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
             <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
             <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
@@ -317,7 +317,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
             <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
           </div>`:`<div><button type="button" class="cf-link" data-time="on" ${dis}>+ Указать удобное время для звонка</button></div>`}
-          <div class="sm-alert is-info">${ICON_INFO}<span>РРУ получит ваше имя, email, организацию и ИНН, телефон, тему, комментарий и время запроса.</span></div>
+          <p class="cf-note">Вместе с запросом передадим ваши имя и email, название и ИНН организации.</p>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${dis}>Отмена</button>
           <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
@@ -370,7 +370,8 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     function renderCallSent(){
       sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div><span style="flex:1"></span>${closeX}</div>
         <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Запрос принят</h2>
-        <p class="sm-intro">С вами свяжутся.</p>
+        <p class="sm-intro">Спасибо! Специалист поддержки свяжется с вами по номеру ${esc(cf.phone.trim())}, а если не дозвонится — напишет на ${SUP.user}.</p>
+        ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
         <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
       sm.querySelector("[data-close].sm-btn").focus();
     }

@@ -141,7 +141,7 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field textarea{padding-bottom:28px}
 /* ручка растягивания: две диагонали white@35% в углу (Chrome/Safari; Firefox рисует свою) */
 .sm-field textarea::-webkit-resizer{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none'%3E%3Cpath d='M9 1 1 9M9 5 5 9' stroke='white' stroke-opacity='.35' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 4px bottom 4px; background-size:10px 10px}
-/* ---------- «Запрос на звонок»: поля Text field / Phone / Dropdown / Data picker (dynamic input), Choice chip panel ---------- */
+/* ---------- «Запросить звонок»: поля Text field / Phone / Dropdown / Data picker (dynamic input), Choice chip panel ---------- */
 .sm-field input,.sm-field select{display:block; width:100%; box-sizing:border-box; height:46px; padding:12px 14px; border:1px solid transparent; border-radius:12px;
   background:rgba(255,255,255,.1); color:#fff; font-family:inherit; font-size:16px; line-height:22px; outline:none; transition:background .12s, border-color .12s; color-scheme:dark}
 .sm-field input:hover,.sm-field select:hover{background:rgba(255,255,255,.12)}
@@ -154,6 +154,7 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field.cf-in label{top:12px}
 .sm-field.cf-in.up label{top:-9px}
 .sm-field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1); opacity:.8; cursor:pointer}
+.cf-note{margin:0; font-size:14px; line-height:20px; color:rgba(255,255,255,.6)}   /* состав передаваемых данных — строкой перед кнопками */
 .cf-cap{margin-top:8px; font-size:12px; line-height:15px; color:rgba(255,255,255,.6)}
 .cf-cap.err{color:#FF6674}
 .cf-group{display:flex; flex-direction:column; gap:8px}
