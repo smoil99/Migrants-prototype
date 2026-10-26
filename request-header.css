@@ -154,7 +154,6 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 .sm-field.cf-in label{top:12px}
 .sm-field.cf-in.up label{top:-9px}
 .sm-field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1); opacity:.8; cursor:pointer}
-.cf-note{margin:0; font-size:14px; line-height:20px; color:rgba(255,255,255,.6)}   /* состав передаваемых данных — строкой перед кнопками */
 .cf-cap{margin-top:8px; font-size:12px; line-height:15px; color:rgba(255,255,255,.6)}
 .cf-cap.err{color:#FF6674}
 .cf-group{display:flex; flex-direction:column; gap:8px}

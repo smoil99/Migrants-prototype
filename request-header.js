@@ -288,6 +288,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запросить звонок</h2>${closeX}</div>
         <div class="sm-body">
           <p class="sm-intro">Специалист поддержки свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
+          <div class="sm-alert is-info">${ICON_INFO}<span>Вместе с запросом передадим ваши имя и email, название и ИНН организации.</span></div>
           <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
             <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
             <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
@@ -317,7 +318,6 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
             <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
           </div>`:`<div><button type="button" class="cf-link" data-time="on" ${dis}>+ Указать удобное время для звонка</button></div>`}
-          <p class="cf-note">Вместе с запросом передадим ваши имя и email, название и ИНН организации.</p>
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${dis}>Отмена</button>
           <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
