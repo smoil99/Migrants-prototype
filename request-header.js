@@ -300,14 +300,14 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
               <label for="cfComment"><span class="ph">Кратко опишите вопрос</span><span class="lb">Комментарий</span> <i>*</i></label>
               <div class="sm-count" id="cfCount" aria-live="polite"></div>
             </div>
-            ${cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
+            ${cf.sending?"":cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
           </div>
           <div>
             <div class="${fieldCls(cf.phone,e.phone," cf-in")}">
               <input id="cfPhone" type="tel" inputmode="tel" autocomplete="tel" value="${esc(cf.phone)}" aria-describedby="cfPhoneC" ${dis}>
               <label for="cfPhone"><span class="ph">Телефон для связи</span><span class="lb">Телефон для связи</span> <i>*</i></label>
             </div>
-            ${cap("cfPhoneC", e.phone||(cf.phone||cf.tried?"Номер изменится только для этого запроса — профиль не меняется":"Укажите номер, по которому вам удобно ответить"), !!e.phone)}
+            ${cf.sending?"":cap("cfPhoneC", e.phone||(cf.phone||cf.tried?"Номер изменится только для этого запроса — профиль не меняется":"Укажите номер, по которому вам удобно ответить"), !!e.phone)}
           </div>
           ${cf.timeOpen?`<div class="cf-time">
             <div class="cf-time-h"><span>Удобное время (необязательно)</span><button type="button" class="cf-link" data-time="off" ${dis}>Убрать</button></div>
@@ -317,7 +317,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             </div>
             <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
             <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
-          </div>`:`<div><button type="button" class="cf-link" data-time="on" ${dis}>+ Указать удобное время для звонка</button></div>`}
+          </div>`:cf.sending?"":`<div><button type="button" class="cf-link" data-time="on">+ Указать удобное время для звонка</button></div>`}
         </div>
         <div class="sm-acts"><button class="sm-btn sec" type="button" data-close ${dis}>Отмена</button>
           <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
@@ -368,7 +368,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       });
     }
     function renderCallSent(){
-      sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div><span style="flex:1"></span>${closeX}</div>
+      sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div></div>
         <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Запрос принят</h2>
         <p class="sm-intro">Спасибо! Специалист поддержки свяжется с вами по номеру ${esc(cf.phone.trim())}, а если не дозвонится — напишет на ${SUP.user}.</p>
         ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
