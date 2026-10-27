@@ -439,6 +439,9 @@
     .who .nm,.who .rl{display:none}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+  /* форма заявки: главная навигация не залипает — закреплена только шапка заявки (у верха экрана) */
+  .topnav{position:relative}
+  .lk-header{top:env(safe-area-inset-top,0px)}
 </style>
 <style>
   /* ---------- целевая форма заявки (Figma 6783:33804 пустая · 7439:148673 черновик) ---------- */
@@ -1452,7 +1455,8 @@ let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
 
 /* ---------- glass-навигация при скролле ---------- */
 function onScroll(){
-  const was=document.body.classList.contains("scrolled"), on=window.scrollY>$(".harness").offsetHeight-2;
+  // компактная шапка — когда шапка заявки доехала до верха (главная навигация уже ушла с экрана)
+  const was=document.body.classList.contains("scrolled"), on=window.scrollY>$(".harness").offsetHeight+$(".topnav").offsetHeight-2;
   if(was!==on) headerFlip(()=>document.body.classList.toggle("scrolled",on));
   if(was!==on) setStackH();   /* высота шапки меняется — пересчитать отступы якорей и боковой панели */
   renderSteps();
@@ -1476,8 +1480,8 @@ function headerFlip(apply){
 }
 $(".lk-header").addEventListener("transitionend",e=>{ if(/^(height|font-size|padding-top|padding-bottom)$/.test(e.propertyName)) setStackH(); });
 function setStackH(){
-  /* дробная высота (zoom/DPR) округлялась вниз → щель в 1px; берём точную и заходим под бордер навигации на 1px */
-  const t=$(".topnav").getBoundingClientRect().height-1, h=$(".lk-header").getBoundingClientRect().height;
+  /* главная навигация не закреплена — в стек над контентом входит только шапка заявки; высота дробная (zoom/DPR) — берём точную */
+  const t=0, h=$(".lk-header").getBoundingClientRect().height;
   document.documentElement.style.setProperty("--topnav-h",t+"px");
   document.documentElement.style.setProperty("--stack-h",(t+h)+"px");
 }
