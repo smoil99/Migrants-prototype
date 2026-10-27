@@ -289,7 +289,6 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запросить звонок</h2>${closeX}</div>
         <div class="sm-body">
           <p class="sm-intro">Специалист поддержки свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
-          <div class="sm-alert is-info">${ICON_INFO}<span>Вместе с запросом передадим ваши имя и email, название и ИНН организации.</span></div>
           <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
             <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
             <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
