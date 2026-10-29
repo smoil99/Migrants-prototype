@@ -363,6 +363,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запросить звонок</h2>${closeX}</div>
         <div class="sm-body">
           <p class="sm-intro">Укажите вопрос и телефон для связи. Если не удастся дозвониться, поддержка сможет написать на ${SUP.user}.</p>
+          <div class="sm-alert is-info">${ICON_INFO}<span>Не прикладывайте документы кандидатов.</span></div>
           <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
             <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
             <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
@@ -377,7 +378,6 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             ${cf.sending?"":cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
           </div>
           <div class="cf-attachments">
-            <div class="sm-alert is-info">${ICON_INFO}<span>Не прикладывайте документы кандидатов.</span></div>
           <div class="sm-drop${cf.sending?" off":""}" tabindex="0" role="button" aria-label="Прикрепить файлы">
             <span class="sm-upbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 19h14"/></svg></span>
             <span><b>Прикрепите файлы (необязательно)</b><small>${HINT}</small></span>
@@ -467,7 +467,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Спасибо за обращение!</h2>
         <p class="sm-intro">Запрос принят. С вами свяжутся в ближайшее время.</p>
         ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString(scn.lang==="en"?"en-GB":"ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
-        <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
+        <div class="sm-acts cf-confirm-acts"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
       localizeCall();
       sm.querySelector("[data-close].sm-btn").focus();
     }
