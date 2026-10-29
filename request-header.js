@@ -19,7 +19,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
   const box=document.getElementById("supMenu");
   if(box){
     const SUP={email:"Zarkadr@rabota.ru", phone:"+7 (495) 123-45-67", tel:"+74951234567", user:"ivanov@company.ru"};
-    const scn={clipboard:"ok", send:"ok", upload:"ok", phone:"yes"};
+    const scn={clipboard:"ok", send:"ok", upload:"ok", phone:"yes", callError:"none", lang:"ru"};
     const ICON_COPY='<svg class="ic-copy" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.75 0-1.12.15-1.41.13-.25.33-.45.58-.58.29-.15.66-.15 1.41-.15h5.07c.75 0 1.12 0 1.4.15.25.13.46.33.59.58.14.29.14.66.14 1.41v5.06c0 .75 0 1.12-.14 1.41-.13.25-.34.45-.59.58-.28.15-.65.15-1.4.15h-1.87M3.47 14.67h5.06c.75 0 1.12 0 1.41-.15.25-.13.45-.33.58-.58.15-.29.15-.66.15-1.41V7.47c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H3.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41v5.06c0 .75 0 1.12.15 1.41.13.25.33.45.58.58.29.15.66.15 1.41.15z"/></svg>'
       +'<svg class="ic-done" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8"/></svg>';
     const copyRow=(href,text,tip,manual)=>
@@ -86,7 +86,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     /* файл, брошенный мимо зоны (или на неактивную зону), не открывается браузером; при 5 файлах — тост */
     ov.addEventListener("dragover",e=>e.preventDefault());
     ov.addEventListener("drop",e=>{ e.preventDefault(); if(files.length>=MAX_FILES && e.dataTransfer?.files?.length && !sending) showToast(FULL); });
-    let files=[], sending=false, lastFocus=null;
+    let files=[], sending=false, lastFocus=null, activeForm="support";
     const hasBad=()=>files.some(f=>f.err);   // неподходящий файл блокирует отправку, пока его не удалят
     const ICON_TRASH16='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.67 4v-.53c0-.75 0-1.12-.15-1.41a1.33 1.33 0 0 0-.58-.58c-.29-.15-.66-.15-1.41-.15H7.47c-.75 0-1.12 0-1.41.15-.25.13-.45.33-.58.58-.15.29-.15.66-.15 1.41V4M2 4h12m-1.33 0v7.47c0 1.12 0 1.68-.22 2.1-.19.38-.5.69-.88.88-.42.22-.98.22-2.1.22H6.53c-1.12 0-1.68 0-2.1-.22a2 2 0 0 1-.88-.88c-.22-.42-.22-.98-.22-2.1V4"/></svg>';
     const ICON_OK='<svg class="ok-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.75" fill="#00E887"/><path d="M8.25 12.4l2.5 2.5 5-5.3" fill="none" stroke="#0B1214" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';   // 24 px / checkmark filled, #00E887
@@ -106,6 +106,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     function showToast(text){
       toast.innerHTML=ICON_XFILL+`<span>${text}</span><button type="button" aria-label="Закрыть" data-tclose><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
       clearTimeout(tOut); toast.classList.remove("out"); toast.hidden=false; toast.style.animation="none"; void toast.offsetWidth; toast.style.animation="";
+      if(activeForm==="call") localizeCall(toast);
       placeToast(); clearTimeout(tT); tLeft=6000; tStart=Date.now(); tT=setTimeout(hideToast,tLeft);
     }
     const tPause=()=>{ if(toast.hidden) return; clearTimeout(tT); tLeft-=Date.now()-tStart; };
@@ -120,12 +121,14 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     let fid=0;
     const busy=()=>files.some(f=>f.st==="up"||f.st==="fail");   // загрузка идёт или оборвалась — отправка ждёт
     const fileRow=f=>{
-      const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending?"disabled":""}>${f.st==="up"?ICON_X16:ICON_TRASH16}</button>`;
+      const del=`<button class="sm-del" type="button" data-del="${f.id}" aria-label="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" title="${f.st==="up"?"Отменить загрузку":"Удалить файл"}" ${sending||cf.sending?"disabled":""}>${f.st==="up"?ICON_X16:ICON_TRASH16}</button>`;
       if(f.st==="up") return `<div class="sm-file up" data-fid="${f.id}">${ICON_FILE}<div class="fm"><div class="fr"><span class="fn">${esc(f.name)}</span><span class="pc">${f.p}%</span></div><div class="bar" role="progressbar" aria-label="Загрузка ${esc(f.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${f.p}"><i style="width:${f.p}%"></i></div></div>${del}</div>`;
       if(f.st==="fail") return `<div class="sm-file fail" data-fid="${f.id}">${ICON_ALERT}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">Не удалось загрузить файл</div></div><button class="sm-del" type="button" data-retry="${f.id}" aria-label="Загрузить снова" title="Загрузить снова">${ICON_RETRY16}</button>${del}</div>`;
       return `<div class="sm-file${f.st==="bad"?" bad":""}" data-fid="${f.id}">${f.st==="bad"?ICON_ALERT:f.fresh?ICON_OK:ICON_FILE}<div class="fm"><div class="fn">${esc(f.name)}</div><div class="fs">${f.st==="bad"?f.err:fmtSize(f.size)}</div></div>${del}</div>`;
     };
     function syncSend(){
+      const callSend=sm.querySelector("[data-callsend]");
+      if(callSend){ callSend.disabled=cf.sending||hasBad()||busy(); return; }
       const send=sm.querySelector("[data-send]"), ta=sm.querySelector("textarea"); if(!send||!ta) return;
       send.disabled=!ta.value.trim()||sending||hasBad()||busy();
     }
@@ -133,14 +136,15 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const box=sm.querySelector(".sm-files"); if(!box) return;
       box.innerHTML=files.map(fileRow).join("");
       box.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{
-        const i=files.findIndex(f=>f.id===+b.dataset.del); if(i<0) return;
+        const i=files.findIndex(f=>f.id===+b.dataset.del); if(i<0||sending||cf.sending) return;
         clearInterval(files[i].t); clearTimeout(files[i].t); files.splice(i,1); renderFiles();
       }));
       box.querySelectorAll("[data-retry]").forEach(b=>b.addEventListener("click",()=>{
-        const f=files.find(x=>x.id===+b.dataset.retry); if(!f) return;
+        const f=files.find(x=>x.id===+b.dataset.retry); if(!f||sending||cf.sending) return;
         f.st="up"; f.p=0; f.failAt=null; startUpload(f); renderFiles();
       }));
       syncSend(); syncZone();
+      localizeCall();
     }
     function startUpload(f){
       const total=Math.min(6000,900+f.size/1.5e6*1000), step=100;   // имитация: ~1,5 МБ/с, не дольше 6 с
@@ -159,7 +163,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       },step);
     }
     const stopUploads=()=>files.forEach(f=>{ clearInterval(f.t); clearTimeout(f.t); });
-    const announce=t=>{ const l=sm.querySelector("#smLive"); if(l){ l.textContent=""; setTimeout(()=>{ l.textContent=t; },50); } };   // для экранного диктора
+    const announce=t=>{ if(activeForm==="call"&&scn.lang==="en") t=t.replace(/^Файл «(.*)» загружен$/,'File “$1” uploaded'); const l=sm.querySelector("#smLive"); if(l){ l.textContent=""; setTimeout(()=>{ l.textContent=t; },50); } };   // для экранного диктора
     function renderForm(){
       const text=sm.querySelector("textarea")?.value||"", keep=sm.querySelector(".sm-body")?.scrollTop||0;   // перерисовка не сбрасывает прокрутку тела
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Написать в поддержку</h2>${closeX}</div>
@@ -194,6 +198,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     }
     /* не больше 5 строк в списке; лишние не добавляются — тост. Файл сверх 20 МБ суммарно — строка с ошибкой */
     function addFiles(list){
+      if(sending||cf.sending) return;
       let extra=0;
       for(const f of list){
         if(files.length>=MAX_FILES){ extra++; continue; }
@@ -211,9 +216,10 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     function syncZone(){
       const z=sm.querySelector(".sm-drop"); if(!z) return;
       const full=files.length>=MAX_FILES;
-      z.classList.toggle("off", sending||full);
-      z.setAttribute("aria-disabled", String(sending||full));
-      z.querySelector("small").textContent=full&&!sending?FULL:HINT;
+      z.classList.toggle("off", sending||cf.sending||full);
+      z.setAttribute("aria-disabled", String(sending||cf.sending||full));
+      z.tabIndex=(sending||cf.sending||full)?-1:0;
+      z.querySelector("small").textContent=full&&!sending&&!cf.sending?FULL:HINT;
     }
     /* счётчик «3650 / 4000» — когда осталось меньше 400 символов */
     function syncCount(){
@@ -242,7 +248,8 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       });
     }
     function openForm(){
-      setOpen(false); lastFocus=document.activeElement;
+      activeForm="support";
+      sm.lang="ru"; setOpen(false); lastFocus=document.activeElement;
       stopUploads(); files=[]; sending=false; hideToast(true); sm.innerHTML=""; renderForm();
       const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
       fade(ov,true); document.documentElement.style.overflow="hidden";
@@ -250,6 +257,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     }
     function closeForm(){
       if(sending||cf.sending) return;
+      stopUploads();
       fade(ov,false); document.documentElement.style.overflow="";
       (lastFocus&&lastFocus.isConnected?lastFocus:btn).focus();
     }
@@ -269,6 +277,71 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     });
 
     /* ---------- «Запросить звонок» (US-024, docs#320; макет 8170:6226) ---------- */
+    // Locale and server outcomes are prototype controls, not product settings.
+    const CALL_EN={
+      "Запросить звонок":"Request a call", "Закрыть":"Close", "Тема вопроса":"Question topic",
+      "Коммерческое предложение":"Commercial proposal", "Договор":"Contract", "Заявка":"Request",
+      "Работа платформы":"Platform assistance", "Другой вопрос":"Other question",
+      "Кратко опишите вопрос":"Briefly describe your question", "Комментарий":"Comment",
+      "Не указывайте персональные данные других людей и реквизиты документов":"Do not include other people’s personal data or document details",
+      "Не прикладывайте документы кандидатов.":"Do not attach candidate documents.",
+      "Прикрепите файлы (необязательно)":"Attach files (optional)", "Прикрепить файлы":"Attach files",
+      "PDF, JPG, JPEG, PNG, HEIC · до 10 МБ на файл, всего до 20 МБ, не больше 5 файлов":"PDF, JPG, JPEG, PNG, HEIC · up to 10 MB per file, 20 MB total, no more than 5 files",
+      "Можно прикрепить не больше 5 файлов":"You can attach no more than 5 files",
+      "Телефон для связи":"Contact phone number", "Номер изменится только для этого запроса — профиль не меняется":"This number is used for this request only — your profile stays unchanged",
+      "Укажите номер, по которому вам удобно ответить":"Enter a phone number we can contact you on",
+      "Указать удобное время для звонка":"Add a preferred call time", "Удобное время (необязательно)":"Preferred time (optional)",
+      "Убрать":"Remove", "Дата":"Date", "Интервал":"Time interval", "Часовой пояс":"Time zone",
+      "Это пожелание: время звонка не назначается и не резервируется.":"This is a preference: a call time is not scheduled or reserved.",
+      "Отмена":"Cancel", "Отправить":"Submit", "Отправляем…":"Submitting…", "Запрос принят":"Request accepted",
+      "С вами свяжутся.":"We will contact you.", "Понятно":"Got it",
+      "Выберите тему вопроса":"Select a question topic", "Опишите вопрос — без комментария запрос не отправить":"Describe your question — a comment is required",
+      "Проверьте номер — в нём не хватает цифр":"Check the phone number — enter 11 to 15 digits",
+      "Выберите дату или уберите удобное время":"Select a date or remove the preferred time",
+      "Выберите интервал или уберите удобное время":"Select an interval or remove the preferred time",
+      "Не удалось отправить запрос. Попробуйте ещё раз.":"Could not submit your request. Please try again.",
+      "Неподдерживаемый формат. Разрешены только: PDF, JPG, JPEG, PNG, HEIC":"Unsupported format. Allowed: PDF, JPG, JPEG, PNG, HEIC",
+      "Файл больше 10 МБ":"File exceeds 10 MB", "Общий размер файлов — не больше 20 МБ":"Total file size must not exceed 20 MB",
+      "Не удалось загрузить файл":"Could not upload the file", "Загрузить снова":"Retry upload",
+      "Удалить файл":"Remove file", "Отменить загрузку":"Cancel upload",
+      "Вы уже отправили несколько запросов за час. Можно снова через 15 минут":"You have submitted several requests in the past hour. Please try again in 15 minutes",
+      "Запрос на звонок временно недоступен. Попробуйте позже или напишите в поддержку":"Call requests are temporarily unavailable. Please try again later or contact support",
+      "Запрос на звонок недоступен для вашей учётной записи":"Call requests are unavailable for your account",
+      "Не удалось определить вашу компанию. Напишите в поддержку":"We could not identify your company. Please contact support",
+      "Файл больше недоступен, выберите его заново":"The file is no longer available. Please select it again"
+    };
+    const CALL_ERRORS={
+      limit:"Вы уже отправили несколько запросов за час. Можно снова через 15 минут",
+      unavailable:"Запрос на звонок временно недоступен. Попробуйте позже или напишите в поддержку",
+      forbidden:"Запрос на звонок недоступен для вашей учётной записи",
+      company:"Не удалось определить вашу компанию. Напишите в поддержку",
+      file:"Файл больше недоступен, выберите его заново"
+    };
+    const callErrorText=()=>CALL_ERRORS[scn.callError]||"Не удалось отправить запрос. Попробуйте ещё раз.";
+    function localizeCall(root=sm){
+      if(activeForm!=="call") return;
+      if(root===sm) sm.lang=scn.lang;
+      if(scn.lang!=="en") return;
+      const translate=text=>{
+        const key=text.trim();
+        if(CALL_EN[key]) return text.replace(key,CALL_EN[key]);
+        if(key.startsWith("Укажите вопрос и телефон для связи.")) return `Enter your question and contact phone number. If we cannot reach you by phone, support may email you at ${SUP.user}.`;
+        return text.replace(/^Загрузка /,"Uploading ").replace("Ваше пожелание по времени передано:","Your preferred time has been submitted:")
+          .replace(" — прошло"," — past").replace(/ КБ/g," KB").replace(/ МБ/g," MB")
+          .replace("Калининград","Kaliningrad").replace("Москва","Moscow").replace("Самара","Samara")
+          .replace("Екатеринбург","Yekaterinburg").replace("Индия","India").replace("Омск","Omsk")
+          .replace("Новосибирск","Novosibirsk").replace("Иркутск","Irkutsk").replace("Якутск","Yakutsk")
+          .replace("Владивосток","Vladivostok").replace("Магадан","Magadan").replace("Камчатка","Kamchatka");
+      };
+      const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+      while(walk.nextNode()){
+        const node=walk.currentNode;
+        if(!node.parentElement.closest("textarea,.fn")) node.textContent=translate(node.textContent);
+      }
+      root.querySelectorAll("[aria-label],[title]").forEach(el=>{
+        for(const attr of ["aria-label","title"]){ const value=el.getAttribute(attr); if(value) el.setAttribute(attr,translate(value)); }
+      });
+    }
     const TOPICS=["Коммерческое предложение","Договор","Заявка","Работа платформы","Другой вопрос"];
     const SLOTS=["09:00–11:00","11:00–13:00","13:00–15:00","15:00–17:00","17:00–19:00"];   // рекомендация дизайна: по 2 ч в рабочее время
     const TZS=[["Калининград, UTC+2",120],["Москва, UTC+3",180],["Самара, UTC+4",240],["Екатеринбург, UTC+5",300],["Индия, UTC+5:30",330],["Омск, UTC+6",360],["Новосибирск, UTC+7",420],["Иркутск, UTC+8",480],["Якутск, UTC+9",540],["Владивосток, UTC+10",600],["Магадан, UTC+11",660],["Камчатка, UTC+12",720]];
@@ -288,7 +361,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const slotOpts=SLOTS.map(s=>{ const past=isToday && +s.slice(6,8)<=today.getHours(); return `<option value="${s}"${cf.slot===s?" selected":""}${past?" disabled":""}>${s}${past?" — прошло":""}</option>`; }).join("");
       sm.innerHTML=`<div class="sm-head"><h2 id="smTitle">Запросить звонок</h2>${closeX}</div>
         <div class="sm-body">
-          <p class="sm-intro">Специалист поддержки свяжется с вами по телефону, а если не дозвонится — напишет на ${SUP.user}.</p>
+          <p class="sm-intro">Укажите вопрос и телефон для связи. Если не удастся дозвониться, поддержка сможет написать на ${SUP.user}.</p>
           <div class="cf-group" role="radiogroup" aria-labelledby="cfTopicL" aria-describedby="cfTopicE">
             <div class="cf-label" id="cfTopicL">Тема вопроса <i>*</i></div>
             <div class="cf-chips">${TOPICS.map((t,i)=>`<button type="button" class="cf-chip" role="radio" aria-checked="${cf.topic===i}" data-topic="${i}" ${dis} tabindex="${cf.topic===i||(cf.topic==null&&i===0)?0:-1}">${t}</button>`).join("")}</div>
@@ -301,6 +374,16 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
               <div class="sm-count" id="cfCount" aria-live="polite"></div>
             </div>
             ${cf.sending?"":cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
+          </div>
+          <div class="cf-attachments">
+            <div class="cf-cap">Не прикладывайте документы кандидатов.</div>
+          <div class="sm-drop${cf.sending?" off":""}" tabindex="0" role="button" aria-label="Прикрепить файлы">
+            <span class="sm-upbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 19h14"/></svg></span>
+            <span><b>Прикрепите файлы (необязательно)</b><small>${HINT}</small></span>
+            <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" hidden>
+          </div>
+          <div class="sm-files"></div>
+          <span class="rh-sr" id="smLive" aria-live="polite"></span>
           </div>
           <div>
             <div class="${fieldCls(cf.phone,e.phone," cf-in")}">
@@ -315,7 +398,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
               <div><div class="${fieldCls(true,e.date," cf-in")}"><input id="cfDate" type="date" min="${isoDay(today)}" max="${isoDay(max)}" value="${cf.date}" aria-describedby="cfDateC" ${dis}><label for="cfDate"><span class="lb">Дата</span></label></div>${e.date?cap("cfDateC",e.date,true):""}</div>
               <div><div class="${fieldCls(cf.slot,e.slot," cf-in cf-sel")}"><select id="cfSlot" aria-describedby="cfSlotC" ${dis}><option value=""></option>${slotOpts}</select><label for="cfSlot"><span class="ph">Интервал</span><span class="lb">Интервал</span></label>${ICON_CHEV}</div>${e.slot?cap("cfSlotC",e.slot,true):""}</div>
             </div>
-            <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
+            <div class="${fieldCls(true,false," cf-in cf-sel")}"><select id="cfTz" ${dis}>${TZS.map(t=>`<option value="${t[0]}"${cf.tz===t[0]?" selected":""}>${t[0]}</option>`).join("")}</select><label for="cfTz"><span class="lb">Часовой пояс</span></label>${ICON_CHEV}</div>
             <div class="cf-cap">Это пожелание: время звонка не назначается и не резервируется.</div>
           </div>`:cf.sending?"":`<div><button type="button" class="cf-link cf-link-ic" data-time="on">${ICON_CLOCK}<span>Указать удобное время для звонка</span></button></div>`}
         </div>
@@ -323,6 +406,8 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
           <button class="sm-btn pri" type="button" data-callsend ${dis}>${cf.sending?'<span class="sm-spin" aria-hidden="true"></span>Отправляем…':"Отправить"}</button></div>`;
       sm.querySelector(".sm-body").scrollTop=keep;
       wireCall();
+      renderFiles();
+      localizeCall();
     }
     function callCount(){ const c=sm.querySelector("#cfCount"); if(!c) return; const n=cf.comment.length; c.textContent=CMAX-n<100?`${n} / ${CMAX}`:""; }
     function validate(){
@@ -342,6 +427,13 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         b.addEventListener("keydown",ev=>{ const d={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[ev.key]; if(!d) return; ev.preventDefault();
           cf.topic=((+b.dataset.topic)+d+TOPICS.length)%TOPICS.length; delete cf.err.topic; renderCall(); sm.querySelector(`[data-topic="${cf.topic}"]`).focus(); });
       });
+      const drop=sm.querySelector(".sm-drop"), inp=drop.querySelector("input");
+      drop.addEventListener("click",()=>{ if(!cf.sending&&files.length<MAX_FILES) inp.click(); });
+      drop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); if(!cf.sending&&files.length<MAX_FILES) inp.click(); } });
+      inp.addEventListener("change",()=>{ addFiles(inp.files); inp.value=""; });
+      drop.addEventListener("dragover",e=>{ e.preventDefault(); if(!cf.sending) drop.classList.add("drag"); });
+      drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));
+      drop.addEventListener("drop",e=>{ e.preventDefault(); e.stopPropagation(); drop.classList.remove("drag"); addFiles(e.dataTransfer.files); });
       const ta=sm.querySelector("#cfComment");
       ta.addEventListener("input",()=>{ cf.comment=ta.value; callCount(); if(!clr("comment")) up(ta,ta.value); });
       ta.addEventListener("focus",()=>up(ta,ta.value)); ta.addEventListener("blur",()=>up(ta,ta.value)); callCount();
@@ -356,6 +448,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       if(sl) sl.addEventListener("change",()=>{ cf.slot=sl.value; if(cf.tried) cf.err=validate(); renderCall(); sm.querySelector("#cfSlot").focus(); });
       if(tz) tz.addEventListener("change",()=>{ cf.tz=tz.value; });
       sm.querySelector("[data-callsend]").addEventListener("click",()=>{
+        if(cf.sending||hasBad()||busy()) return;
         cf.tried=true; cf.err=validate();
         if(Object.keys(cf.err).length){ renderCall();   // фокус — на первое поле с ошибкой
           const first={topic:`[data-topic="0"]`,comment:"#cfComment",phone:"#cfPhone",date:"#cfDate",slot:"#cfSlot"}[Object.keys(cf.err)[0]];
@@ -363,21 +456,24 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
         cf.sending=true; hideToast(true); renderCall();
         setTimeout(()=>{ cf.sending=false;
           if(scn.send==="fail"){ renderCall(); showToast("Не удалось отправить запрос. Попробуйте ещё раз."); }
-          else renderCallSent();
+          else if(scn.callError!=="none"){ renderCall(); showToast(callErrorText()); }
+          else { files=[]; renderCallSent(); }
         },900);
       });
     }
     function renderCallSent(){
       sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div></div>
         <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Запрос принят</h2>
-        <p class="sm-intro">Спасибо! Специалист поддержки свяжется с вами по номеру ${esc(cf.phone.trim())}, а если не дозвонится — напишет на ${SUP.user}.</p>
-        ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString("ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
+        <p class="sm-intro">С вами свяжутся.</p>
+        ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString(scn.lang==="en"?"en-GB":"ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
         <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
+      localizeCall();
       sm.querySelector("[data-close].sm-btn").focus();
     }
     function openCall(){
+      activeForm="call";
       setOpen(false); lastFocus=document.activeElement;
-      stopUploads(); hideToast(true); callReset(); sm.innerHTML=""; renderCall();
+      stopUploads(); files=[]; hideToast(true); callReset(); sm.innerHTML=""; renderCall();
       const h=document.querySelector(".harness"); ov.style.top=h? Math.max(0,Math.round(h.getBoundingClientRect().bottom))+"px" : "";
       fade(ov,true); document.documentElement.style.overflow="hidden";
       sm.querySelector("[data-topic]").focus();
@@ -389,10 +485,18 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       const row=document.querySelector(".harness-row"); if(!row||row.querySelector(".sup-scn")) return;
       const seg=(label,key,opts)=>`<span class="sup-scn-g"><span class="sup-scn-l">${label}</span><span class="sup-seg">${opts.map(([v,t])=>`<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${scn[key]===v}">${t}</button>`).join("")}</span></span>`;
       const w=document.createElement("div"); w.className="sup-scn";
-      w.innerHTML=seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]])+seg("Загрузка файла","upload",[["ok","Успешно"],["fail","Обрыв"]])+seg("Телефон в профиле","phone",[["yes","Есть"],["no","Нет"]]);
+      w.innerHTML=seg("Язык формы звонка","lang",[["ru","RU"],["en","EN"]])+seg("Буфер обмена","clipboard",[["ok","Работает"],["deny","Запрещён"]])+seg("Отправка","send",[["ok","Успешно"],["fail","Ошибка"]])+seg("Загрузка файла","upload",[["ok","Успешно"],["fail","Обрыв"]])+seg("Телефон в профиле","phone",[["yes","Есть"],["no","Нет"]]);
+      const outcomes=document.createElement("label"); outcomes.className="sup-scn-g";
+      outcomes.innerHTML='<span>Ошибка звонка</span><select aria-label="Ошибка запроса на звонок"><option value="none">Нет</option><option value="limit">Лимит запросов</option><option value="unavailable">Временно недоступно</option><option value="forbidden">Нет доступа</option><option value="company">Нет компании</option><option value="file">Файл недоступен</option></select>';
+      w.appendChild(outcomes);
+      outcomes.querySelector("select").addEventListener("change",e=>{ scn.callError=e.target.value; });
       row.appendChild(w);
       w.addEventListener("click",e=>{ const b=e.target.closest("button[data-k]"); if(!b) return; e.stopPropagation();
-        scn[b.dataset.k]=b.dataset.v; w.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
+        scn[b.dataset.k]=b.dataset.v; w.querySelectorAll(`[data-k="${b.dataset.k}"]`).forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+        if(b.dataset.k==="lang"&&activeForm==="call"&&ov.classList.contains("is-open")){
+          if(sm.querySelector("[data-callsend]")) renderCall(); else renderCallSent();
+        }
+      });
     }
     function fromHash(){
       if(!location.hash.startsWith("#support") && location.hash!=="#call-form") return;
