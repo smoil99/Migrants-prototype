@@ -294,7 +294,8 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       "Убрать":"Remove", "Дата":"Date", "Интервал":"Time interval", "Часовой пояс":"Time zone",
       "Это пожелание: время звонка не назначается и не резервируется.":"This is a preference: a call time is not scheduled or reserved.",
       "Отмена":"Cancel", "Отправить":"Submit", "Отправляем…":"Submitting…", "Запрос принят":"Request accepted",
-      "С вами свяжутся.":"We will contact you.", "Понятно":"Got it",
+      "Спасибо за обращение!":"Thank you for contacting us!",
+      "Запрос принят. С вами свяжутся в ближайшее время.":"Your request has been accepted. We will contact you shortly.", "Понятно":"Got it",
       "Выберите тему вопроса":"Select a question topic", "Опишите вопрос — без комментария запрос не отправить":"Describe your question — a comment is required",
       "Проверьте номер — в нём не хватает цифр":"Check the phone number — enter 11 to 15 digits",
       "Выберите дату или уберите удобное время":"Select a date or remove the preferred time",
@@ -376,7 +377,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
             ${cf.sending?"":cap("cfCommentC", e.comment||"Не указывайте персональные данные других людей и реквизиты документов", !!e.comment)}
           </div>
           <div class="cf-attachments">
-            <div class="cf-cap">Не прикладывайте документы кандидатов.</div>
+            <div class="sm-alert is-info">${ICON_INFO}<span>Не прикладывайте документы кандидатов.</span></div>
           <div class="sm-drop${cf.sending?" off":""}" tabindex="0" role="button" aria-label="Прикрепить файлы">
             <span class="sm-upbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5M5 19h14"/></svg></span>
             <span><b>Прикрепите файлы (необязательно)</b><small>${HINT}</small></span>
@@ -463,8 +464,8 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
     }
     function renderCallSent(){
       sm.innerHTML=`<div class="sm-head"><div class="sm-ok"><svg viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13.5l4.5 4.5L20 8"/></svg></div></div>
-        <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Запрос принят</h2>
-        <p class="sm-intro">С вами свяжутся.</p>
+        <h2 id="smTitle" style="margin:0;font-size:24px;line-height:32px;font-weight:600">Спасибо за обращение!</h2>
+        <p class="sm-intro">Запрос принят. С вами свяжутся в ближайшее время.</p>
         ${cf.timeOpen&&cf.date&&cf.slot?`<p class="sm-intro">Ваше пожелание по времени передано: ${new Date(cf.date+"T12:00").toLocaleDateString(scn.lang==="en"?"en-GB":"ru-RU",{day:"numeric",month:"long"})}, ${cf.slot} (${cf.tz}).</p>`:""}
         <div class="sm-acts one"><button class="sm-btn pri" type="button" data-close>Понятно</button></div>`;
       localizeCall();
