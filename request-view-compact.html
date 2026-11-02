@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
+<title>Экран заявки</title>
+<meta name="description" content="Кликабельный прототип экрана заявки: перевод свободных полей, роли, статусы, табы">
+<style>
+  /* Layout: тёмный ЛК заявки — крупная левая панель с секциями + правый сайдбар; сверху панель-харнесс прототипа */
+  :root{
+    color-scheme: dark;
+    --bg:#181C1F; --bg2:#181C1F;
+    --panel:rgba(255,255,255,.045); --panel-solid:#26292C;
+    --card:rgba(255,255,255,.045); --card2:rgba(255,255,255,.03);
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --text:#ffffff; --muted:#8A9092; --muted2:#6E767A;
+    --primary:#07BBB2; --primary-dim:rgba(7,187,178,.14);
+    --accent:#61C7D6;
+    --glass:rgba(24,28,31,.62);
+    --st-machine:#61C7D6; --st-edited:#E5B34A; --st-confirmed:#3FBF87;
+    --st-stale:#E5734F; --st-pending:#E5B34A;
+    --radius:16px;
+    --f: "Commissioner", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--f); color:var(--text);
+    background:
+      url("bg.webp") top center / cover no-repeat,
+      var(--bg);
+    background-attachment: fixed;
+    -webkit-font-smoothing:antialiased;
+    font-size:14px; line-height:1.45;
+  }
+  a{color:var(--primary); text-decoration:none}
+
+  /* ---------- харнесс прототипа ---------- */
+  .harness{
+    background:rgba(20,23,26,.94);
+    border-bottom:1px solid var(--line);
+    padding:10px clamp(16px,4vw,40px);
+  }
+  .harness-row{display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; max-width:1240px; margin:0 auto}
+  .harness .tag{font-size:10px; letter-spacing:.14em; font-weight:600; color:var(--primary);
+    border:1px solid rgba(7,187,178,.5); border-radius:5px; padding:3px 8px; text-transform:uppercase}
+  .ctl{display:flex; align-items:center; gap:9px; min-width:0}
+  .ctl > span.lbl{font-size:11px; color:var(--muted); letter-spacing:.04em; white-space:nowrap}
+  .seg{display:inline-flex; background:rgba(255,255,255,.05); border:1px solid var(--line);
+    border-radius:9px; padding:3px}
+  .seg button{appearance:none; border:0; background:transparent; color:var(--muted);
+    font-family:inherit; font-size:12.5px; font-weight:500; padding:6px 11px; border-radius:6px;
+    cursor:pointer; white-space:nowrap; transition:.12s}
+  .seg button:hover{color:#fff}
+  .seg button[aria-pressed="true"]{background:var(--primary); color:#04231f; font-weight:600}
+  .seg.is-off{opacity:.4; pointer-events:none}
+  .hint{font-size:11.5px; color:var(--muted2); flex:1 1 240px; min-width:0}
+  .hint b{color:var(--muted); font-weight:500}
+
+  /* тумблер «Показать англ. версию» — в строке заголовка справа */
+  .head-toggle{margin-left:auto}
+
+  .head-toggle:not([hidden]) ~ .dup-btn{margin-left:0}
+
+  @media (max-width:560px){ .head-toggle{margin-left:0} }
+  .switch{display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none}
+  .switch .sw-lbl{font-size:13px; font-weight:500; color:#dbeaec; white-space:nowrap}
+  .sw-box{position:relative; width:38px; height:22px; flex:none}
+  .sw-box input{position:absolute; opacity:0; width:0; height:0; margin:0}
+  .track{position:absolute; inset:0; border-radius:12px; background:rgba(255,255,255,.18); transition:.15s}
+  .knob{position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:.15s}
+  .sw-box input:checked ~ .track{background:var(--primary)}
+  .sw-box input:checked ~ .knob{transform:translateX(16px)}
+  .sw-box input:focus-visible ~ .track{outline:2px solid var(--accent); outline-offset:2px}
+  [hidden]{display:none!important}
+
+  /* ---------- контейнер контента ---------- */
+  .wrap{max-width:1240px; margin:0 auto; padding:0 clamp(16px,4vw,40px) 60px}
+
+  /* ---------- сетка контента ---------- */
+  .grid{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:22px; margin-top:22px; align-items:start}
+  @media (max-width:920px){ .grid{grid-template-columns:1fr} .side{position:static} }
+
+  .main-panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .section{padding:22px clamp(16px,2.4vw,26px)}
+  .section + .section{border-top:1px solid var(--line)}
+  .section h2{font-size:16px; font-weight:600; margin:0 0 14px; letter-spacing:-.2px}
+
+  .row{display:grid; grid-template-columns:minmax(150px,236px) minmax(0,1fr); gap:8px 22px;
+    padding:9px 0; align-items:start}
+  @media (max-width:560px){ .row{grid-template-columns:1fr; gap:2px} }
+  .row + .row{border-top:1px solid rgba(255,255,255,.045)}
+  .row.solo{grid-template-columns:minmax(0,1fr)}
+  .k{color:var(--muted); font-size:13px; padding-top:1px}
+  .v{font-size:13.5px; color:#eef4f5; min-width:0; word-wrap:break-word}
+  .v .file{color:var(--primary)}
+  .v .doc{color:#d5dee1}
+
+  /* free-text: consumer inline/hover controls */
+  .ft{position:relative}
+  .ft-main{display:flex; align-items:flex-start; gap:8px}
+  .ft-main .txt{min-width:0}
+  .globe{flex:none; margin-top:1px; width:24px;height:24px; display:grid;place-items:center;
+    border-radius:6px; border:1px solid var(--line); background:rgba(255,255,255,.03);
+    color:var(--accent); cursor:pointer; font-size:11px; font-weight:600; letter-spacing:.02em; transition:.12s}
+  .globe:hover{border-color:var(--accent); background:rgba(97,199,214,.12)}
+  .globe.chip{width:auto; padding:0 8px; height:22px; gap:5px}
+  .ft.hovermode .globe{opacity:0; transition:opacity .12s}
+  .ft.hovermode:hover .globe, .ft.hovermode .globe.is-open{opacity:1}
+  .other{margin-top:8px; border-left:2px solid var(--accent); background:rgba(97,199,214,.06);
+    padding:8px 12px; border-radius:0 8px 8px 0; font-size:13px; color:#dbeaec}
+  .other .o-lbl{display:block; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:3px}
+  .swapped-chip{display:inline-block; margin-left:8px; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--accent); border:1px solid rgba(97,199,214,.4); border-radius:4px; padding:1px 5px; vertical-align:2px}
+
+  /* инлайн-иконка перевода (文A) + тултип — как в макете */
+  .tr-icon{position:relative; flex:none; margin-top:-3px; width:26px; height:26px; padding:0;
+    display:grid; place-items:center; border:0; background:transparent; color:var(--muted);
+    border-radius:50%; cursor:pointer; transition:background .12s, color .12s, opacity .12s}
+  .tr-icon svg{width:16px; height:16px}
+  .tr-icon:hover{background:rgba(255,255,255,.10); color:#d4d9db}
+  .tr-icon.is-open{color:var(--accent)}
+  .ft.hovermode .tr-icon{opacity:0}
+  .ft.hovermode:hover .tr-icon, .ft.hovermode .tr-icon.is-open, .ft.hovermode .tr-icon:focus-visible{opacity:1}
+  .tr-icon .tip{position:absolute; bottom:calc(100% + 10px); right:-8px; z-index:25;
+    background:#2A2D30; border:1px solid rgba(255,255,255,.09); border-radius:10px;
+    padding:8px 11px; width:max-content; max-width:260px; text-align:left;
+    box-shadow:0 12px 28px -12px rgba(0,0,0,.65);
+    opacity:0; transform:translateY(4px); pointer-events:none; transition:opacity .14s ease, transform .14s ease}
+  .tr-icon .tip b{display:block; font-size:12.5px; font-weight:600; color:#fff; white-space:nowrap}
+  .tr-icon .tip i{display:block; font-size:11.5px; font-style:normal; color:var(--muted); margin-top:2px; white-space:nowrap}
+  .tr-icon .tip::after{content:""; position:absolute; top:100%; right:14px;
+    border:6px solid transparent; border-top-color:#2A2D30}
+  .tr-icon:hover .tip, .tr-icon:focus-visible .tip{opacity:1; transform:translateY(0)}
+
+  /* free-text: admin comparator */
+  .cmp{display:grid; gap:8px; background:rgba(255,255,255,.025); border:1px solid var(--line);
+    border-radius:10px; padding:11px 13px}
+  .cmp .pane{display:grid; grid-template-columns:96px minmax(0,1fr); gap:12px; align-items:start}
+  @media (max-width:560px){ .cmp .pane{grid-template-columns:1fr; gap:3px} }
+  .pane .p-lbl{font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); padding-top:3px}
+  .pane .p-txt{font-size:13.5px; color:#eef4f5; min-width:0}
+  .pane.src .p-txt{color:#cdd8db}
+  .cmp .divide{height:1px; background:var(--line)}
+  .badge{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600;
+    padding:2px 8px; border-radius:20px; vertical-align:1px}
+  .badge .bd{width:6px;height:6px;border-radius:50%}
+  .b-machine{color:var(--st-machine); background:rgba(97,199,214,.12)}
+  .b-machine .bd{background:var(--st-machine)}
+  .b-edited{color:var(--st-edited); background:rgba(229,179,74,.14)}
+  .b-edited .bd{background:var(--st-edited)}
+  .b-confirmed{color:var(--st-confirmed); background:rgba(63,191,135,.14)}
+  .b-confirmed .bd{background:var(--st-confirmed)}
+  .b-stale{color:var(--st-stale); background:rgba(229,115,79,.14)}
+  .b-stale .bd{background:var(--st-stale)}
+  .b-pending{color:var(--st-pending); background:rgba(229,179,74,.14)}
+  .b-pending .bd{background:var(--st-pending)}
+  .p-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .acts{display:flex; gap:8px; margin-top:2px; flex-wrap:wrap}
+  .btn{appearance:none;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;
+    border-radius:7px;padding:5px 11px;border:1px solid var(--line-strong);background:transparent;color:#dbe6e8;transition:.12s}
+  .btn:hover{border-color:var(--accent);color:#fff}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#04231f;font-weight:600}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .note{font-size:11.5px;color:var(--muted); display:flex; gap:6px; align-items:flex-start; margin-top:2px}
+  .note.warn{color:#f0b48f}
+  .edit-ta{width:100%;background:#0a1a22;border:1px solid var(--accent);border-radius:8px;color:#fff;
+    font-family:inherit;font-size:13.5px;padding:8px 10px;resize:vertical;min-height:58px}
+
+  /* skeleton загрузки перевода */
+  .skel{display:grid; gap:7px; padding:2px 0}
+  .skel .ln{height:12px; border-radius:6px;
+    background:linear-gradient(90deg, rgba(255,255,255,.05) 25%, rgba(255,255,255,.14) 37%, rgba(255,255,255,.05) 63%);
+    background-size:400% 100%; animation:shimmer 1.1s ease-in-out infinite}
+  .skel .ln.w80{width:80%} .skel .ln.w60{width:60%} .skel .ln.w50{width:50%} .skel .ln.w40{width:40%}
+  @keyframes shimmer{0%{background-position:100% 0} 100%{background-position:0 0}}
+  @media (prefers-reduced-motion:reduce){ .skel .ln{animation:none} }
+
+  /* ---------- сайдбар ---------- */
+  .side{display:grid; gap:16px; position:sticky; top:calc(var(--cb-h,200px) + 16px); align-self:start; z-index:20}
+  .scard{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px}
+  .scard h3{margin:0 0 14px; font-size:15px; font-weight:600}
+  .prog-num{font-size:13px;color:var(--muted)}
+  .prog-num b{color:#fff;font-size:15px}
+  .bar{height:7px;border-radius:6px;background:rgba(255,255,255,.1);margin:10px 0 4px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:60%;background:linear-gradient(90deg,var(--primary),var(--accent))}
+  .sinfo{font-size:12px;color:var(--muted);margin-top:12px}
+  .sinfo b{display:block;color:#fff;font-size:14px;font-weight:500;margin-top:2px}
+  .partner{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .partner:first-of-type{margin-top:0}
+  .partner .lg{width:32px;height:32px;border-radius:8px;background:#0e2028;display:grid;place-items:center;
+    font-size:10px;font-weight:700;color:var(--accent);flex:none}
+  .partner .pn{font-size:10.5px;color:var(--muted)}
+  .partner .pv{font-size:13px;color:#fff;font-weight:500}
+  .collapse{display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+    width:100%;background:transparent;border:0;padding:0;font-family:inherit;color:inherit;text-align:left}
+  .collapse .cv{color:var(--muted);transition:transform .18s ease}
+  .collapse[aria-expanded="true"] .cv{transform:rotate(180deg)}
+  .history{display:grid;gap:10px;margin-top:14px}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .hpill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#fff;
+    border:1px solid var(--line-strong);background:rgba(255,255,255,.04);padding:5px 12px;border-radius:20px}
+  .hdot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+  .htime{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+  /* ---------- меню переключения прототипов (общее для страниц) ---------- */
+  .proto-menu{position:relative; flex:none}
+  .pm-trigger{appearance:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-family:inherit; font-size:12.5px; font-weight:600; color:#fff;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:6px 11px}
+  .pm-trigger:hover{border-color:var(--line-strong)}
+  .pm-trigger:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .pm-chev{width:13px;height:13px;color:var(--muted); transition:transform .15s}
+  .pm-trigger[aria-expanded="true"] .pm-chev{transform:rotate(180deg)}
+  .pm-pop{position:absolute; top:calc(100% + 8px); left:0; z-index:60; min-width:270px;
+    background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px}
+  .pm-pop a{display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:8px; color:#fff; font-size:13px; font-weight:500}
+  .pm-pop a:hover{background:rgba(255,255,255,.06)}
+  .pm-pop a .pm-ic{width:16px;height:16px;color:var(--muted);flex:none;margin-top:1px}
+  .pm-pop a small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px;line-height:1.35}
+  .pm-pop a[aria-current="page"]{background:var(--primary-dim)}
+  .pm-pop a[aria-current="page"] .pm-ic{color:var(--primary)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="stylesheet" href="request-header.css">
+<link rel="stylesheet" href="compact-header.css">
+<script>window.REQUEST_FORM_URL="request-form-compact.html";</script>
+</head>
+<body>
+<!-- ============ ХАРНЕСС ПРОТОТИПА ============ -->
+<div class="harness">
+  <div class="harness-row">
+    <span class="tag">Прототип</span>
+
+    <!-- меню переключения фич -->
+    <div class="proto-menu" id="protoMenu">
+      <button class="pm-trigger" aria-haspopup="menu" aria-expanded="false">
+        <span class="pm-cur">Компактная шапка заявки</span>
+        <svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="pm-pop" role="menu" hidden>
+        <a role="menuitem" href="index.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 12h14M5 16h9"/><path d="M15.5 4.5l4 4"/></svg>
+          <span>Экран заявки<small>Перевод полей, роли, статусы, табы</small></span>
+        </a>
+        <a role="menuitem" href="related-requests.html" hidden style="display:none">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+          <span>Связанные заявки<small>Свёртка длинного списка в ячейке таблицы</small></span>
+        </a>
+        <a role="menuitem" href="request-groups.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>
+          <span>Группа заявок<small>Создание, копирование заявки и группы, единая отправка (#215)</small></span>
+        </a>
+        <a role="menuitem" href="request-candidates.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><rect x="15" y="5" width="7" height="9" rx="1.5"/></svg>
+          <span>Кандидаты заявки<small>Лист карточек · превью: 4 вкладки карточки кандидата</small></span>
+        </a>
+        <a role="menuitem" href="candidate-import.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5L12 11l2.5 2.5"/></svg>
+          <span>Импорт кандидатов<small>Из файла: сопоставление колонок, результат, разбор записей (T-65)</small></span>
+        </a>
+        <a role="menuitem" href="request-form.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M14 17.5l1.5 1.5 3-3"/></svg>
+          <span>Целевая форма заявки<small>Создание заявки · черновик при первом вводе</small></span>
+        </a>
+        <a role="menuitem" href="request-form-compact.html" aria-current="page">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M12 13v4M10 15l2 2 2-2"/></svg>
+          <span>Компактная шапка заявки<small>docs#326 · создание, черновик и просмотр: закреплённая панель</small></span>
+        </a>
+        <a role="menuitem" href="requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>
+          <span>Список заявок<small>Статусы со счётчиками · черновики: дублировать, удалить</small></span>
+        </a>
+        <a role="menuitem" href="notifications.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
+          <span>Колокольчик уведомлений<small>Панель in-app уведомлений U1, U3–U7 · счётчики, состояния (docs#59)</small></span>
+        </a>
+        <a role="menuitem" href="services.html#support">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8"/><path d="M12 17h.01"/></svg>
+          <span>Связаться с техподдержкой<small>Меню «?»: копирование почты и телефона · «Написать в поддержку» (docs#196) · «Запросить звонок» (docs#320)</small></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="ctl"><span class="lbl">Экран</span><div class="seg" role="group" aria-label="Экран"><button aria-pressed="false" onclick="location.href='request-form-compact.html'">Создание</button><button aria-pressed="true" onclick="location.href='request-view-compact.html'">Просмотр</button></div></div>
+    <div class="ctl"><span class="lbl">Проверка</span><div class="seg"><button type="button" id="chStress" aria-pressed="false">Длинное название, 2 статуса, 2 действия</button></div></div>
+    <div class="ctl"><a href="index.html">Как было ↗</a></div>
+    <div class="ctl">
+      <span class="lbl">Роль / ЛК</span>
+      <div class="seg" id="roleSeg" role="group" aria-label="Роль">
+        <button data-role="client" aria-pressed="true">Клиент · RU</button>
+        <button data-role="admin" aria-pressed="false">Админ РРУ</button>
+        <button data-role="provider" aria-pressed="false">Провайдер · EN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ШАПКА ЗАЯВКИ — общая для Обзор · Кандидаты · Услуги · Документы (request-header.css/.js) ============ -->
+<nav class="topnav">
+  <div class="rh-nav">
+    <div class="rh-links">
+      <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i="nav_home">Главная</span></a>
+      <a href="requests.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v13H8l-4 3z"/></svg><span data-i="nav_req">Заявки</span></a>
+    </div>
+    <div class="help" id="supMenu">
+      <button class="help-btn" type="button" aria-label="Помощь" aria-haspopup="true" aria-expanded="false" aria-controls="supPop">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.725 17.3323C12.9135 17.1434 13.0077 16.9145 13.0077 16.6455C13.0077 16.3767 12.9133 16.148 12.7245 15.9595C12.5357 15.7712 12.3068 15.677 12.038 15.677C11.7692 15.677 11.5405 15.7714 11.352 15.9603C11.1635 16.1491 11.0692 16.3779 11.0692 16.6467C11.0692 16.9156 11.1637 17.1443 11.3525 17.3327C11.5413 17.5211 11.7702 17.6152 12.039 17.6152C12.3078 17.6152 12.5365 17.5209 12.725 17.3323ZM11.3308 14.0595H12.7135C12.7263 13.5007 12.7901 13.1032 12.9048 12.8672C13.0196 12.6314 13.2468 12.3456 13.5865 12.0098C14.1763 11.4366 14.5757 10.9596 14.7845 10.5788C14.9935 10.1981 15.098 9.7875 15.098 9.347C15.098 8.50283 14.8179 7.80125 14.2577 7.24225C13.6974 6.68342 12.9782 6.404 12.1 6.404C11.3653 6.404 10.708 6.60175 10.128 6.99725C9.54783 7.39275 9.13275 7.92575 8.88275 8.59625L10.1422 9.1365C10.3308 8.63783 10.5891 8.27692 10.9172 8.05375C11.2454 7.83075 11.6166 7.71925 12.0308 7.71925C12.5551 7.71925 12.9753 7.86858 13.2913 8.16725C13.6074 8.46608 13.7655 8.85133 13.7655 9.323C13.7655 9.71283 13.6395 10.0529 13.3875 10.3432C13.1357 10.6336 12.8514 10.9268 12.5348 11.223C12.0282 11.6987 11.701 12.117 11.553 12.478C11.4048 12.8388 11.3308 13.366 11.3308 14.0595ZM12.0018 21.1C10.7544 21.1 9.57767 20.8632 8.4715 20.3895C7.36533 19.9158 6.39717 19.2641 5.567 18.4343C4.73683 17.6044 4.08475 16.6367 3.61075 15.531C3.13692 14.4253 2.9 13.2489 2.9 12.0018C2.9 10.7378 3.13683 9.55683 3.6105 8.459C4.08417 7.36117 4.73592 6.39717 5.56575 5.567C6.39558 4.73683 7.36333 4.08475 8.469 3.61075C9.57467 3.13692 10.7511 2.9 11.9983 2.9C13.2623 2.9 14.4432 3.13683 15.541 3.6105C16.6388 4.08417 17.6028 4.73592 18.433 5.56575C19.2632 6.39558 19.9153 7.35917 20.3893 8.4565C20.8631 9.55383 21.1 10.7344 21.1 11.9983C21.1 13.2456 20.8632 14.4223 20.3895 15.5285C19.9158 16.6347 19.2641 17.6028 18.4343 18.433C17.6044 19.2632 16.6408 19.9153 15.5435 20.3893C14.4462 20.8631 13.2656 21.1 12.0018 21.1ZM12 19.8C14.1667 19.8 16.0083 19.0417 17.525 17.525C19.0417 16.0083 19.8 14.1667 19.8 12C19.8 9.83333 19.0417 7.99167 17.525 6.475C16.0083 4.95833 14.1667 4.2 12 4.2C9.83333 4.2 7.99167 4.95833 6.475 6.475C4.95833 7.99167 4.2 9.83333 4.2 12C4.2 14.1667 4.95833 16.0083 6.475 17.525C7.99167 19.0417 9.83333 19.8 12 19.8Z"/></svg>
+      </button>
+      <div class="sup-pop" id="supPop" role="group" aria-labelledby="supLabel" hidden></div>
+    </div>
+    <div class="rh-who">
+      <div class="txt"><div class="nm" id="whoName">ИП Гаврилова</div><div class="rl" id="whoRole">Клиент в РФ</div></div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>
+</nav>
+<header class="lk-header">
+  <div class="lk-header-in">
+    <div class="rh-crumbs"><a href="requests.html" data-i="nav_req">Заявки</a><span class="sep">/</span><b data-i="req_title">Электросварщик ручной сварки</b></div>
+    <div class="rh-head">
+      <a class="ch-back" href="requests.html" aria-label="Вернуться к заявкам"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></a>
+      <h1 data-i="req_title">Электросварщик ручной сварки</h1>
+      <span class="rh-status"><span class="rh-dot"></span><span data-i="status">В работе</span></span>
+      <label class="switch head-toggle" id="headToggleWrap" hidden>
+        <span class="sw-lbl" id="headerToggleLbl">Показать англ. версию</span>
+        <span class="sw-box"><input type="checkbox" id="headerToggle"><span class="track"></span><span class="knob"></span></span>
+      </label>
+      <button type="button" class="dup-btn" id="dupBtn" aria-label="Дублировать заявку">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+        <span class="lbl">Дублировать</span>
+        <span class="dup-tip" role="tooltip">Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small></span>
+      </button>
+    </div>
+    <div class="rh-meta">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg><span data-i="m_grade">Разряд: 5-й</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.3c1.6.6 2.7 2.2 3 4.7"/></svg><span data-i="m_count">Количество: 25 чел.</span></span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-i="m_city">Москва</span></span>
+    </div>
+    <nav class="rh-tabs" aria-label="Разделы заявки">
+      <a href="request-view-compact.html" data-i="tab_overview" aria-current="page">Обзор</a>
+      <a href="request-candidates-compact.html" data-i="tab_cand">Кандидаты</a>
+      <a href="services-compact.html" data-i="tab_serv">Услуги</a>
+      <a href="documents-compact.html" data-i="tab_docs">Документы</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="main-panel" id="panel"></div>
+
+    <aside class="side">
+      <div class="scard">
+        <h3 data-i="s_progress">Прогресс найма</h3>
+        <div class="prog-num" data-i="s_hired">Нанято кандидатов</div>
+        <div class="prog-num"><b>15</b> / 25</div>
+        <div class="bar"><i></i></div>
+        <div class="sinfo"><span data-i="s_date">Дата выхода на работу</span><b>01.04.2026</b></div>
+      </div>
+      <div class="scard">
+        <h3 data-i="s_partners">Партнёры</h3>
+        <div class="partner"><div class="lg">DE</div><div><div class="pn" data-i="s_employer">Работодатель</div><div class="pv">Demo Customer LLC</div></div></div>
+        <div class="partner"><div class="lg">OO</div><div><div class="pn" data-i="s_prf">Партнёр в РФ</div><div class="pv">ООО Ромашка</div></div></div>
+        <div class="partner"><div class="lg">RE</div><div><div class="pn" data-i="s_pin">Партнёр в Индии</div><div class="pv">Reliance Inc.</div></div></div>
+      </div>
+      <div class="scard">
+        <button class="collapse" id="historyToggle" type="button" aria-expanded="false" aria-controls="historyBody">
+          <h3 style="margin:0" data-i="s_history">История статусов</h3><span class="cv">⌄</span>
+        </button>
+        <div class="history" id="historyBody" hidden>
+          <div class="hrow"><span class="hpill"><span class="hdot"></span><span data-i="st_new">Новая</span></span><span class="htime">07.10.2026, 11:57:01</span></div>
+          <div class="hrow"><span class="hpill"><span class="hdot"></span><span data-i="status">В работе</span></span><span class="htime">07.10.2026, 11:58:39</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ---------------- i18n для «хрома» экрана ---------------- */
+const I = {
+  nav_home:["Главная","Home"], nav_req:["Заявки","Requests"],
+  req_title:["Электросварщик ручной сварки","Manual arc welder"],
+  status:["В работе","In progress"],
+  m_grade:["Разряд: 5-й","Grade: 5"], m_count:["Количество: 25 чел.","Headcount: 25"], m_city:["Москва","Moscow"],
+  tab_overview:["Обзор","Overview"], tab_cand:["Кандидаты","Candidates"], tab_serv:["Услуги","Services"], tab_docs:["Документы","Documents"],
+  s_progress:["Прогресс найма","Hiring progress"], s_hired:["Нанято кандидатов","Candidates hired"],
+  s_date:["Дата выхода на работу","Start date"], s_partners:["Партнёры","Partners"],
+  s_employer:["Работодатель","Employer"], s_prf:["Партнёр в РФ","Partner in Russia"], s_pin:["Партнёр в Индии","Partner in India"],
+  s_history:["История статусов","Status history"],
+  st_new:["Новая","New"],
+};
+
+/* ---------------- Данные заявки ----------------
+   ft:true  → свободнотекстовое поле (участвует в фиче перевода)
+   src      → язык источника ('ru' у полей заявки, 'en' у полей профиля)
+   status   → machine | edited | confirmed | stale
+   confirm  → поле требует подтверждения значения (профиль кандидата)
+------------------------------------------------- */
+const SECTIONS = [
+  { t:["Способ привлечения и квота","Recruitment method & quota"], rows:[
+    { k:["Какие специалисты нужны?","Specialists needed"], v:["Квотируемые специалисты","Quota-based specialists"] },
+    { k:["У компании есть согласованная квота","Company has an approved quota"], v:["Да","Yes"] },
+    { k:["Приказ с согласованной квотой","Quota approval order"], file:"Приказ_о_квоте.pdf", open:["Открыть","Open"] },
+  ]},
+  { t:["Потребность в специалистах","Staffing need"], rows:[
+    { k:["Профессия","Profession"], v:["Электросварщик ручной сварки (105558)","Manual arc welder (105558)"] },
+    { k:["Занятие","Occupation"], v:["Сварщики и газорезчики (7212)","Welders and gas cutters (7212)"] },
+    { id:"grade", ft:true, src:"ru", status:"machine",
+      k:["Грейд (разряд)","Grade"], v:{ru:"От 5 разряда и выше",en:"Grade 5 and above"} },
+    { k:["Регион работы","Work region"], v:["Москва","Moscow"] },
+    { k:["Адрес работы","Work address"], v:["Москва, Пресненская набережная, 4","Moscow, Presnenskaya Naberezhnaya, 4"] },
+    { k:["Количество специалистов","Number of specialists"], v:["100","100"] },
+    { id:"term", ft:true, src:"ru", status:"confirmed",
+      k:["Срок привлечения (другой)","Engagement term (other)"], v:{ru:"2 года с возможностью продления",en:"2 years, extendable"} },
+  ]},
+  { t:["Условия оплаты","Compensation"], rows:[
+    { k:["Заработная плата (до вычета НДФЛ)","Salary (before tax)"], v:["150 000 ₽ / мес.","RUB 150,000 / mo"] },
+    { k:["Планируемая дата выхода на работу","Planned start date"], v:["01.04.2026","01.04.2026"] },
+    { k:["Предусмотрен испытательный срок","Probation period"], v:["Да","Yes"] },
+    { k:["Зарплата на испытательном сроке","Salary during probation"], v:["120 000 ₽ / мес.","RUB 120,000 / mo"] },
+  ]},
+  { t:["Бытовые условия и логистика","Living conditions & logistics"], rows:[
+    { k:["Проживание сотрудников","Accommodation"], v:["Общежитие","Dormitory"] },
+    { id:"accom", ft:true, src:"ru", status:"machine",
+      k:["Свой вариант проживания","Accommodation (other)"],
+      v:{ru:"Общежитие рядом с работой, двухместные комнаты, общий санузел",
+         en:"Dormitory near the work site, double rooms, shared bathroom"} },
+    { k:["Компания организует питание","Company arranges meals"], v:["Другое","Other"] },
+    { id:"meal", ft:true, src:"ru", status:"edited",
+      k:["Свой вариант питания","Meals (other)"],
+      v:{ru:"Компенсация 20 000 ₽ в месяц зачисляется на баланс сотрудника, тратить можно только в корпоративной столовой",
+         en:"RUB 20,000/month is credited to the employee's balance and can be spent only in the corporate canteen"} },
+    { id:"transport", ft:true, src:"ru", status:"machine",
+      k:["Свой вариант логистики","Transport (other)"],
+      v:{ru:"Компания предоставляет служебный транспорт до места работы",
+         en:"The company provides shuttle transport to the work site"} },
+  ]},
+  { t:["Организация работ и медицина","Work organization & medical"], rows:[
+    { k:["Нужен бригадир","Foreman required"], v:["Да","Yes"] },
+    { k:["Сотрудников на одного бригадира","Employees per foreman"], v:["15","15"] },
+    { k:["Как будет выбран бригадир","How the foreman is chosen"], v:["Назначим одного из сотрудников","We will appoint one of the employees"] },
+    { id:"med", ft:true, src:"ru", status:"machine",
+      k:["Расширенный медосмотр","Extended medical examination"],
+      v:{ru:"Психиатр, нарколог, флюорография",en:"Psychiatrist, narcologist, fluorography"} },
+  ]},
+  { t:["Дополнительные услуги","Additional services"], rows:[
+    { k:["Нужна помощь с покупкой билетов","Help with ticket purchase"], v:["Да","Yes"] },
+    { k:["Помощь со встречей в аэропорту","Help meeting at the airport"], v:["Другое","Other"] },
+    { id:"meet", ft:true, src:"ru", status:"machine",
+      k:["Свой вариант встречи","Meeting (other)"],
+      v:{ru:"Встреча в аэропорту с табличкой, трансфер до общежития",
+         en:"Airport pickup with a name sign, transfer to the dormitory"} },
+    { k:["Нужен переводчик","Interpreter needed"], v:["Да, на период адаптации","Yes, for the adaptation period"] },
+  ]},
+  { t:["Профиль вакансии и кандидата","Vacancy & candidate profile"], rows:[
+    { k:["Пол специалистов","Specialists’ gender"], v:["Мужской","Male"] },
+    { k:["Возраст от, лет","Age from, years"], v:["25","25"] },
+    { k:["Возраст до, лет","Age to, years"], v:["40","40"] },
+    { id:"duties", ft:true, src:"en", status:"confirmed",
+      k:["Должностные обязанности","Job responsibilities"],
+      v:{en:"Welding of especially complex structures operated in extreme conditions (gas and oil pipelines, aircraft assemblies)",
+         ru:"Сварка особо сложных конструкций, эксплуатируемых в экстремальных условиях (газо- и нефтепроводы, узлы летательных аппаратов)"} },
+    { id:"reqs", ft:true, src:"en", status:"edited",
+      k:["Требования к специалисту","Specialist requirements"],
+      v:{en:"Experience with dissimilar metals, clearance for work at height",
+         ru:"Опыт работы с разнородными металлами, допуск к работе на высоте"} },
+    { k:["Формат собеседования","Interview format"], v:["Онлайн","Online"] },
+  ]},
+  { t:["График и переработки","Schedule & overtime"], rows:[
+    { k:["Режим работы","Work mode"], v:["Сменный график","Shift schedule"] },
+    { id:"schedule", ft:true, src:"en", status:"machine", confirm:true,
+      k:["Детали режима работы","Work schedule details"],
+      v:{en:"12-hour shifts, 2/2 rotation",ru:"Смены по 12 часов, чередование 2/2"} },
+    { k:["Планируются ли переработки","Overtime expected"], v:["Да","Yes"] },
+    { k:["Оплата переработок","Overtime payment"], v:["Фиксированная оплата","Fixed rate"] },
+    { k:["Как рассчитывается оплата","How it is calculated"], v:["Почасово","Hourly"] },
+    { id:"overtime", ft:true, src:"en", status:"machine", confirm:true,
+      k:["Детали оплаты переработок","Overtime payment details"],
+      v:{en:"RUB 2,000/hour, no more than once a month, up to 2 hours",
+         ru:"2000 ₽ / час, не чаще одного раза в месяц, не более 2 часов"} },
+  ]},
+  /* общее поле заявки вне тематических блоков — последняя секция, значение без повторной подписи (docs#314) */
+  { t:["Дополнительная информация","Additional information"], rows:[
+    { id:"addinfo", ft:true, src:"ru", solo:true,
+      k:["Дополнительная информация","Additional information"],
+      v:{ru:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
+         en:"Arrival route: Bangalore – Krasnodar – Saint Petersburg"} },
+  ]},
+];
+
+/* ---------------- Состояние ---------------- */
+let role = "client";           // client | admin | provider
+let pattern = "inline";        // header | inline | hover
+let headerShowOther = false;
+let loading = false;            // идёт «подгрузка перевода» → скелетоны
+let loadTimer = null;
+const openSet = new Set();      // раскрытые поля (inline/hover)
+const editing = new Set();      // поля в режиме правки (admin)
+
+const STATUS = {
+  machine:  ["Машинный","Machine"],
+  edited:   ["Отредактирован","Edited"],
+  confirmed:["Подтверждён","Confirmed"],
+  stale:    ["Устарел","Outdated"],
+};
+const esc = s => (s+"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+function langOf(r){ return r==="provider" ? "en" : "ru"; }
+function otherLang(l){ return l==="ru" ? "en" : "ru"; }
+function findRow(id){ for(const s of SECTIONS) for(const r of s.rows) if(r.id===id) return r; }
+
+/* ---------------- Рендер ---------------- */
+function render(){
+  document.documentElement.lang = role==="provider" ? "en" : "ru";
+  const vl = langOf(role);
+
+  // «хром»
+  document.querySelectorAll("[data-i]").forEach(el=>{ const t=I[el.dataset.i]; if(t) el.textContent = t[vl==="en"?1:0]; });
+  document.getElementById("whoName").textContent = ({client:"ИП Гаврилова",admin:"А. Смирнов",provider:"R. Sharma"})[role];
+  document.getElementById("whoRole").textContent = ({client:"Клиент в РФ",admin:"Администратор РРУ",provider:"Provider · Candidates"})[role];
+
+  // роль / паттерн переключатели
+  document.querySelectorAll("#roleSeg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.role===role));
+  document.querySelectorAll("#patternSeg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.pat===pattern));
+  const isConsumer = role!=="admin";
+
+  // тумблер языка в строке заголовка (только header-паттерн у потребителя)
+  // «Дублировать» — клиенту и администратору; у провайдера нет права создавать заявки
+  document.getElementById("dupBtn").hidden = role==="provider";
+  const tw = document.getElementById("headToggleWrap");
+  const showToggle = isConsumer && pattern==="header";
+  tw.hidden = !showToggle;
+  if(showToggle){
+    document.getElementById("headerToggleLbl").textContent =
+      role==="client" ? "Показать англ. версию" : "Показать ориг. (RU)";
+    document.getElementById("headerToggle").checked = headerShowOther;
+  }
+
+  // панель секций
+  document.getElementById("panel").innerHTML = SECTIONS.map(renderSection).join("");
+  bind();
+  setHarnessH();
+}
+
+function renderSection(s){
+  const vl = langOf(role);
+  const rows = s.rows.map(renderRow).join("");
+  return `<div class="section"><h2>${esc(s.t[vl==="en"?1:0])}</h2>${rows}</div>`;
+}
+
+function renderRow(r){
+  const vl = langOf(role);
+  const label = esc((r.k)[vl==="en"?1:0]);
+  let val;
+  if(r.file){
+    val = `<span class="v"><span class="doc">${esc(r.file)}</span> · <a class="file" href="#" onclick="return false">${esc(r.open[vl==="en"?1:0])}</a></span>`;
+  } else if(r.ft){
+    val = loading ? renderSkeleton(r) : (role==="admin" ? renderAdmin(r) : renderConsumer(r));
+  } else {
+    val = `<span class="v">${esc(r.v[vl==="en"?1:0])}</span>`;
+  }
+  if(r.solo) return `<div class="row solo"><div class="v-wrap">${val}</div></div>`;
+  return `<div class="row"><div class="k">${label}</div><div class="v-wrap">${val}</div></div>`;
+}
+
+/* скелетон «перевод подгружается» для свободного поля */
+function renderSkeleton(r){
+  if(role==="admin"){
+    const src=r.src, tgt=otherLang(src);
+    const srcLbl = src==="ru" ? "Оригинал · RU" : "Оригинал · EN";
+    const tgtLbl = tgt==="en" ? "Перевод · EN (для провайдера)" : "Перевод · RU (для клиента)";
+    return `<div class="cmp">
+      <div class="pane src"><div class="p-lbl">${srcLbl}</div><div class="skel"><span class="ln w80"></span></div></div>
+      <div class="divide"></div>
+      <div class="pane"><div class="p-lbl">${tgtLbl}</div><div class="skel"><span class="ln w80"></span><span class="ln w50"></span></div></div>
+    </div>`;
+  }
+  return `<div class="skel"><span class="ln w80"></span><span class="ln w50"></span></div>`;
+}
+
+/* потребитель: header / inline / hover */
+function renderConsumer(r){
+  const vl = langOf(role);
+  const ol = otherLang(vl);
+  const primaryText = r.v[vl];
+
+  // header-паттерн: глобальный тумблер меняет отображаемый текст
+  if(pattern==="header"){
+    if(headerShowOther){
+      const chip = ol==="en" ? "перевод · EN" : "оригинал · RU";
+      return `<span class="v">${esc(r.v[ol])}<span class="swapped-chip">${chip}</span></span>`;
+    }
+    return `<span class="v">${esc(primaryText)}</span>`;
+  }
+
+  // inline / hover: иконка перевода на КАЖДОМ свободном поле — одинаково у клиента и провайдера
+  const open = openSet.has(r.id);
+  const isTranslated = r.src !== vl;        // зритель читает перевод (true) или свой оригинал (false)
+  const otherLbl = ol.toUpperCase(), srcLbl = r.src.toUpperCase();
+  const cls = pattern==="hover" ? "ft hovermode" : "ft";
+
+  let tipTitle, tipSub, boxLbl, boxText, aria;
+  if(isTranslated){                          // поле переведено для зрителя → можно открыть оригinal
+    tipTitle = "Переведено с помощью ИИ";
+    tipSub   = open ? "Нажмите, чтобы скрыть оригинал" : "Нажмите, чтобы показать оригинал";
+    boxLbl   = "Оригинал · " + srcLbl;  boxText = r.v[r.src];  aria = "Переведено ИИ — показать оригинал";
+  } else {                                   // зритель видит свой оригинал → можно открыть перевод (что видит другая сторона)
+    tipTitle = "Перевод · " + otherLbl;
+    tipSub   = open ? "Нажмите, чтобы скрыть перевод" : "Нажмите, чтобы показать перевод";
+    boxLbl   = "Перевод · " + otherLbl;  boxText = r.v[ol];  aria = "Показать перевод";
+  }
+  const otherBox = open
+    ? `<div class="other"><span class="o-lbl">${boxLbl}</span>${esc(boxText)}</div>` : "";
+  return `<div class="${cls}">
+     <div class="ft-main">
+       <span class="v txt">${esc(primaryText)}</span>
+       <button class="tr-icon${open?" is-open":""}" data-toggle="${r.id}" aria-expanded="${open}" aria-label="${aria}">
+         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+         <span class="tip" role="tooltip"><b>${tipTitle}</b><i>${tipSub}</i></span>
+       </button>
+     </div>${otherBox}</div>`;
+}
+
+/* админ РРУ: просмотр оригинала и перевода рядом (только чтение — по требованиям) */
+function renderAdmin(r){
+  const src = r.src;                 // язык источника
+  const tgt = otherLang(src);        // язык перевода
+  const srcLbl = src==="ru" ? "Оригинал · RU" : "Оригинал · EN";
+  const tgtLbl = tgt==="en" ? "Перевод · EN (для провайдера)" : "Перевод · RU (для клиента)";
+
+  return `<div class="cmp">
+    <div class="pane src"><div class="p-lbl">${esc(srcLbl)}</div><div class="p-txt">${esc(r.v[src])}</div></div>
+    <div class="divide"></div>
+    <div class="pane"><div class="p-lbl">${esc(tgtLbl)}</div><div class="p-txt">${esc(r.v[tgt])}</div></div>
+  </div>`;
+}
+
+/* ---------------- События ---------------- */
+function bind(){
+  document.querySelectorAll("[data-toggle]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.toggle; openSet.has(id)?openSet.delete(id):openSet.add(id); render();
+  });
+  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{ editing.add(b.dataset.edit); render(); });
+  document.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=()=>{ editing.delete(b.dataset.cancel); render(); });
+  document.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.save, r=findRow(id), tgt=otherLang(r.src);
+    const ta=document.getElementById("ta-"+id); if(ta) r.v[tgt]=ta.value;
+    r.status="edited"; editing.delete(id); render();
+  });
+  document.querySelectorAll("[data-confirm]").forEach(b=>b.onclick=()=>{ findRow(b.dataset.confirm).status="confirmed"; render(); });
+  document.querySelectorAll("[data-retrans]").forEach(b=>b.onclick=()=>{ findRow(b.dataset.retrans).status="machine"; render(); });
+}
+
+/* при клике на свитчер — скелетон свободных полей на 1 секунду, затем результат */
+function triggerLoad(){
+  loading = true; render();
+  if(loadTimer) clearTimeout(loadTimer);
+  loadTimer = setTimeout(()=>{ loading = false; render(); }, 1000);
+}
+
+document.querySelectorAll("#roleSeg button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.role===role) return;
+  role=b.dataset.role; headerShowOther=false; openSet.clear(); editing.clear(); triggerLoad();
+});
+document.querySelectorAll("#patternSeg button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.pat===pattern) return;
+  pattern=b.dataset.pat; openSet.clear(); triggerLoad();
+});
+document.getElementById("headerToggle").onchange=e=>{ headerShowOther=e.target.checked; triggerLoad(); };
+
+/* высота залипающей панели-харнесса → под неё уходит шапка ЛК */
+function setHarnessH(){
+  const topnav = document.querySelector(".topnav").offsetHeight;
+  const lk = document.documentElement.classList.contains("rh-pin") ? document.querySelector(".lk-header").offsetHeight : 0;   // шапка не закреплена — липкие колонки встают под навигацию
+  document.documentElement.style.setProperty("--topnav-h", topnav + "px");
+  document.documentElement.style.setProperty("--stack-h", (topnav + lk) + "px");
+}
+window.addEventListener("resize", setHarnessH);
+
+/* стекло + тень у шапки только когда она закрепилась (плашка «Прототип» ушла вверх) */
+function onScroll(){
+  const h = document.querySelector(".harness").offsetHeight;
+  document.body.classList.toggle("scrolled", window.scrollY > h - 2);
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+window.addEventListener("resize", onScroll);
+
+/* раскрытие «Истории статусов» */
+(function(){
+  const ht = document.getElementById("historyToggle");
+  if(!ht) return;
+  ht.addEventListener("click", ()=>{
+    const body = document.getElementById("historyBody");
+    body.hidden = !body.hidden;
+    ht.setAttribute("aria-expanded", String(!body.hidden));
+    setHarnessH();
+  });
+})();
+
+/* меню переключения прототипов */
+(function(){
+  const pm=document.getElementById("protoMenu"); if(!pm) return;
+  const trig=pm.querySelector(".pm-trigger"), pop=pm.querySelector(".pm-pop");
+  const close=()=>{ pop.hidden=true; trig.setAttribute("aria-expanded","false"); };
+  const open=()=>{ pop.hidden=false; trig.setAttribute("aria-expanded","true"); };
+  trig.addEventListener("click", e=>{ e.stopPropagation(); pop.hidden?open():close(); });
+  document.addEventListener("click", e=>{ if(!pm.contains(e.target)) close(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") close(); });
+})();
+
+render();
+setHarnessH();
+onScroll();
+</script>
+<script src="request-header.js"></script>
+<script src="compact-header.js"></script>
+</body>
+</html>

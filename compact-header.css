@@ -1,0 +1,112 @@
+/* Компактная шапка заявки (docs#326) — только для страниц *-compact.html.
+   Единое правило для создания/черновика и просмотра:
+   · навигация ЛК и шапка заявки идут в потоке страницы и уезжают вместе с ней — контент не сдвигается;
+   · когда шапка заявки ушла с экрана, сверху выезжает закреплённая панель .chb постоянной высоты;
+   · якоря, фокус и липкие колонки считают отступ от --cb-h (см. compact-header.js). */
+html{scroll-padding-top:calc(var(--cb-h,56px) + 16px)}
+.tf-sec{scroll-margin-top:0!important}   /* отступ уже задан scroll-padding-top, иначе он суммируется */
+
+/* ---------- шапка в потоке ---------- */
+.topnav{position:relative!important}
+body.scrolled .topnav{background:transparent!important; border-bottom-color:transparent!important; -webkit-backdrop-filter:none!important; backdrop-filter:none!important}
+.lk-header{position:relative!important; top:auto!important; background:transparent!important; box-shadow:none!important; -webkit-backdrop-filter:none!important; backdrop-filter:none!important}
+.lk-header-in{padding-top:12px!important; padding-bottom:12px!important}
+.lk-header .rh-crumbs,.lk-header .tf-crumbs{display:none}   /* путь дублирует «Назад» */
+
+.ch-back{appearance:none; flex:none; display:inline-grid; place-items:center; width:32px; height:32px; padding:0; border:0; border-radius:50%;
+  background:rgba(255,255,255,.10); color:#fff; cursor:pointer}
+.ch-back:hover{background:rgba(255,255,255,.15)}
+.ch-back svg{width:16px; height:16px}
+.lk-header .tf-back{width:32px!important; height:32px!important}
+.lk-header .tf-back svg{width:16px; height:16px}
+
+.tf-title,.rh-head{flex-wrap:nowrap!important; gap:12px!important}
+.tf-title h1,.rh-head h1{flex:0 1 auto; min-width:0; margin:0; font-size:22px!important; line-height:32px!important; letter-spacing:-.3px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-wrap:nowrap}
+.tf-title h1:focus-visible,.rh-head h1:focus-visible,.cb-title:focus-visible{outline-offset:-2px}
+.tf-title .tf-chip,.tf-title .rc-ref,.rh-head .rh-status,.rh-head .head-toggle,.rh-head .ch-extra,.tf-title .ch-extra{flex:none}
+.tf-title .dup-btn,.rh-head .dup-btn{flex:none; margin-left:auto}
+.dup-btn + .ch-extra-act,.ch-extra-act{margin-left:0!important}
+.tf-meta,.tf-sub{margin:2px 0 0 44px!important; line-height:20px}
+.rh-meta{margin:2px 0 0 44px!important; line-height:20px}
+.rh-tabs{margin-top:10px!important}
+
+/* ---------- закреплённая панель ---------- */
+.chb{position:fixed; top:0; left:0; right:0; z-index:38; padding-top:env(safe-area-inset-top,0px);
+  background:rgba(24,28,31,.86); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+  border-bottom:1px solid var(--line,rgba(255,255,255,.08)); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
+  transform:translateY(-100%); visibility:hidden; transition:transform .2s ease, visibility .2s}
+.chb.on{transform:none; visibility:visible}
+.cb-in{box-sizing:border-box; min-height:56px; margin:0 auto; padding:8px clamp(16px,4vw,40px);
+  display:grid; grid-template-columns:32px minmax(80px,1fr) auto auto; align-items:center; gap:6px 12px}
+.cb-title{min-width:0; font-size:16px; line-height:24px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.cb-sub{min-width:0; display:flex; align-items:center; gap:12px}
+.cb-info{min-width:0; display:flex; align-items:center; gap:12px; white-space:nowrap; font-size:13px; line-height:20px; color:var(--muted,#8A9092)}
+.cb-info .tf-chip,.cb-info .rh-status,.cb-info .rc-ref{flex:none; margin:0}
+.cb-info .tf-meta{margin:0!important; flex-wrap:nowrap; font-size:13px}
+.chb .m-del,.chb .m-del + .bul{display:none}   /* срок удаления остаётся в полной шапке */
+.chb .rh-status{padding:2px 11px; font-size:13px}
+.cb-acts{display:flex; align-items:center; gap:8px}
+.cb-acts .dup-btn{margin:0}
+.cb-send{height:32px!important; min-height:32px; padding:0 16px!important; font-size:14px; white-space:nowrap}
+.cb-send svg{display:none; width:16px; height:16px}
+.cb-tabs{display:flex; align-items:center; gap:2px; overflow-x:auto; scrollbar-width:none}
+.cb-tabs::-webkit-scrollbar{display:none}
+.cb-tabs a{flex:none; padding:5px 10px; border-radius:32px; font-size:13px; line-height:20px; font-weight:500; color:var(--muted,#8A9092); text-decoration:none}
+.cb-tabs a:hover{color:#fff}
+.cb-tabs a[aria-current="page"]{background:rgba(255,255,255,.10); color:#fff}
+.cb-sec{display:none; flex:none; max-width:46vw; height:28px; padding:0 8px; border:1px solid var(--line-strong,rgba(255,255,255,.16)); border-radius:32px;
+  background:transparent; color:#fff; font:inherit; font-size:13px}
+.cb-sec option{color:#111}
+/* подсказка со списком полей: в панели открывается вниз */
+.chb .sv-tip{bottom:auto; top:calc(100% + 8px)}
+.chb .sv-tip::after{top:auto; bottom:100%; border-top-color:transparent; border-bottom-color:#1c2023}
+.chb .sv-tip::before{top:auto; bottom:100%}
+
+/* степпер и липкие колонки в низком окне не выходят за экран */
+.tf-steps{max-height:calc(100vh - var(--cb-h,56px) - 32px); overflow-y:auto; scrollbar-width:none}
+
+/* тултип полного названия */
+.ch-tip{position:fixed; z-index:95; max-width:min(480px,calc(100vw - 32px)); padding:6px 10px; border-radius:8px; border:1px solid var(--line-strong,rgba(255,255,255,.16));
+  background:#1c2023; color:#fff; font-size:13px; line-height:18px; box-shadow:0 10px 24px -10px rgba(0,0,0,.7); pointer-events:none}
+
+/* ---------- низкое окно ---------- */
+@media (max-height:640px){
+  .lk-header-in{padding-top:6px!important; padding-bottom:8px!important}
+  .tf-sub{display:none}
+  .rh-tabs{margin-top:6px!important}
+  .cb-in{min-height:48px; padding-top:4px; padding-bottom:4px}
+}
+
+/* ---------- средняя и узкая ширина: панель в две строки ---------- */
+@media (max-width:1100px){
+  .cb-in{grid-template-columns:32px minmax(0,1fr) auto}
+  .cb-sub{grid-row:2; grid-column:1/-1}
+  .cb-info{flex:1 1 auto; overflow-x:auto; scrollbar-width:none}
+  .cb-info::-webkit-scrollbar{display:none}
+  .cb-tabs{flex:1 1 auto}
+  .cb-sub:has(.cb-tabs) .cb-info{flex:none; max-width:50%}
+  body:not(.sent) .cb-sec{display:block; margin-left:auto}
+}
+@media (max-width:640px){
+  .tf-title,.rh-head{display:grid!important; grid-template-columns:32px minmax(0,1fr) auto; align-items:start; gap:4px 12px!important}
+  .tf-title h1,.rh-head h1{grid-column:2; font-size:18px!important; line-height:24px!important; padding-top:4px; white-space:normal; text-wrap:wrap;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2}
+  .tf-title .tf-back,.rh-head .ch-back{grid-column:1; grid-row:1}
+  .tf-title .dup-btn,.rh-head .dup-btn{grid-column:3; grid-row:1; width:32px; padding:0}
+  .dup-btn .lbl{display:none}
+  .tf-title .tf-chip,.tf-title .rc-ref,.rh-head .rh-status,.rh-head .head-toggle{grid-column:2/-1; grid-row:2; justify-self:start}
+  .tf-title .rc-ref:not([hidden]) ~ .tf-chip,.rh-head .rh-status ~ .head-toggle{justify-self:end}
+  .tf-title .ch-extra,.rh-head .ch-extra{grid-column:2/-1; grid-row:3; justify-self:start}
+  .ch-extra-act{grid-column:3; grid-row:2; width:32px; padding:0}
+  .tf-meta{display:block!important; margin-left:0!important; font-size:13px}
+  .tf-sub{margin-left:0!important}
+  .rh-meta{margin-left:0!important; gap:2px 14px}
+  .chb .tf-meta{display:flex!important; margin:0!important}
+  .chb .tf-meta:not(:has(.sv.err,.sv.warn,.sv.saving)){display:none!important}   /* в панели — только проблемы сохранения */
+  .cb-send{width:32px; padding:0!important; border-radius:50%}
+  .cb-send svg{display:block}
+  .cb-send .lbl{display:none}
+  .cb-acts .dup-btn{width:32px; padding:0}
+}
+@media (prefers-reduced-motion:reduce){ .chb{transition:none} }

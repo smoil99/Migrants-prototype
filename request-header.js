@@ -524,7 +524,7 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       if(dup.classList.contains("busy")) return;
       dup.classList.add("busy"); dup.querySelector(".lbl").textContent="Дублирование…";
       const sp=document.createElement("span"); sp.className="spin"; dup.querySelector("svg").replaceWith(sp);
-      setTimeout(()=>{ location.href="request-form.html#fromreq"; },700);
+      setTimeout(()=>{ location.href=(window.REQUEST_FORM_URL||"request-form.html")+"#fromreq"; },700);
     });
     /* возврат «Назад» из bfcache — снять состояние загрузки */
     window.addEventListener("pageshow",()=>{

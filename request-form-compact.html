@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Commissioner:wght@400;500;600&display=swap">
+<title>Компактная шапка — создание</title>
+<meta name="description" content="Прототип целевой формы создания заявки (Figma 6783:33804): пустая форма → черновик при первом вводе (Figma 7439:148673)">
+<style>
+  /* Layout: ЛК клиента/админа — вкладка «Группы заявок» → экран группы (черновик / отправлена) → модалки DS; сверху харнесс прототипа */
+  :root{
+    color-scheme: dark;
+    --bg:#181C1F;
+    --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.06); --panel-solid:#26292C;
+    --field:rgba(255,255,255,.10);
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --text:#ffffff; --text-2:#e3e9eb; --muted:#8A9092; --muted2:#6E767A;
+    --label:rgba(255,255,255,.6); --dim:rgba(255,255,255,.35);
+    --primary:#07BBB2; --primary-dim:rgba(7,187,178,.14);
+    --accent:#61C7D6; --accent-dim:rgba(97,199,214,.10);
+    /* DS «Text» (статус, 1178:522) */
+    --st-pending:#F5CD06; --st-work:#61C7D6; --st-done:#00E887; --st-error:#FF6674; --st-none:#808C99;
+    /* DS «Alert» */
+    --warn:#F5CD06; --warn-bg:rgba(245,205,6,.10);
+    --err:#FF6674; --err-bg:rgba(255,102,116,.10);
+    --glass:rgba(24,28,31,.62);
+    --radius:16px; --r-field:12px; --r-pill:32px;
+    --f: "Commissioner", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:var(--f); color:var(--text);
+    background:
+      url("bg.webp") top center / cover no-repeat,
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased; font-size:14px; line-height:1.45;
+  }
+  a{color:var(--primary); text-decoration:none}
+  button{font-family:inherit}
+  [hidden]{display:none!important}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  /* ---------- харнесс прототипа ---------- */
+  .harness{background:rgba(20,23,26,.94); border-bottom:1px solid var(--line); padding:10px clamp(16px,4vw,40px)}
+  .harness-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px 22px; max-width:1240px; margin:0 auto}
+  .harness .tag{font-size:10px; letter-spacing:.14em; font-weight:600; color:var(--primary);
+    border:1px solid rgba(7,187,178,.5); border-radius:5px; padding:3px 8px; text-transform:uppercase}
+  .ctl{display:flex; align-items:center; gap:9px; min-width:0; flex-wrap:wrap}
+  .ctl > span.lbl{font-size:11px; color:var(--muted); letter-spacing:.04em; white-space:nowrap}
+  .seg{display:inline-flex; flex-wrap:wrap; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:3px}
+  .seg button{appearance:none; border:0; background:transparent; color:var(--muted);
+    font-size:12.5px; font-weight:500; padding:6px 11px; border-radius:6px; cursor:pointer; white-space:nowrap; transition:.12s}
+  .seg button:hover{color:#fff}
+  .seg button[aria-pressed="true"]{background:var(--primary); color:#04231f; font-weight:600}
+  .hint{font-size:11.5px; color:var(--muted2); flex:1 1 300px; min-width:0; margin:0}
+  .hint b{color:var(--muted); font-weight:500}
+
+  /* ---------- меню переключения прототипов (общее для страниц) ---------- */
+  .proto-menu{position:relative; flex:none}
+  .pm-trigger{appearance:none; display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-size:12.5px; font-weight:600; color:#fff;
+    background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:9px; padding:6px 11px}
+  .pm-trigger:hover{border-color:var(--line-strong)}
+  .pm-chev{width:13px;height:13px;color:var(--muted); transition:transform .15s}
+  .pm-trigger[aria-expanded="true"] .pm-chev{transform:rotate(180deg)}
+  .pm-pop{position:absolute; top:calc(100% + 8px); left:0; z-index:60; min-width:290px;
+    background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px}
+  .pm-pop a{display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:8px; color:#fff; font-size:13px; font-weight:500}
+  .pm-pop a:hover{background:rgba(255,255,255,.06)}
+  .pm-pop a .pm-ic{width:16px;height:16px;color:var(--muted);flex:none;margin-top:1px}
+  .pm-pop a small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px;line-height:1.35}
+  .pm-pop a[aria-current="page"]{background:var(--primary-dim)}
+  .pm-pop a[aria-current="page"] .pm-ic{color:var(--primary)}
+
+  /* ---------- верхняя навигация ЛК: прозрачная, стекло при скролле ---------- */
+  .topnav{position:sticky; top:env(safe-area-inset-top,0px); z-index:35;
+    background:transparent; border-bottom:1px solid transparent; padding:0 clamp(16px,4vw,40px);
+    transition:background .22s ease, border-color .22s ease}
+  body.scrolled .topnav{background:var(--glass);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom-color:var(--line)}
+  .topnav-in{max-width:1240px; margin:0 auto; height:56px; display:flex; align-items:center; gap:24px}
+  .brand-links,.nav-links{display:flex; gap:22px; align-items:center; min-width:0}
+  .nav-links{gap:20px; overflow-x:auto; scrollbar-width:none}
+  .nav-links::-webkit-scrollbar{display:none}
+  .brand-links a,.nav-links a{display:flex; align-items:center; gap:7px; color:var(--muted); font-weight:500; font-size:13.5px; white-space:nowrap}
+  .brand-links a.active,.nav-links a.active{color:#fff}
+  .nav-links a.new{color:var(--primary)}
+  .brand-links .ic{width:15px;height:15px;opacity:.75}
+  .who{margin-left:auto; display:flex; align-items:center; gap:10px; white-space:nowrap}
+  .who .help{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#cfd6d8;background:rgba(255,255,255,.08)}
+  .who .help svg{width:16px;height:16px}
+  .who .nm{font-size:13px;font-weight:600;line-height:1.1}
+  .who .rl{font-size:11px;color:var(--muted)}
+
+  /* ---------- шапка группы: залипает под навигацией + glass, как в «Переводе свободных полей» ---------- */
+  .lk-header{position:sticky; top:calc(var(--topnav-h,56px) + env(safe-area-inset-top,0px)); z-index:30;
+    background:transparent; box-shadow:none; transition:background .22s ease, box-shadow .22s ease}
+  body.scrolled .lk-header{background:var(--glass);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    box-shadow:0 12px 34px -22px rgba(0,0,0,.8)}
+  .lk-header-in{max-width:1320px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 0}
+  .lk-header .crumbs{margin:0 0 10px}
+  .crumbs a{color:var(--muted)}
+  .crumbs a:hover{color:#fff}
+  .lk-header .head{margin-top:0; flex-wrap:nowrap; align-items:center}
+  .lk-header h1{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .backc{appearance:none; flex:none; width:32px; height:32px; border-radius:50%; border:0; cursor:pointer; display:grid; place-items:center;
+    background:rgba(255,255,255,.10); color:#fff}
+  .backc:hover{background:rgba(255,255,255,.16)}
+  .backc svg{width:16px; height:16px}
+  .gsum{margin:8px 0 0; font-size:13px; color:var(--muted); display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px; row-gap:2px}
+  .gsum .bul{color:var(--dim)}
+  .gsum .ghost{color:var(--warn)}
+  /* табы заявок — DS «Filter tabs» (1152:2905): пилюли r32, Medium 16/20, неактивный — opacity .8 */
+  .rtabs{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:14px 0 14px; margin:0 -4px; padding-inline:4px}
+  .rtabs::-webkit-scrollbar{display:none}
+  .rtab{appearance:none; flex:none; display:inline-flex; align-items:center; gap:7px; cursor:pointer; white-space:nowrap;
+    padding:6px 12px; border-radius:var(--r-pill); border:1px solid transparent; background:transparent;
+    color:#fff; font-size:16px; line-height:20px; font-weight:500; opacity:.8; transition:opacity .12s, background .12s}
+  .rtab:hover{opacity:1; background:rgba(255,255,255,.06)}
+  .rtab[aria-selected="true"]{opacity:1; background:rgba(255,255,255,.10); border-color:#fff}
+  .rtab svg{width:14px; height:14px; flex:none}
+  .rtab .edot{width:8px; height:8px; border-radius:50%; background:var(--err); flex:none}
+  .rtab.add-tab{color:var(--accent); opacity:1}
+  .rtab.add-tab:hover{background:var(--accent-dim)}
+  #gPanel{scroll-margin-top:calc(var(--cb-h,200px) + 12px)}
+  #gPanel{margin-top:12px}
+  #gPanel .req-head{cursor:default; display:block}
+  .rh1{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap}
+  .rh1 .kebab{margin-left:auto}
+  /* название заявки: меньше названия группы (h1 22–30px), больше секций формы (17px) */
+  #gPanel .req-title{font-size:22px; line-height:28px; font-weight:600; letter-spacing:-.3px; margin:0; white-space:normal}
+  .rh2{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 4px; padding-top:8px; font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
+  .rh2 .soon{color:var(--warn)}
+  .rh2 .sv.err{color:var(--err); font-weight:500}
+  .rh2 .btn.link{font-size:16px; padding:0 2px}
+  @media (max-width:560px){ #gPanel .req-title{font-size:19px; line-height:24px} .rh2{font-size:14px; line-height:20px} }
+  #gPanel .req-head:hover{background:none}
+  .kid-row{display:flex; align-items:center; gap:6px}
+  @media (max-width:560px){
+    .lk-header .crumbs{display:none}
+    .lk-header .head{flex-wrap:wrap; row-gap:8px}
+    .lk-header h1{white-space:normal; flex:1 1 0; font-size:20px}
+    .lk-header .head .acts{order:2; margin-left:0}
+    .lk-header .head .acts .lbl{display:none}
+    .lk-header .head .acts .btn{width:32px; padding:0}
+    .lk-header #gRef,.lk-header #gStatus{order:3}
+    .rtab{font-size:15px}
+  }
+  .kid-row .kid{flex:1; min-width:0}
+
+  /* ---------- контейнер ---------- */
+  .wrap{max-width:1320px; margin:0 auto; padding:18px clamp(16px,4vw,40px) 80px}
+
+  /* ---------- примитивы DS ---------- */
+  .btn{appearance:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    height:40px; padding:0 20px; border:0; border-radius:var(--r-pill); font-size:15px; font-weight:500; color:#fff;
+    background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
+    white-space:nowrap; transition:background .12s, filter .12s}
+  .btn:hover{background:rgba(255,255,255,.15)}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn.primary{background:var(--primary); box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.danger{background:rgba(255,102,116,.16); color:#ffb3ba; box-shadow:inset 0 0 0 1px rgba(255,102,116,.35)}
+  .btn.danger:hover{background:rgba(255,102,116,.24)}
+  .btn:disabled{background:rgba(255,255,255,.06); color:var(--dim); box-shadow:none; cursor:not-allowed; filter:none}
+  .btn.sm{height:32px; padding:0 14px; font-size:13.5px}
+  .btn.link{height:auto; padding:4px 2px; background:none; box-shadow:none; color:var(--accent); font-size:13.5px}
+  .btn.link:hover{background:none; text-decoration:underline}
+  .btn.link.del{color:#ff9aa3}
+
+  .status{display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border-radius:var(--r-pill);
+    background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+    font-size:14px; line-height:22px; font-weight:500; color:#fff; white-space:nowrap}
+  .status .dot{width:8px;height:8px;border-radius:50%;background:var(--st-none);flex:none}
+  .status.s-new .dot{background:var(--st-pending)}
+  .status.s-draft{color:var(--dim); font-weight:400}
+  .status.s-wait .dot{background:transparent; border:2px solid rgba(255,255,255,.25); border-top-color:var(--accent); animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .ref{display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,.10); border-radius:6px;
+    padding:2px 8px; font-size:13px; font-weight:600; color:#fff; font-variant-numeric:tabular-nums; white-space:nowrap}
+  .ref .h{color:var(--dim); font-weight:600}
+  .ref.draft{color:var(--label); font-weight:500}
+  .ref.wait{color:var(--label); font-weight:500}
+  .ref.wait::before{content:""; width:9px; height:9px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--accent); animation:spin .8s linear infinite}
+
+  .alert{display:flex; gap:10px; align-items:flex-start; border-radius:12px; padding:14px 16px; font-size:14px; font-weight:500; line-height:20px}
+  .alert > svg{width:18px;height:18px;flex:none;margin-top:1px}
+  .alert .body{flex:1; min-width:0}
+  .alert .body small{display:block; margin-top:3px; font-weight:400; color:rgba(255,255,255,.72); font-size:13px}
+  .alert.warn{background:var(--warn-bg); color:var(--warn)}
+  .alert.err{background:var(--err-bg); color:var(--err)}
+  .alert.info{background:var(--accent-dim); color:var(--accent)}
+  .alert ul{margin:8px 0 0; padding:0; list-style:none; display:grid; gap:6px}
+  .alert li{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; color:#ffd2d6; font-weight:400; font-size:13.5px}
+  .alert li .btn.link{color:#fff; font-size:13px}
+
+  .f{display:flex; flex-direction:column; gap:8px; min-width:0}
+  .f label{font-size:13px; color:var(--label)}
+  .f label i{color:var(--err); font-style:normal}
+  .f input,.f select{height:46px; width:100%; border-radius:var(--r-field); background:var(--field);
+    border:1px solid transparent; color:#fff; font:inherit; font-size:15px; padding:0 14px; transition:border-color .12s}
+  .f select{appearance:none; padding-right:38px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center}
+  .f select option{background:#26292C; color:#fff}
+  .f input::placeholder{color:rgba(255,255,255,.38)}
+  .f input:hover,.f select:hover{border-color:rgba(255,255,255,.14)}
+  .f input:focus,.f select:focus{outline:none; border-color:var(--primary)}
+  .f.wide{grid-column:1 / -1}
+  .f .lab{font-size:13px; color:var(--label)}
+  .f .lab i{color:var(--err); font-style:normal}
+  .f textarea{width:100%; min-height:84px; resize:vertical; border-radius:var(--r-field); background:var(--field); border:1px solid transparent;
+    color:#fff; font:inherit; font-size:15px; padding:12px 14px; transition:border-color .12s}
+  .f textarea::placeholder{color:rgba(255,255,255,.38)}
+  .f textarea:hover{border-color:rgba(255,255,255,.14)}
+  .f textarea:focus{outline:none; border-color:var(--primary)}
+  .f .hint-t{font-size:12px; color:var(--muted2); line-height:1.35}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chipb{appearance:none; cursor:pointer; border:1px solid transparent; background:rgba(255,255,255,.10); color:#fff;
+    border-radius:var(--r-pill); padding:6px 14px; font-size:14px; line-height:22px; text-align:left}
+  .chipb:hover{background:rgba(255,255,255,.14)}
+  .chipb[aria-checked="true"],.chipb[aria-checked="true"]:hover{background:#fff; color:#16191B}   /* выбранная — белая заливка, без обводки */
+  .f.bad .lab{color:var(--err)}
+  .f.bad .chipb{border-color:rgba(255,102,116,.55)}
+  .f.bad textarea{border-color:var(--err)}
+  .fsec{padding:18px 0 4px; border-bottom:1px solid var(--line)}
+  .fsec:last-of-type{border-bottom:0}
+  .fsec h3{font-size:17px; font-weight:600; margin:0; letter-spacing:-.2px}
+  .fsec .form,.fsec .kv-grid{margin-top:14px}
+  .card .fsec:first-child{padding-top:0}
+  .f .err-t{display:none; font-size:12px; color:var(--err)}
+  .f.bad label{color:var(--err)}
+  .f.bad input,.f.bad select{border-color:var(--err)}
+  .f.bad .err-t{display:block}
+
+  .chk{display:flex; gap:12px; align-items:flex-start; cursor:pointer; font-size:14.5px; color:var(--text-2)}
+  .chk input{appearance:none; width:18px; height:18px; flex:none; margin:1px 0 0; border-radius:4px;
+    border:1.5px solid rgba(255,255,255,.4); background:transparent; cursor:pointer; display:grid; place-items:center}
+  .chk input:checked{background:var(--primary); border-color:var(--primary)}
+  .chk input:checked::after{content:""; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:translateY(-1px) rotate(45deg)}
+
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .ftab{appearance:none; cursor:pointer; border:1px solid transparent; background:rgba(255,255,255,.10); color:#fff;
+    border-radius:var(--r-pill); padding:6px 14px; font-size:14.5px; line-height:22px}
+  .ftab:hover{background:rgba(255,255,255,.14)}
+  .ftab[aria-pressed="true"]{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.55)}
+  .ftab .n{color:var(--muted); margin-left:6px; font-variant-numeric:tabular-nums}
+
+  /* ---------- шапки экранов ---------- */
+  .backpill{appearance:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.06); border:1px solid var(--line); color:#dfe8e7; font-size:13.5px; font-weight:500;
+    padding:8px 16px 8px 12px; border-radius:999px}
+  .backpill:hover{background:rgba(255,255,255,.1)}
+  .backpill svg{width:16px;height:16px}
+  .crumbs{font-size:12.5px; color:var(--muted); margin:4px 0 12px}
+  h1{font-size:clamp(22px,3vw,30px); font-weight:600; letter-spacing:-.5px; margin:0; text-wrap:balance}
+  .head{display:flex; align-items:center; gap:12px 14px; flex-wrap:wrap; margin-top:16px}
+  .head .acts{margin-left:auto; display:flex; gap:10px; flex-wrap:wrap}
+  .lead{color:var(--muted); font-size:14px; margin:10px 0 0; max-width:78ch}
+  .meta{display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:10px; color:var(--muted); font-size:13px}
+  .meta b{color:var(--text-2); font-weight:500}
+  .stack{display:grid; gap:12px; margin-top:18px}
+  .stack:empty{display:none}
+
+  /* ---------- список групп ---------- */
+  .toolbar{display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px; margin-top:20px}
+  .search{position:relative; flex:0 1 380px; margin-left:auto}
+  .search svg{position:absolute; left:14px; top:50%; width:18px; height:18px; transform:translateY(-50%); color:var(--label); pointer-events:none}
+  .search input{width:100%; height:44px; border-radius:var(--r-field); background:var(--field); border:1px solid transparent;
+    color:#fff; font:inherit; font-size:14.5px; padding:0 14px 0 42px}
+  .search input::placeholder{color:rgba(255,255,255,.4)}
+  .search input:focus{outline:none; border-color:var(--primary)}
+  .search-note{font-size:12.5px; color:var(--muted); margin-top:10px}
+  .search-note b{color:var(--text-2); font-weight:500}
+
+  .groups{display:grid; gap:12px; margin-top:18px}
+  .grp{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden}
+  .grp-head{display:grid; grid-template-columns:20px minmax(0,1.25fr) minmax(0,1.3fr) auto; align-items:center; gap:10px 18px;
+    padding:16px 20px; cursor:pointer}
+  .grp-head:hover{background:rgba(255,255,255,.025)}
+  .chev{width:18px;height:18px;color:var(--muted);transition:transform .15s;display:grid;place-items:center}
+  .chev svg{width:18px;height:18px}
+  .grp.open .grp-head .chev{transform:rotate(90deg)}
+  .grp-title{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .grp-title b{font-size:15.5px; font-weight:600}
+  .grp-sub{font-size:12.5px; color:var(--muted); margin-top:4px}
+  .grp-vol{font-size:13.5px; color:var(--text-2); min-width:0}
+  .grp-vol .regs{color:var(--muted); font-size:12.5px; margin-top:3px}
+  .miss{color:var(--warn); font-style:normal}
+  .tagc{font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--accent); background:var(--accent-dim); border-radius:6px; padding:2px 7px}
+  .lock{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:500; color:var(--warn); background:var(--warn-bg); border-radius:6px; padding:2px 8px; white-space:nowrap}
+  .lock svg{width:12px;height:12px}
+  .grp-kids{display:none; padding:2px 20px 16px 58px; gap:8px}
+  .grp.open .grp-kids{display:grid}
+  .kid{appearance:none; cursor:pointer; text-align:left; color:inherit; width:100%;
+    display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; padding:11px 14px; border-radius:12px;
+    background:var(--panel-2); border:1px solid var(--line)}
+  .kid:hover{border-color:var(--line-strong); background:rgba(255,255,255,.08)}
+  .kid.hit{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim)}
+  .kid .t{font-weight:600; font-size:14.5px}
+  .kid .m{color:var(--muted); font-size:13px; min-width:0}
+  .kid .r{margin-left:auto; display:flex; align-items:center; gap:10px}
+  .grp-kids .open-g{justify-self:start; margin-top:2px}
+  .empty{border:1px dashed var(--line-strong); border-radius:var(--radius); padding:44px 20px; text-align:center; color:var(--muted)}
+  .empty b{display:block; color:var(--text-2); font-size:15px; font-weight:600; margin-bottom:6px}
+
+  /* ---------- экран группы ---------- */
+  .counters{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+  .chip{display:flex; align-items:baseline; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px}
+  .chip b{font-size:18px; font-weight:600; font-variant-numeric:tabular-nums}
+  .chip span{font-size:13px; color:var(--muted)}
+  .chip.warn{border-color:rgba(245,205,6,.3); background:var(--warn-bg)}
+  .chip.warn span{color:var(--warn)}
+  .chip.ghost{background:transparent; border-style:dashed}
+  .regline{font-size:13px; color:var(--muted); margin-top:10px}
+  .regline b{color:var(--text-2); font-weight:500}
+
+  .sec{font-size:18px; font-weight:600; margin:28px 0 2px; letter-spacing:-.2px}
+  .sec-sub{color:var(--muted); font-size:13.5px; margin:0 0 14px}
+  .reqs{display:grid; gap:10px}
+  .req{background:var(--panel-2); border:1px solid var(--line-strong); border-radius:12px; overflow:hidden}
+  .req.bad{border-color:rgba(255,102,116,.55)}
+  .req.copy{border-color:rgba(245,205,6,.35)}
+  .req.priv{border-style:dashed}
+  .req.flash{animation:flash 1.2s ease-out}
+  @keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+  .req-head{display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; padding:13px 16px; cursor:pointer}
+  .req-head:hover{background:rgba(255,255,255,.03)}
+  .req.open .req-head .chev{transform:rotate(90deg)}
+  .req-title{font-size:15px; font-weight:600; white-space:nowrap}
+  .req-meta{font-size:13px; color:var(--muted); min-width:0}
+  .req-right{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+  .dmeta{font-size:12px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums}
+  .dmeta .exp.soon{color:var(--warn)}
+  .dmeta .sv{color:var(--text-2)}
+  .dmeta .sv.err{color:var(--err); font-weight:500}
+  .dmeta .btn.link{font-size:12px; padding:0 2px; color:var(--accent)}
+  .req.bad .miss{color:var(--err)}
+  .kebab{appearance:none; border:0; background:transparent; color:var(--muted); width:32px; height:32px; border-radius:8px;
+    display:grid; place-items:center; cursor:pointer; flex:none}
+  .kebab:hover,.kebab[aria-expanded="true"]{background:rgba(255,255,255,.10); color:#fff}
+  .kebab svg{width:18px;height:18px}
+  .rmenu{position:fixed; z-index:70; width:260px; background:var(--panel-solid); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 20px 50px -14px rgba(0,0,0,.7); padding:6px; display:flex; flex-direction:column; gap:2px; animation:fade .12s ease-out}
+  .rmenu button{appearance:none; border:0; background:none; color:#fff; font-size:14px; font-weight:500; text-align:left; cursor:pointer;
+    padding:10px 12px; border-radius:8px; display:flex; gap:10px; align-items:flex-start}
+  .rmenu button svg{width:16px; height:16px; flex:none; margin-top:2px; color:var(--muted)}
+  .rmenu button:hover,.rmenu button:focus-visible{background:rgba(255,255,255,.08); outline:none}
+  .rmenu button small{display:block; color:var(--muted); font-size:12px; font-weight:400; margin-top:2px}
+  .rmenu .del,.rmenu .del svg{color:#ff9aa3}
+  .req-body{display:none; padding:4px 16px 16px; border-top:1px solid var(--line)}
+  .req.open .req-body{display:block}
+  .req-body > .alert{margin-top:14px}
+  .form{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 18px; margin-top:16px}
+  .kv-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 24px; margin-top:16px}
+  .kv .k{display:block; font-size:12.5px; color:var(--muted)}
+  .kv .v{font-size:14.5px; color:var(--text-2)}
+  .form-note{font-size:12px; color:var(--muted2); margin:14px 0 0}
+  .req-acts{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
+  .req-acts .note{font-size:12.5px; color:var(--muted); margin-right:auto; flex:1 1 220px}
+  .req-acts .sp,.foot .sp{flex:1}
+
+  .add{appearance:none; cursor:pointer; width:100%; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:10px;
+    min-height:56px; padding:10px 16px; border-radius:12px; border:1.5px dashed rgba(97,199,214,.55); background:rgba(255,255,255,.025);
+    color:var(--accent); font-size:15px; font-weight:500}
+  .add:hover{background:var(--accent-dim)}
+  .add svg{width:18px;height:18px}
+  .add small{color:var(--muted); font-size:12.5px; font-weight:400}
+
+  .foot{display:flex; flex-wrap:wrap; align-items:center; gap:12px 14px; margin-top:24px; padding-top:20px; border-top:1px solid var(--line)}
+  .foot .note{flex:1 1 300px; font-size:13px; color:var(--muted)}
+  .foot .note.warn{color:var(--warn)}
+  /* отправка доступна из любой заявки: панель действий липнет к низу экрана (BRD §4.2.1) */
+  .foot.sticky{position:sticky; bottom:0; z-index:20; margin:24px -16px 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    background:rgba(24,28,31,.82); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4);
+    border-top:1px solid var(--line); border-radius:14px 14px 0 0}
+  /* карточка вложенной заявки */
+  .band{display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:18px; padding:14px 18px; border-radius:14px;
+    background:var(--accent-dim); box-shadow:inset 0 0 0 1px rgba(97,199,214,.25)}
+  .band .lbl{color:var(--text-2); font-weight:500}
+  .band .sp{flex:1}
+  .band small{flex-basis:100%; color:var(--muted); font-size:12.5px}
+  .card{margin-top:18px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px clamp(18px,2.6vw,30px)}
+  .card h2{font-size:17px; font-weight:600; margin:0}
+  .card .kv-grid{margin-top:18px}
+
+  /* ---------- модалка DS (glass) ---------- */
+  .mbg{position:fixed; inset:0; z-index:80; background:rgba(8,11,13,.55); display:grid; place-items:start center;
+    overflow:auto; padding:max(28px,6vh) 16px 28px; animation:fade .14s ease-out}
+  @keyframes fade{from{opacity:0}}
+  .modal{width:min(640px,100%); border-radius:20px; padding:32px clamp(20px,4vw,32px); display:flex; flex-direction:column; gap:22px;
+    background:rgba(46,50,54,.78); -webkit-backdrop-filter:blur(60px) saturate(1.3); backdrop-filter:blur(60px) saturate(1.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -20px rgba(0,0,0,.75)}
+  .m-top{display:flex; align-items:flex-start; gap:12px}
+  .m-top h2{font-size:24px; line-height:32px; font-weight:600; margin:0; letter-spacing:-.3px; flex:1}
+  .m-x{appearance:none; border:0; background:rgba(255,255,255,.08); color:#cfd6d8; width:32px; height:32px; border-radius:50%; cursor:pointer; display:grid; place-items:center; flex:none}
+  .m-x:hover{background:rgba(255,255,255,.14)}
+  .m-x svg{width:16px;height:16px}
+  .m-lead{color:var(--label); font-size:14.5px; margin:-10px 0 0}
+  .m-acts{display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; padding-top:4px}
+  .sum{display:flex; gap:12px; align-items:flex-start; background:var(--accent-dim); border-radius:12px; padding:14px 16px; font-size:14.5px; color:var(--text-2)}
+  .sum .sig{color:var(--accent); font-weight:600; font-size:17px; line-height:20px}
+  .sum b{color:#fff}
+  .prevs{display:grid; gap:10px}
+  .prev{background:rgba(255,255,255,.06); border-radius:12px; padding:14px 16px}
+  .prev-h{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .prev-h b{font-size:15px}
+  .prev .kv-grid{margin-top:12px; gap:10px 18px}
+  .prev .kv .v{font-size:13.5px}
+  .delta{display:grid; gap:6px; background:rgba(255,255,255,.06); border-radius:12px; padding:14px 16px; font-size:14px; color:var(--text-2)}
+  .delta .row{display:flex; justify-content:space-between; gap:12px}
+  .delta .row span{color:var(--muted)}
+  .delta .up{color:var(--st-done)}
+
+  /* ---------- toast ---------- */
+  #toast{position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); z-index:90; transform:translate(-50%,16px);
+    background:var(--panel-solid); border:1px solid var(--line-strong); color:#fff; border-radius:12px; padding:11px 16px;
+    font-size:14px; box-shadow:0 16px 40px -12px rgba(0,0,0,.7); opacity:0; pointer-events:none; transition:.22s; max-width:calc(100vw - 32px)}
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+
+  @media (max-width:860px){
+    .grp-head{grid-template-columns:20px minmax(0,1fr) auto}
+    .grp-vol{grid-column:2 / -1; grid-row:2}
+    .kv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:560px){
+    .form,.kv-grid,.prev .kv-grid{grid-template-columns:1fr}
+    .grp-kids{padding-left:20px}
+    .head .acts{margin-left:0}
+    .search{flex:1 1 100%; margin-left:0}
+    .who .nm,.who .rl{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+  /* форма заявки: главная навигация не залипает — закреплена только шапка заявки (у верха экрана) */
+  .topnav{position:relative}
+  .lk-header{top:env(safe-area-inset-top,0px)}
+</style>
+<style>
+  /* ---------- целевая форма заявки (Figma 6783:33804 пустая · 7439:148673 черновик) ---------- */
+  .tf-wrap{max-width:1472px; margin:0 auto; padding:16px clamp(16px,4vw,40px) 80px}
+  .topnav-in,.harness-row{max-width:1392px}
+  .lk-header-in{max-width:1472px; padding-bottom:16px}
+  .tf-wrap{padding-top:8px!important}
+  .tf-crumbs{font-size:12.5px; color:var(--muted); margin:0 0 14px}
+  .tf-crumbs a{color:var(--muted)} .tf-crumbs a:hover{color:#fff}
+  .tf-crumbs span{color:#fff; font-weight:500}
+  .tf-title{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .tf-title h1{font-size:clamp(22px,3vw,28px); line-height:1.25}
+  .tf-back{position:relative; width:40px; height:40px}
+  .tf-back svg{width:18px; height:18px}
+  .tf-tip{position:absolute; left:-6px; bottom:calc(100% + 8px); z-index:40; white-space:nowrap; pointer-events:none;
+    background:#1c2023; border:1px solid var(--line-strong); border-radius:8px; padding:6px 10px; font-size:12px; line-height:16px; color:#fff;
+    box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s; text-align:left; font-weight:400}
+  .tf-tip small{display:block; color:var(--muted); font-size:12px}
+  .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
+  /* «Дублировать» — вторичная кнопка DS справа в строке заголовка (слот «Экспорт» шапки 6783:33804) */
+  .dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:32px; padding:0 14px;
+    border:0; border-radius:var(--r-pill); background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
+    color:#fff; font:inherit; font-size:14px; font-weight:500; cursor:pointer; white-space:nowrap}
+  .dup-btn:hover{background:rgba(255,255,255,.15)}
+  .dup-btn > svg{width:16px; height:16px; flex:none}
+  .dup-btn .tf-tip{white-space:normal; width:max-content; max-width:360px}
+  .dup-btn[aria-disabled="true"]{color:var(--dim); background:rgba(255,255,255,.06); box-shadow:none; cursor:not-allowed}
+  .dup-btn.busy{cursor:progress}
+  .dup-btn .spin{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:var(--primary); animation:spin .8s linear infinite}
+  .dup-btn .tf-tip{left:auto; right:0}
+  .dup-btn:hover .tf-tip,.dup-btn:focus-visible .tf-tip{opacity:1; transform:none}
+  @media (max-width:640px){ .dup-btn{width:32px; padding:0} .dup-btn .lbl{display:none} }
+  #dupAlert:not(:empty){margin-bottom:24px}
+  #dupAlert .alert{align-items:center}
+  #dupAlert .alert .body{color:#fff; font-weight:400}
+  #dupAlert .alert .body b{font-weight:600}
+  #dupAlert .x{appearance:none; border:0; background:none; color:inherit; opacity:.7; cursor:pointer; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex:none}
+  #dupAlert .x:hover{opacity:1; background:rgba(255,255,255,.08)}
+  #dupAlert .x svg{width:14px; height:14px}
+  #dupAlert .sv-retry{margin-left:6px}
+  .tf-card.flash{animation:flash 1.2s ease-out}
+  /* «Дополнительная информация» — общее поле заявки вне тематических блоков (BRD US-016 §5.4, строка 31) */
+  .tf-general{padding:24px 0; border-top:1px solid var(--line)}
+  /* выпадающие списки — DS «Menu panel» (Figma 7003:51979) и «Menu item» (849:4694) */
+  .fi select{pointer-events:none}
+  .fi.dd .box{cursor:pointer}
+  .fi.dd.open .box{border-color:rgba(255,255,255,.4)}
+  .fi.dd.open .end.pe svg, .fi.dd-on.open .dd-chev svg{transform:rotate(180deg)}
+  .fi .end.pe svg{transition:transform .15s}
+  .fi:not(.dd-on) .dd-chev{display:none}
+  .dd-panel{position:absolute; left:0; right:0; top:calc(100% + 8px); z-index:50; background:#161B1D; border:1px solid rgba(255,255,255,.12);
+    border-radius:14px; padding:6px; display:flex; flex-direction:column; gap:2px; box-shadow:0 12px 16px rgba(0,0,0,.45); max-height:420px; overflow:auto}
+  .dd-item{appearance:none; border:0; background:none; color:#fff; font:inherit; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:8px; width:100%}
+  .dd-item:hover,.dd-item.act{background:rgba(255,255,255,.08)}
+  .dd-item .tx{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .dd-item b{font-weight:400; font-size:16px; line-height:22px}
+  .dd-item small{font-size:12px; line-height:normal; color:rgba(255,255,255,.6)}
+  .dd-item .ck{width:16px; height:16px; flex:none; color:var(--primary)}
+  .dd-sep{height:11px; padding:5px 0; flex:none}
+  .dd-sep::before{content:""; display:block; height:1px; background:rgba(255,255,255,.1)}
+  .dd-empty{display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 10px; text-align:center; font-size:14px; color:rgba(255,255,255,.6)}
+  .dd-empty svg{width:24px; height:24px}
+  .dd-empty button{appearance:none; border:0; background:none; color:#fff; font:inherit; font-size:16px; font-weight:500; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+  .age-group .qlab{margin-bottom:12px}
+  body.sent .tf-general > .fi{display:none}
+  .fi .end.unit{right:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55)}
+  #delBtn{position:relative}
+  #delBtn .del-tip{left:0}
+  #delBtn:hover .del-tip,#delBtn:focus-visible .del-tip{opacity:1; transform:none}
+  /* ---------- боковые карточки заявки — как на «Экране заявки» (index.html) ---------- */
+  .tf-side{align-self:stretch; min-width:0}
+  .side-cards{display:grid; gap:16px; margin-bottom:32px}
+  .scard{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px}
+  .scard h3{margin:0 0 14px; font-size:15px; font-weight:600}
+  .prog-num{font-size:13px; color:var(--muted)}
+  .prog-num b{color:#fff; font-size:15px}
+  .scard .bar{height:7px; border-radius:6px; background:rgba(255,255,255,.1); margin:10px 0 4px; overflow:hidden}
+  .scard .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--accent))}
+  .sinfo{font-size:12px; color:var(--muted); margin-top:12px}
+  .sinfo b{display:block; color:#fff; font-size:14px; font-weight:500; margin-top:2px}
+  .partner{display:flex; align-items:center; gap:10px; margin-top:12px}
+  .partner:first-of-type{margin-top:0}
+  .partner .lg{width:32px; height:32px; border-radius:8px; background:#0e2028; display:grid; place-items:center; font-size:10px; font-weight:700; color:var(--accent); flex:none}
+  .partner .lg.none{background:rgba(255,255,255,.05); color:var(--dim)}
+  .partner .pn{font-size:10.5px; color:var(--muted)}
+  .partner .pv{font-size:13px; color:#fff; font-weight:500}
+  .partner .pv.none{color:var(--dim); font-weight:400}
+  .collapse{display:flex; align-items:center; justify-content:space-between; cursor:pointer; width:100%; background:transparent; border:0; padding:0; font-family:inherit; color:inherit; text-align:left}
+  .collapse .cv{color:var(--muted); transition:transform .18s ease}
+  .collapse[aria-expanded="true"] .cv{transform:rotate(180deg)}
+  .history{display:grid; gap:10px; margin-top:14px}
+  .hrow{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .hpill{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:500; color:#fff; border:1px solid var(--line-strong); background:rgba(255,255,255,.04); padding:5px 12px; border-radius:20px}
+  .hdot{width:8px; height:8px; border-radius:50%; background:var(--accent); flex:none}
+  .hdot.draft{background:var(--st-none)}
+  .htime{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+  @media (max-width:1100px){ .side-cards{margin:8px 0 0} }
+  /* «Отправлена»: без навигации по разделам; зазор между колонками = зазору между карточками (16px), карточки липнут как на «Экране заявки» */
+  body.sent .tf-steps{display:none}
+  body.sent .tf-grid{grid-template-columns:minmax(0,1fr) minmax(240px,372px); gap:16px; justify-content:normal}
+  body.sent .tf-side{align-self:start; position:sticky; top:calc(var(--cb-h,200px) + 16px)}
+  body.sent .side-cards{margin:0}
+  @media (max-width:1100px){ body.sent .tf-grid{grid-template-columns:minmax(0,1fr)} body.sent .tf-side{position:static} }
+  /* тултипы шапки уходят вверх, в зону навигации: пока они открыты, шапка выше навигации */
+  .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible,.tf-back:hover,.tf-back:focus-visible){z-index:40}
+  /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
+  .rc-ref{font-size:15px; line-height:22px; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.28); border-radius:6px; padding:0 7px; white-space:nowrap; font-variant-numeric:tabular-nums}
+  .tf-chip.s-new{color:#fff; font-weight:500}
+  .tf-chip.s-new::before{background:var(--accent)}
+  .tf-chip.s-work,.tf-chip.s-done,.tf-chip.s-cancel{color:#fff; font-weight:500}
+  .tf-chip.s-work::before{background:var(--st-work)} .tf-chip.s-done::before{background:var(--st-done)} .tf-chip.s-cancel::before{background:var(--st-none)}
+  .hdot.s-work{background:var(--st-work)} .hdot.s-done{background:var(--st-done)} .hdot.s-cancel{background:var(--st-none)}
+  body.sent #dupAlert,body.sent .tf-mode,body.sent #drop,body.sent .tf-foot,body.sent .tf-rows{display:none}
+  body.sent .tf-sec h2,body.sent .tf-general h2{margin-bottom:12px}
+  body.sent .tf-sec:first-of-type{padding-top:0}
+  body.sent .tf-card > div[style]{margin-top:0!important}
+  .kvv{margin:0; display:grid}
+  .kvv > div{display:grid; grid-template-columns:minmax(0,320px) minmax(0,1fr); gap:4px 24px; padding:12px 0; border-top:1px solid var(--line)}
+  .kvv > div:first-child{border-top:0}
+  .kvv dt{font-size:14px; line-height:20px; color:rgba(255,255,255,.6)}
+  .kvv dd{margin:0; font-size:15px; line-height:20px; color:#fff; white-space:pre-line; overflow-wrap:anywhere}
+  .kvv dd.none{color:var(--dim)}
+  @media (max-width:640px){ .kvv > div{grid-template-columns:1fr} }
+  /* DS «Modal small» (7323:50409): Icon bubble 60 + warning-diamond, действия по краям */
+  .modal.m-small{width:min(560px,100%); gap:24px}
+  .m-bubble{width:60px; height:60px; border-radius:50%; display:grid; place-items:center; flex:none;
+    background:linear-gradient(-37deg,rgba(240,234,7,0) 78%,rgba(240,234,7,.9) 118%),rgba(255,255,255,.10);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), inset 0 1px 0 rgba(255,255,255,.2)}
+  .m-bubble img{width:32px; height:32px; display:block}
+  .m-bubble.ok{background:linear-gradient(-37deg,rgba(0,194,113,0) 78%,rgba(0,194,113,.9) 118%),rgba(255,255,255,.10)}
+  .m-small .m-lead{margin:0; font-size:16px; line-height:22px; color:rgba(255,255,255,.6)}
+  .m-small .m-acts{justify-content:space-between; padding-top:12px}
+  .m-small .m-acts .btn{height:46px; font-size:16px; font-weight:600; padding:0 21px}
+  .tf-chip{display:inline-flex; align-items:center; gap:7px; padding:3px 11px; border-radius:var(--r-pill); background:rgba(255,255,255,.10);
+    font-size:12.5px; line-height:18px; color:var(--label)}
+  .tf-chip::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--st-none)}
+  .tf-sub{margin:8px 0 0; font-size:14px; color:var(--muted)}
+  .tf-meta{margin:8px 0 0; font-size:14px; color:var(--muted); display:flex; flex-wrap:wrap; column-gap:6px; row-gap:2px}
+  .tf-meta .bul{color:var(--dim)}
+  /* индикатор сохранения черновика (Figma 7366:80789 · 7366:83899 · 7366:85975 · 7379:95976 · 7380:99015) */
+  .sv{display:inline-flex; align-items:center; gap:6px}
+  .sv svg{width:14px; height:14px; flex:none}
+  .sv.saving{color:transparent; background:linear-gradient(90deg,rgba(255,255,255,.35) 0%,#fff 45%,rgba(255,255,255,.35) 90%);
+    background-size:200% 100%; -webkit-background-clip:text; background-clip:text; animation:shim 1.3s linear infinite}
+  @keyframes shim{from{background-position:100% 0}to{background-position:-100% 0}}
+  .sv.err{color:var(--err)}
+  .sv.warn{color:var(--warn)}
+  .sv-retry{appearance:none; border:0; background:none; padding:0; font:inherit; color:#fff; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+  .sv-retry:hover{color:var(--accent)}
+  .sv-info{position:relative; display:inline-flex}
+  .sv-info > button{appearance:none; border:0; background:none; padding:0; color:var(--warn); cursor:pointer; display:grid; place-items:center}
+  .sv-info > button svg{width:16px; height:16px}
+  .sv-tip{position:absolute; left:50%; bottom:calc(100% + 8px); transform:translate(-50%,4px); z-index:45; min-width:150px; white-space:nowrap;
+    background:#1c2023; border:1px solid var(--line-strong); border-radius:8px; padding:7px 10px; font-size:12px; line-height:16px; color:var(--label);
+    box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; visibility:hidden; transition:.14s}
+  .sv-tip::after{content:""; position:absolute; left:50%; top:100%; margin-left:-5px; border:5px solid transparent; border-top-color:#1c2023}
+  .sv-tip::before{content:""; position:absolute; left:0; right:0; top:100%; height:10px}
+  .sv-tip ul{margin:2px 0 0; padding:0 0 0 14px; color:#fff}
+  .sv-tip li button{appearance:none; border:0; background:none; padding:0; font:inherit; color:#fff; cursor:pointer; text-align:left}
+  .sv-tip li button:hover{text-decoration:underline}
+  .sv-info:hover .sv-tip,.sv-info:focus-within .sv-tip{opacity:1; visibility:visible; transform:translate(-50%,0)}
+
+  .tf-grid{display:grid; grid-template-columns:minmax(0,956px) minmax(240px,372px); justify-content:space-between; gap:24px 48px; margin-top:0; align-items:start}
+  .tf-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:24px; min-width:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .tf-mode{display:flex; gap:6px; flex-wrap:wrap}
+  .tf-mode .rtab{font-size:14px; line-height:20px; padding:6px 12px}
+  .tf-drop{appearance:none; width:100%; cursor:pointer; margin-top:24px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:18px 16px 20px; border-radius:12px; border:1px solid var(--line-strong); background:rgba(255,255,255,.02); color:#fff; font:inherit; text-align:center}
+  .tf-drop:hover{background:rgba(255,255,255,.05)}
+  .tf-drop .mic{width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,.12); margin-bottom:8px}
+  .tf-drop .mic svg{width:16px; height:16px}
+  .tf-drop b{font-size:14px; font-weight:500}
+  .tf-drop small{font-size:12px; color:var(--muted)}
+  .tf-drop.rec .mic{background:var(--err); animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(255,102,116,.18)}}
+
+  .tf-sec{padding:24px 0; border-top:1px solid var(--line); scroll-margin-top:calc(var(--cb-h,200px) + 16px)}
+  .tf-sec:first-of-type{border-top:0}
+  .tf-sec h2,.tf-general h2{font-size:22px; line-height:29px; font-weight:600; letter-spacing:-.3px; margin:0 0 24px}
+  .fi.nolab textarea{padding-top:12px}
+  .kvv.solo > div{grid-template-columns:1fr}
+  .tf-rows{display:grid; gap:24px}
+  .tf-two{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
+  .tf-half{max-width:446px}
+
+  /* поле DS «dynamic input»: плейсхолдер = лейбл внутри, при значении лейбл уезжает вверх */
+  .fi{position:relative; min-width:0}
+  .fi .box{position:relative; display:flex; align-items:center; min-height:46px; border-radius:var(--r-field); background:var(--field);
+    border:1px solid transparent; transition:border-color .12s}
+  .fi .box:hover{border-color:rgba(255,255,255,.14)}
+  .fi .box:focus-within{border-color:var(--primary)}
+  .fi input,.fi select,.fi textarea{appearance:none; flex:1; min-width:0; width:100%; height:44px; border:0; background:transparent; color:#fff;
+    font:inherit; font-size:15px; padding:16px 14px 4px; outline:none}
+  .fi textarea{height:auto; min-height:94px; resize:vertical; padding-top:22px; line-height:20px}
+  .fi select{cursor:pointer; padding-right:40px}
+  .fi select option{background:#26292C; color:#fff}
+  .fi .pl{position:absolute; left:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55); pointer-events:none; transition:.12s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100% - 80px)}
+  .fi .pl i,.qlab i{color:var(--err); font-style:normal}
+  .fi.has .pl,.fi .box:focus-within .pl,.fi.ph .pl{top:4px; font-size:12px; line-height:16px}
+  .fi input::placeholder{color:rgba(255,255,255,.38)}
+  .fi:not(.has) select{color:transparent}
+  .fi .end{display:flex; gap:6px; padding-right:8px; flex:none; color:rgba(255,255,255,.6)}
+  .fi .end svg{width:16px; height:16px}
+  .fi .end.pe{pointer-events:none; position:absolute; right:6px; top:15px}
+  .step{appearance:none; width:28px; height:28px; border:0; border-radius:8px; background:rgba(255,255,255,.10); color:#fff; display:grid; place-items:center; cursor:pointer}
+  .step:hover{background:rgba(255,255,255,.16)}
+  .step svg{width:14px; height:14px}
+  .fi input[type=number]::-webkit-inner-spin-button{display:none}
+  .fi input[type=number]{-moz-appearance:textfield}
+  .fi input[type=date]::-webkit-calendar-picker-indicator{opacity:0; cursor:pointer}
+  .fi:not(.has) input[type=date]{color:transparent}
+  .ht{font-size:12px; line-height:16px; color:var(--muted); margin:6px 0 0}
+  .fi.bad .box{border-color:var(--err)}
+  .fi.bad .pl{color:var(--err)}
+  .et{display:none; font-size:12px; line-height:16px; color:var(--err); margin:6px 0 0}
+  .bad > .et{display:block}
+
+  .q{min-width:0}
+  .qlab{font-size:14px; line-height:20px; color:var(--label); margin:0 0 8px}
+  .q .chips{gap:8px}
+  .q .chipb{font-size:15px; line-height:20px; padding:8px 12px}
+  .q.bad .chipb{border-color:rgba(255,102,116,.55)}
+  .q.bad .qlab{color:var(--err)}
+
+  .tf-foot{display:flex; align-items:center; gap:12px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:24px}
+  .tf-foot .sp{flex:1}
+
+  /* степпер справа */
+  .tf-steps{position:sticky; top:calc(var(--cb-h,200px) + 16px); display:flex; flex-direction:column; gap:0; padding:0; margin:0; list-style:none}
+  .tf-steps li + li{margin-top:24px; position:relative}
+  .tf-steps li + li::before{content:""; position:absolute; left:19px; top:-18px; height:12px; width:1px; background:var(--line-strong)}
+  /* DS «Stepper» (Figma 7001:50813): Default — номер; Completed — check-circle; Error — x-circle.
+     Active (блок на экране) — белые номер и подпись, без акцентного цвета на буллете; неактивные — 60% */
+  .tf-steps button{appearance:none; border:0; background:none; color:rgba(255,255,255,.6); font:inherit; font-size:14px; line-height:20px; cursor:pointer;
+    display:flex; align-items:center; gap:12px; padding:0; text-align:left}
+  .tf-steps button:hover{color:#fff}
+  .tf-steps .n{width:40px; height:40px; flex:none; border-radius:50%; display:grid; place-items:center; font-size:16px; line-height:20px; font-weight:500;
+    color:rgba(255,255,255,.6); background:rgba(255,255,255,.10); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .tf-steps .n img{width:24px; height:24px; display:block}
+  .tf-steps .done .n,.tf-steps .err .n{background:rgba(255,255,255,.15)}
+  .tf-steps .on button,.tf-steps .on .n{color:#fff}
+  @media (max-width:1100px){ .tf-grid{grid-template-columns:minmax(0,1fr)} .tf-steps{display:none} }
+  @media (max-width:640px){
+    .tf-card{padding:18px 16px} .tf-two{grid-template-columns:1fr} .tf-half{max-width:none}
+    .tf-sec h2,.tf-general h2{font-size:19px; line-height:24px; margin-bottom:18px}
+    .tf-foot .btn{flex:1 1 100%}
+    .tf-crumbs{display:none}
+  }
+</style>
+<link rel="stylesheet" href="compact-header.css">
+<script>window.REQUEST_FORM_URL="request-form-compact.html";</script>
+</head>
+<body>
+<!-- ============ ХАРНЕСС ПРОТОТИПА ============ -->
+<div class="harness">
+  <div class="harness-row">
+    <span class="tag">Прототип</span>
+    <div class="proto-menu" id="protoMenu">
+      <button class="pm-trigger" aria-haspopup="menu" aria-expanded="false">
+        <span class="pm-cur">Компактная шапка заявки</span>
+        <svg class="pm-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="pm-pop" role="menu" hidden>
+        <a role="menuitem" href="index.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 12h14M5 16h9"/><path d="M15.5 4.5l4 4"/></svg>
+          <span>Экран заявки<small>Перевод полей, роли, статусы, табы</small></span>
+        </a>
+        <a role="menuitem" href="related-requests.html" hidden style="display:none">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+          <span>Связанные заявки<small>Колонка «2 + всего N» · карточка · экран заявки (T-03 §3)</small></span>
+        </a>
+        <a role="menuitem" href="request-groups.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>
+          <span>Группа заявок<small>Создание, дублирование заявки и группы, единая отправка (#215)</small></span>
+        </a>
+        <a role="menuitem" href="request-candidates.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><rect x="15" y="5" width="7" height="9" rx="1.5"/></svg>
+          <span>Кандидаты заявки<small>Лист карточек · превью: 4 вкладки карточки кандидата</small></span>
+        </a>
+        <a role="menuitem" href="candidate-import.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5L12 11l2.5 2.5"/></svg>
+          <span>Импорт кандидатов<small>Из файла: сопоставление колонок, результат, разбор записей (T-65)</small></span>
+        </a>
+        <a role="menuitem" href="request-form.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h5"/><path d="M14 17.5l1.5 1.5 3-3"/></svg>
+          <span>Целевая форма заявки<small>Создание заявки · черновик при первом вводе</small></span>
+        </a>
+        <a role="menuitem" href="request-form-compact.html" aria-current="page">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M12 13v4M10 15l2 2 2-2"/></svg>
+          <span>Компактная шапка заявки<small>docs#326 · создание, черновик и просмотр: закреплённая панель</small></span>
+        </a>
+        <a role="menuitem" href="requests.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>
+          <span>Список заявок<small>Статусы со счётчиками · черновики: дублировать, удалить</small></span>
+        </a>
+        <a role="menuitem" href="notifications.html">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>
+          <span>Колокольчик уведомлений<small>Панель in-app уведомлений U1, U3–U7 · счётчики, состояния (docs#59)</small></span>
+        </a>
+        <a role="menuitem" href="services.html#support">
+          <svg class="pm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8"/><path d="M12 17h.01"/></svg>
+          <span>Связаться с техподдержкой<small>Меню «?»: копирование почты и телефона · «Написать в поддержку» (docs#196) · «Запросить звонок» (docs#320)</small></span>
+        </a>
+      </div>
+    </div>
+    <div class="ctl"><span class="lbl">Экран</span><div class="seg" role="group" aria-label="Экран"><button aria-pressed="true" onclick="location.href='request-form-compact.html'">Создание</button><button aria-pressed="false" onclick="location.href='request-view-compact.html'">Просмотр</button></div></div>
+    <div class="ctl"><span class="lbl">Проверка</span><div class="seg"><button type="button" id="chStress" aria-pressed="false">Длинное название, 2 статуса, 2 действия</button></div></div>
+    <div class="ctl"><a href="request-form.html">Как было ↗</a></div>
+    <div class="ctl"><span class="lbl">Роль</span><div class="seg" id="chRole" role="group" aria-label="Роль"><button data-n="ИП Гаврилова" data-r="Клиент в РФ" aria-pressed="true">Клиент</button><button data-n="Администратор" data-r="Сотрудник платформы" aria-pressed="false">Админ</button></div></div>
+    <div class="ctl">
+      <span class="lbl">Состояние</span>
+      <div class="seg" id="stateSeg" role="group" aria-label="Состояние формы">
+        <button data-st="empty" aria-pressed="true">Пустая форма</button>
+        <button data-st="draft" aria-pressed="false">Черновик</button>
+        <button data-st="saving" aria-pressed="false">Сохраняется</button>
+        <button data-st="error" aria-pressed="false">Не сохранено</button>
+        <button data-st="offline" aria-pressed="false">Нет сети</button>
+        <button data-st="field" aria-pressed="false">Ошибка в поле</button>
+        <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
+        <button data-st="filled" aria-pressed="false">Всё заполнено</button>
+        <button data-st="submit" aria-pressed="false">Ошибки после отправки</button>
+        <button data-st="dup" aria-pressed="false">Дубль создан</button>
+        <button data-st="duperr" aria-pressed="false">Ошибка дублирования</button>
+        <button data-st="sent" aria-pressed="false">Отправлена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ НАВИГАЦИЯ ЛК КЛИЕНТА ============ -->
+<nav class="topnav"><div class="topnav-in">
+  <div class="brand-links">
+    <a href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span>Главная</span></a>
+    <a href="requests.html" class="active"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Заявки</span></a>
+  </div>
+  <div class="who"><span class="help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg></span><div><div class="nm">ИП Гаврилова</div><div class="rl">Клиент в РФ</div></div></div>
+</div></nav>
+
+<!-- ============ ЗАЛИПАЮЩАЯ ШАПКА (как в «Экране заявки») ============ -->
+<header class="lk-header"><div class="lk-header-in">
+  <p class="tf-crumbs"><a href="requests.html" id="crumbList">Заявки</a> / <span id="crumbCur">Новая заявка</span></p>
+  <div class="tf-title">
+    <button class="backc tf-back" id="backBtn" aria-label="Вернуться к заявкам">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+      <span class="tf-tip" id="backTip" hidden>Вернуться к заявкам<small>Черновик сохранится</small></span>
+    </button>
+    <h1 id="title">Новая заявка</h1>
+    <span class="rc-ref" id="sentRef" hidden></span>
+    <span class="tf-chip" id="draftChip" hidden>Черновик</span>
+    <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+      <span class="lbl">Дублировать</span>
+      <span class="tf-tip" id="dupTip" role="tooltip"></span>
+    </button>
+  </div>
+  <p class="tf-sub" id="sub">Заполните вручную, продиктуйте или загрузите файл — нейросеть заполнит поля за вас</p>
+  <p class="tf-meta" id="meta" hidden></p>
+</div></header>
+
+<main class="tf-wrap">
+
+  <div class="tf-grid">
+    <form class="tf-card" id="form" novalidate autocomplete="off">
+      <div id="dupAlert" aria-live="polite"></div>
+      <div class="tf-mode" role="tablist">
+        <button type="button" class="rtab" role="tab" data-mode="voice" aria-selected="true">Продиктовать</button>
+        <button type="button" class="rtab" role="tab" data-mode="brief" aria-selected="false">Загрузить файл</button>
+      </div>
+      <button type="button" class="tf-drop" id="drop">
+        <span class="mic" id="dropIc"></span>
+        <b id="dropT"></b>
+        <small id="dropS"></small>
+      </button>
+
+      <div style="margin-top:8px">
+        <section class="tf-sec" id="s1">
+          <h2>Способ привлечения и квота</h2>
+          <div class="tf-rows">
+            <div class="fi" data-req><div class="box">
+              <select name="attract"><option value=""></option><option>Квотируемые</option><option>Неквотируемые</option><option>Высококвалифицированные (ВКС)</option><option>Территория опережающего развития (ТОР)</option><option>Не знаю</option></select>
+              <span class="pl">Какие специалисты нужны?<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="quota" data-show="attract:Квотируемые"><p class="qlab">У компании есть согласованная квота?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s2">
+          <h2>Потребность в специалистах</h2>
+          <div class="tf-rows">
+            <div class="fi" data-req data-show="attract:Квотируемые|Неквотируемые|Высококвалифицированные (ВКС)|Территория опережающего развития (ТОР)|Не знаю" id="profFi"><div class="box"><input name="prof" autocomplete="off" role="combobox" aria-expanded="false"><span class="pl">Профессия<i>*</i></span><span class="end pe dd-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span></div>
+              <p class="et">Обязательное поле</p>
+              <p class="ht" id="profManual" hidden>Введено вручную. Профессию проверит и подберёт менеджер из справочника перед началом работы</p></div>
+            <div class="fi" data-show="attract:Квотируемые"><div class="box"><input name="occ" readonly tabindex="-1"><span class="pl">Занятие (привязано к профессии)</span></div></div>
+            <div class="fi" data-req><div class="box">
+              <select name="region"><option value=""></option><option>Москва</option><option>Московская обл.</option><option>Ленинградская обл.</option><option>Республика Татарстан</option><option>Свердловская обл.</option><option>Краснодарский край</option></select>
+              <span class="pl">Регион работы<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+            </div><p class="et">Обязательное поле</p>
+              <p class="ht" data-show="attract:Квотируемые&quota:Да">Регион должен соответствовать региону, указанному в заявлении на квоту.</p></div>
+            <div class="fi"><div class="box"><input name="address"><span class="pl">Адрес работы</span></div>
+              <p class="ht" data-show="attract:Квотируемые&quota:Да">Адрес должен соответствовать адресу, указанному в заявлении на квоту.</p></div>
+            <div class="tf-two">
+              <div class="fi" data-req><div class="box"><input name="qty" type="number" min="1" inputmode="numeric"><span class="pl">Количество специалистов<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div>
+                <p class="et">Обязательное поле</p></div>
+              <div class="fi"><div class="box"><input name="grade"><span class="pl">Грейд или разряд</span></div>
+                <p class="ht">Заполните, если для вакансии используется грейд или разряд</p></div>
+            </div>
+            <div class="q" data-req data-name="term"><p class="qlab">Срок привлечения специалистов<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">6 месяцев</button><button type="button" class="chipb">1 год</button><button type="button" class="chipb">2 года</button><button type="button" class="chipb">Другой срок</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi tf-half" data-req data-show="term:Другой срок"><div class="box"><input name="termOther" type="number" min="1" inputmode="numeric"><span class="pl">Другой срок<i>*</i></span><span class="end pe unit">мес.</span></div>
+              <p class="et">Обязательное поле</p><p class="ht">Укажите срок в месяцах.</p></div>
+            <div class="fi tf-half" data-req><div class="box"><input name="start" type="date"><span class="pl">Планируемая дата выхода на работу<i>*</i></span>
+              <span class="end pe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg></span></div><p class="et">Обязательное поле</p>
+</div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s3">
+          <h2>Условия оплаты</h2>
+          <div class="tf-rows">
+            <div class="fi tf-half" data-req><div class="box"><input name="salary" inputmode="numeric"><span class="pl">Заработная плата, ₽<i>*</i></span></div>
+              <p class="et">Обязательное поле</p><p class="ht">Укажите зарплату в рублях за месяц до вычета НДФЛ.</p>
+              <p class="ht" data-show="attract:Высококвалифицированные (ВКС)">Для данного способа привлечения действуют ограничения по минимальному размеру заработной платы.</p></div>
+            <div class="q" data-name="probation"><p class="qlab">Предусмотрен ли испытательный срок?</p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+            <div class="fi tf-half" data-show="probation:Да"><div class="box"><input name="probSalary" inputmode="numeric"><span class="pl">Зарплата на испытательном сроке, ₽</span></div>
+              <p class="ht">В рублях за месяц до вычета НДФЛ.</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s4">
+          <h2>Бытовые условия и логистика</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="food"><p class="qlab">Компания организует питание?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="food:Другое"><div class="box"><input name="foodOther"><span class="pl">Как будет организовано питание?<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Как сотрудники будут питаться, кто оплачивает питание и в каком размере</p></div>
+            <div class="q" data-req data-name="housing"><p class="qlab">Проживание сотрудников<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Общежитие</button><button type="button" class="chipb">Хостел</button><button type="button" class="chipb">Другое жильё</button><button type="button" class="chipb">Компания не предоставляет жильё</button></div>
+              <p class="et">Обязательное поле</p><p class="ht" data-show="housing:Общежитие|Хостел">Предоставляемое жильё должно иметь статус жилого помещения.</p></div>
+            <div class="fi" data-req data-show="housing:Другое жильё"><div class="box"><input name="housingOther"><span class="pl">Другой вариант проживания<i>*</i></span></div>
+              <p class="et">Обязательное поле</p><p class="ht">Предоставляемое жильё должно иметь статус жилого помещения.</p></div>
+            <div class="fi" data-show="housing:Общежитие|Хостел"><div class="box"><input name="housingTerms"><span class="pl">Условия проживания</span></div>
+              <p class="ht">Укажите адрес или тип объекта, количество человек в комнате и другие важные условия.</p></div>
+            <div class="q" data-req data-name="commute"><p class="qlab">Как сотрудники будут добираться до места работы?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Жильё находится в пешей доступности</button><button type="button" class="chipb">Сотрудники добираются самостоятельно</button><button type="button" class="chipb">Компания предоставляет транспорт</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="commute:Другое"><div class="box"><input name="commuteOther"><span class="pl">Другой вариант проезда<i>*</i></span></div><p class="et">Обязательное поле</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s5">
+          <h2>Организация работ и медицина</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="foreman"><p class="qlab">Нужен ли бригадир?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="foreman:Да"><div class="box"><input name="foremanCount" type="number" min="1" inputmode="numeric"><span class="pl">Количество сотрудников на одного бригадира<i>*</i></span><span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="foremanHow" data-show="foreman:Да"><p class="qlab">Как будет выбран бригадир?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Назначим одного из сотрудников</button><button type="button" class="chipb">Откроем отдельную вакансию</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi"><div class="box"><input name="med"><span class="pl">Расширенный медосмотр</span></div>
+              <p class="ht">Перечислите обследования, которые нужно пройти. Если медосмотр не нужен, оставьте поле пустым</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s6">
+          <h2>Дополнительные услуги</h2>
+          <div class="tf-rows">
+            <div class="q" data-req data-name="tickets"><p class="qlab">Нужна помощь с покупкой билетов?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, купим билеты самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="tickets:Другое"><div class="box"><input name="ticketsOther"><span class="pl">Какая помощь с переездом нужна?<i>*</i></span></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="airport"><p class="qlab">Нужна помощь со встречей сотрудников в аэропорту?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет, встретим самостоятельно</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="airport:Другое"><div class="box"><input name="airportOther"><span class="pl">Свой вариант встречи<i>*</i></span></div><p class="et">Обязательное поле</p></div>
+            <div class="q" data-req data-name="translator"><p class="qlab">Нужен ли переводчик?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Да, в штат</button><button type="button" class="chipb">Да, на период адаптации</button><button type="button" class="chipb">Нет</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="translator:Другое"><div class="box"><input name="translatorOther"><span class="pl">Какое сопровождение переводчика нужно?<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Укажите формат (на объекте, онлайн), период, языки и другие условия</p></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s7">
+          <h2>Профиль вакансии и кандидата</h2>
+          <div class="tf-rows">
+            <div class="q" data-name="gender"><p class="qlab">Пол специалистов</p>
+              <div class="chips"><button type="button" class="chipb">Мужской</button><button type="button" class="chipb">Женский</button><button type="button" class="chipb">Не имеет значения</button></div>
+              <p class="ht" data-show="gender:Мужской|Женский">Указывайте пол только при наличии объективных требований, связанных с характером работы</p></div>
+            <div class="age-group"><p class="qlab">Возраст, лет</p>
+              <div class="tf-two">
+              <div class="fi ph" data-req data-label="Возраст от, лет"><div class="box"><input name="ageFrom" aria-label="Возраст от, лет" type="number" min="18" inputmode="numeric" placeholder="18"><span class="pl">От<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
+              <div class="fi" data-req data-label="Возраст до, лет"><div class="box"><input name="ageTo" aria-label="Возраст до, лет" type="number" min="18" inputmode="numeric"><span class="pl">До<i>*</i></span>
+                <span class="end"><button type="button" class="step" data-d="-1" aria-label="Меньше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button><button type="button" class="step" data-d="1" aria-label="Больше"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 15l6-6 6 6"/></svg></button></span></div><p class="et">Обязательное поле</p></div>
+            </div></div>
+            <div class="fi"><div class="box"><textarea name="duties" rows="3"></textarea><span class="pl">Должностные обязанности</span></div>
+              <p class="ht">Опишите основные задачи специалиста</p></div>
+            <div class="fi"><div class="box"><textarea name="reqs" rows="3"></textarea><span class="pl">Требования к специалисту</span></div>
+              <p class="ht">Укажите необходимые навыки, опыт, образование, допуски или сертификаты</p></div>
+            <div class="q" data-name="interview"><p class="qlab">Формат собеседования</p>
+              <div class="chips"><button type="button" class="chipb">Очно</button><button type="button" class="chipb">Онлайн</button><button type="button" class="chipb">Отбор проводит исполнитель</button></div></div>
+          </div>
+        </section>
+
+        <section class="tf-sec" id="s8">
+          <h2>График и переработки</h2>
+          <div class="tf-rows">
+            <div class="q" data-name="schedule"><p class="qlab">Режим работы</p>
+              <div class="chips"><button type="button" class="chipb">5/2, 8 часов в день</button><button type="button" class="chipb">6/1, 8 часов в день</button><button type="button" class="chipb">Сменный график</button><button type="button" class="chipb">Вахта</button><button type="button" class="chipb">Другое</button></div></div>
+            <div class="fi" data-show="schedule:Сменный график|Вахта|Другое"><div class="box"><input name="schedDetails"><span class="pl">Детали режима работы</span></div>
+              <p class="ht" data-show="schedule:Сменный график">Укажите длительность и чередование смен.</p>
+              <p class="ht" data-show="schedule:Вахта">Укажите длительность смен и периодичность вахты.</p>
+              <p class="ht" data-show="schedule:Другое">Опишите особенности графика.</p></div>
+            <div class="q" data-name="overtime"><p class="qlab">Планируются ли переработки?</p>
+              <div class="chips"><button type="button" class="chipb">Да</button><button type="button" class="chipb">Нет</button></div></div>
+            <div class="q" data-req data-name="otPay" data-show="overtime:Да"><p class="qlab">Оплата переработок<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">По ТК РФ</button><button type="button" class="chipb">Фиксированная оплата</button><button type="button" class="chipb">Другое</button></div><p class="et">Обязательное поле</p></div>
+            <div class="fi" data-req data-show="overtime:Да"><div class="box"><input name="otTerms"><span class="pl">Условия компенсации переработок<i>*</i></span></div><p class="et">Обязательное поле</p><p class="ht">Укажите ставку, порядок расчёта и другие условия (что считается переработками)</p></div>
+            <div class="q" data-req data-name="otCalc" data-show="overtime:Да"><p class="qlab">Как рассчитывается оплата переработок?<i>*</i></p>
+              <div class="chips"><button type="button" class="chipb">Почасово</button><button type="button" class="chipb">Сдельно</button><button type="button" class="chipb">Фиксированная сумма за месяц</button></div><p class="et">Обязательное поле</p></div>
+          </div>
+        </section>
+
+        <div class="tf-general">
+          <h2>Дополнительная информация</h2>
+          <div class="fi nolab" data-label="Дополнительная информация"><div class="box"><textarea name="extra" rows="3" aria-label="Дополнительная информация"></textarea></div>
+            <p class="ht">Укажите пожелания и уточнения, которых нет в других полях: маршрут прибытия, особые условия, сроки и т. д.</p></div>
+        </div>
+      </div>
+
+      <div class="tf-foot">
+        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик<span class="tf-tip del-tip" role="tooltip">Удалить черновик без восстановления<small>Вы вернетесь в список заявок</small></span></button>
+        <span class="sp"></span>
+        <button type="button" class="btn primary" id="sendBtn">Отправить заявку</button>
+      </div>
+    </form>
+
+    <aside class="tf-side">
+      <div class="side-cards" id="sideCards" hidden></div>
+      <ol class="tf-steps" id="steps"></ol>
+    </aside>
+  </div>
+</main>
+
+<div id="toast" role="status"></div>
+<div id="modalRoot"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const form=$("#form");
+const S={draft:false, created:null, saved:null, mode:"voice", rec:false, save:"ok", bad:[], st:"empty"};
+const pad=n=>String(n).padStart(2,"0");
+const dmy=d=>pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear();
+const hm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+
+/* ---------- дропзона: голос / бриф ---------- */
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>';
+function renderDrop(){
+  $$(".tf-mode .rtab").forEach(b=>b.setAttribute("aria-selected",b.dataset.mode===S.mode));
+  const v=S.mode==="voice";
+  $("#drop").classList.toggle("rec",v&&S.rec);
+  $("#dropIc").innerHTML=v?MIC:UP;
+  $("#dropT").textContent=v?(S.rec?"Идёт диктовка — нажмите, чтобы остановить":"Нажмите, чтобы начать диктовать"):"Нажмите, чтобы прикрепить файл";
+  $("#dropS").textContent=v?"Нейросеть распознает голос и заполнит поля формы":"Загрузите документ или изображение с текстом брифа";
+}
+$$(".tf-mode .rtab").forEach(b=>b.addEventListener("click",()=>{S.mode=b.dataset.mode; S.rec=false; renderDrop();}));
+$("#drop").addEventListener("click",()=>{
+  if(S.mode==="voice"){ S.rec=!S.rec; renderDrop(); if(!S.rec) toast("В прототипе диктовка не распознаётся"); }
+  else toast("В прототипе загрузка брифа не выполняется");
+});
+
+/* ---------- поля ---------- */
+function syncFi(fi){ const el=fi.querySelector("input,select,textarea"); fi.classList.toggle("has",!!el.value); }
+$$(".fi").forEach(fi=>{
+  const el=fi.querySelector("input,select,textarea");
+  el.addEventListener("input",()=>{syncFi(fi); fi.classList.remove("bad"); S.bad=S.bad.filter(n=>n!==el.name); touched();});
+  el.addEventListener("change",()=>{syncFi(fi); syncCond(); touched();});
+  fi.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
+    const min=+el.min||0;
+    el.value=el.value===""?min:Math.max(min, +el.value+(+b.dataset.d)); syncFi(fi); fi.classList.remove("bad"); touched();
+  }));
+});
+$$(".q").forEach(q=>{
+  q.querySelectorAll(".chipb").forEach(c=>{
+    c.setAttribute("role","radio"); c.setAttribute("aria-checked","false");
+    c.addEventListener("click",()=>{
+      const on=c.getAttribute("aria-checked")==="true";
+      q.querySelectorAll(".chipb").forEach(x=>x.setAttribute("aria-checked","false"));
+      if(!on) c.setAttribute("aria-checked","true");
+      q.classList.remove("bad"); syncAge(); syncCond(); touched();
+    });
+  });
+});
+const qVal=q=>{const c=q.querySelector('.chipb[aria-checked="true"]'); return c?c.textContent:"";};
+const setQ=(name,val)=>{const q=$('.q[data-name="'+name+'"]'); if(!q) return; q.querySelectorAll(".chipb").forEach(c=>c.setAttribute("aria-checked",c.textContent===val));};
+/* условный показ полей и подсказок по матрице 16.10: data-show="поле:значение1|значение2&поле2:значение" */
+function valOf(name){ const q=$('.q[data-name="'+name+'"]'); if(q) return qVal(q); const el=form.elements[name]; return el?el.value:""; }
+/* справочники профессий (демо): квотируемые — ОКПДТР с занятием; неквотируемые — перечень Минтруда */
+const PROF_Q={"Электросварщик ручной сварки":"Сварщики и газорезчики (7212)","Монтажник":"Монтажники металлоконструкций (7214)","Бетонщик":"Бетонщики (7114)","Арматурщик":"Арматурщики (7114)","Каменщик":"Каменщики (7112)","Слесарь-сборщик":"Слесари-сборщики (8211)"};
+const PROF_N=[["Инженер-конструктор","Работники научно-исследовательских, конструкторских и проектных организаций"],["Инженер-технолог","Работники организаций атомной энергетики"],["Инженер-технолог","Работники в сфере добычи, переработки и транспортировки нефти и газа"],["Инженер-технолог","Работники в сфере авиастроения"],["Инженер-технолог","Работники металлургического производства"],["Инженер-электрик","Работники организаций атомной энергетики"],["Повар","Работники сферы общественного питания"],["Сварщик","Работники строительства"],["Сварщик","Работники машиностроения"]];
+const METHOD_DESC={"Квотируемые":"Для визовых работников, чьи профессии не входят в перечень неквотируемых. Компании необходимо заранее получить квоту. Подтверждать знание русского не нужно","Неквотируемые":"Для визовых работников, чьи профессии входят в перечень Минтруда. Квота не требуется. Нужно подтвердить знание русского, а также истории и основ законодательства РФ","Высококвалифицированные (ВКС)":"Для высококвалифицированных специалистов с зарплатой, соответствующей актуальному установленному порогу. Подтверждать знание русского не нужно.","Территория опережающего развития (ТОР)":"Для компаний со статусом резидента территории опережающего развития. Квота не требуется. Нужно подтвердить знание русского","Не знаю":"Менеджер поможет определить тип специалистов"};
+function syncProf(){ const m=valOf("attract"), v=form.elements.prof.value.trim();
+  const list = m==="Квотируемые"?Object.keys(PROF_Q):m==="Неквотируемые"?PROF_N.map(x=>x[0]):[];
+  $("#profFi").classList.toggle("dd-on", list.length>0);
+  $("#profManual").hidden = !(list.length && v && !list.includes(v));
+  const occ = m==="Квотируемые" ? (PROF_Q[v]||"") : ""; if(form.elements.occ.value!==occ){ form.elements.occ.value=occ; syncFi(form.elements.occ.closest(".fi")); } }
+function syncCond(){ syncProf(); $$("[data-show]").forEach(n=>{ n.hidden = !n.dataset.show.split("&").every(c=>{ const [k,v]=c.split(":"); return v.split("|").includes(valOf(k)); }); }); }
+function syncAge(){}
+
+/* пустая форма: без предзаполнений — пол и «Возраст от» пустые, в «От» подсказка «18» (US-016 §5.4, docs#309 нота 49009) */
+function applyDefaults(){
+  form.querySelectorAll("input,select,textarea").forEach(el=>el.value="");
+  $$(".chipb").forEach(c=>c.setAttribute("aria-checked","false"));
+  $$(".fi").forEach(fi=>{syncFi(fi); fi.classList.remove("bad");});
+  $$(".q").forEach(q=>q.classList.remove("bad"));
+  syncAge();
+}
+
+/* ---------- прогресс: только обязательные поля, дефолты засчитываются (#232) ---------- */
+function reqList(){ return $$("[data-req]").filter(n=>!n.closest("[hidden]")); }
+function filled(n){ return n.classList.contains("q") ? !!qVal(n) : !!n.querySelector("input,select,textarea").value; }
+function progress(){ const r=reqList(); return Math.round(r.filter(filled).length/r.length*100); }
+
+/* ---------- черновик: появляется при первом вводе пользователя ---------- */
+/* поля, которые сервер отклонил (400 по полю, #246): ошибка под полем, остальное сохранено */
+const FIELDS={address:{l:"Адрес работы",e:"Не больше 255 символов"}, salary:{l:"Заработная плата",e:"Значение должно быть больше 0"}};
+const ICE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>';
+const ICI='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.3"/></svg>';
+let saveT;
+/* последнее состояние, подтверждённое сервером: из него создаётся дубль (T-84 §5, BR-02) */
+function snap(){ const els={}; [...form.elements].forEach(el=>{ if(el.name) els[el.name]=el.value; }); const q={}; $$(".q[data-name]").forEach(n=>q[n.dataset.name]=qVal(n)); return {els,q}; }
+function restoreSnap(sn){ if(!sn) return; Object.entries(sn.els).forEach(([k,v])=>{ if(form.elements[k]) form.elements[k].value=v; }); Object.entries(sn.q).forEach(([k,v])=>setQ(k,v)); syncAge(); $$(".fi").forEach(syncFi); }
+function save(){
+  clearTimeout(saveT);
+  if(!navigator.onLine){ S.save="offline"; renderHead(); return; }
+  S.save="saving"; renderHead();
+  saveT=setTimeout(()=>{ S.saved=new Date(); S.save=S.bad.length?"partial":"ok"; const prev=S.snap; S.snap=snap(); if(prev) S.bad.forEach(n=>{ S.snap.els[n]=prev.els[n]; }); markBad(); renderHead(); renderSteps(); },900);
+}
+function touched(){
+  if(!S.draft){ S.draft=true; S.created=new Date(); }
+  if(S.save!=="offline") save();
+  S.st="draft"; setSeg(); renderSteps();
+}
+function markBad(){
+  $$(".fi").forEach(fi=>{
+    const el=fi.querySelector("input,select,textarea"), f=FIELDS[el.name]; if(!f) return;
+    let et=fi.querySelector(".et"); if(!et){ et=document.createElement("p"); et.className="et"; fi.querySelector(".box").after(et); }
+    const on=S.bad.includes(el.name);
+    fi.classList.toggle("bad",on); if(on) et.textContent=f.e;
+  });
+}
+function goField(name){ const el=form.elements[name]; el.closest(".fi").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>el.focus({preventScroll:true}),350); }
+function saveHtml(){
+  const t=hm(S.saved||S.created);
+  if(S.save==="saving") return '<span class="sv saving">Сохраняется…</span>';
+  if(S.save==="error") return '<span class="sv err">'+ICE+'Не сохранено</span> <span class="bul">•</span> <button type="button" class="sv-retry" id="retry">Повторить</button>';
+  if(S.save==="offline") return '<span class="sv err">'+ICE+'Нет сети — изменения не сохраняются</span>';
+  if(S.save==="partial"){
+    if(S.bad.length===1) return '<span class="sv warn">'+ICE+'Сохранено: '+t+', кроме поля “'+FIELDS[S.bad[0]].l+'”</span>';
+    const tip='<span class="sv-info"><button type="button" aria-label="Какие поля проверить">'+ICI+'</button><span class="sv-tip" role="tooltip">Проверьте поля:<ul>'+
+      S.bad.map(n=>'<li><button type="button" data-f="'+n+'">'+FIELDS[n].l+'</button></li>').join("")+'</ul></span></span>';
+    return '<span class="sv warn">'+ICE+'Сохранено: '+t+', кроме некоторых полей:'+'</span>'+tip;
+  }
+  return 'Сохранено: '+t;
+}
+function renderHead(){
+  if(S.sent){
+    $("#draftChip").hidden=false; $("#draftChip").textContent=STL[S.status]; $("#draftChip").className="tf-chip s-"+S.status;
+    $("#sub").hidden=true; $("#meta").hidden=false; $("#backTip").hidden=true; $("#delBtn").hidden=true;
+    $("#title").textContent=form.elements.prof.value||"Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
+    const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
+    $("#dupTip").innerHTML="Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small>";
+    $("#meta").innerHTML="Отправлена: "+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
+    setStackH(); return;
+  }
+  $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
+  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Новая заявка"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Новая заявка";
+  $("#draftChip").hidden=!S.draft;
+  $("#sub").hidden=S.draft;
+  $("#meta").hidden=!S.draft;
+  $("#backTip").hidden=!S.draft;
+  $("#delBtn").hidden=!S.draft;
+  const db=$("#dupBtn"), blocked=false;
+  db.hidden=!S.draft;
+  db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
+  $("#dupTip").innerHTML=blocked
+    ? "Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small>"
+    : "Дубль откроется для редактирования<small>Текущий черновик заявки останется в «Черновиках»</small>";
+  if(S.draft){
+    const del=new Date(S.created); del.setDate(del.getDate()+30);
+    const parts=["Заполнено на "+progress()+"%",'<span class="m-del">Удалится автоматически: '+dmy(del)+'</span>',saveHtml()];
+    $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
+  }
+  setStackH();
+}
+$("#meta").addEventListener("click",e=>{
+  if(e.target.closest("#retry")) save();
+  const f=e.target.closest("[data-f]"); if(f) goField(f.dataset.f);
+});
+window.addEventListener("offline",()=>{ if(S.draft){ clearTimeout(saveT); S.save="offline"; renderHead(); } });
+window.addEventListener("online",()=>{ if(S.draft && S.save==="offline") save(); });
+function setSeg(){ $$("#stateSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.st===S.st)); }
+
+/* ---------- выпадающие списки по макету: select-поля и профессия ---------- */
+const CK='<svg class="ck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12l5 5 9-10"/></svg>';
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let ddOpen=null;
+function ddClose(){ if(!ddOpen) return; ddOpen.fi.classList.remove("open"); ddOpen.panel.remove(); const i=ddOpen.fi.querySelector("[role=combobox]"); if(i) i.setAttribute("aria-expanded","false"); ddOpen=null; }
+function ddRender(fi, items, cur, onPick, empty){
+  let panel=fi.querySelector(".dd-panel"); if(!panel){ panel=document.createElement("div"); panel.className="dd-panel"; panel.setAttribute("role","listbox"); fi.querySelector(".box").appendChild(panel); }
+  panel.innerHTML = items.length ? items.map((it,i)=> it.sep ? '<div class="dd-sep" role="separator"></div>'
+      : '<button type="button" class="dd-item" role="option" data-i="'+i+'" aria-selected="'+(it.v===cur)+'"><span class="tx"><b>'+esc(it.t)+'</b>'+(it.d?'<small>'+esc(it.d)+'</small>':'')+'</span>'+(it.v===cur?CK:'')+'</button>').join("")
+    : (empty||'');
+  panel.onmousedown=e=>e.preventDefault();
+  panel.onclick=e=>{ const b=e.target.closest(".dd-item"); if(b){ onPick(items[+b.dataset.i]); ddClose(); } const a=e.target.closest("[data-add]"); if(a){ ddClose(); fi.querySelector("input").blur(); syncCond(); } };
+  fi.classList.add("open"); ddOpen={fi,panel};
+}
+/* select → кастомный список (способ привлечения с описаниями вариантов, регион) */
+$$(".fi").forEach(fi=>{ const sel=fi.querySelector("select"); if(!sel) return; fi.classList.add("dd");
+  const box=fi.querySelector(".box"); box.tabIndex=0; box.setAttribute("role","combobox");
+  const open=()=>{ if(ddOpen&&ddOpen.fi===fi){ ddClose(); return; } ddClose();
+    const items=[]; [...sel.options].filter(o=>o.value).forEach(o=>{ if(sel.name==="attract" && o.value==="Не знаю") items.push({sep:1}); items.push({t:o.text, v:o.value, d: sel.name==="attract"?METHOD_DESC[o.value]:""}); });
+    ddRender(fi, items, sel.value, it=>{ sel.value=it.v; sel.dispatchEvent(new Event("input")); sel.dispatchEvent(new Event("change")); }); };
+  box.addEventListener("click",e=>{ if(e.target.closest(".dd-panel")) return; open(); });
+  box.addEventListener("keydown",e=>{ if(["Enter"," ","ArrowDown"].includes(e.key)){ e.preventDefault(); if(!(ddOpen&&ddOpen.fi===fi)) open(); } if(e.key==="Escape") ddClose(); });
+});
+/* профессия: поиск по справочнику способа; не нашли — «Добавить вручную» (Figma 7007:60458, 7008:64712) */
+(function(){ const fi=$("#profFi"), inp=form.elements.prof;
+  const EMPTY='<div class="dd-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"/></svg>Не смогли найти нужную профессию<button type="button" data-add>Добавить вручную</button></div>';
+  const show=()=>{ const m=valOf("attract"); if(m!=="Квотируемые" && m!=="Неквотируемые"){ ddClose(); return; }
+    const q=inp.value.trim().toLowerCase();
+    const all = m==="Квотируемые" ? Object.keys(PROF_Q).map(n=>({t:n,v:n})) : PROF_N.map(([n,d])=>({t:n,d,v:n}));
+    const items = all.filter(it=>!q || it.t.toLowerCase().includes(q));
+    ddRender(fi, items, inp.value, it=>{ inp.value=it.v; syncFi(fi); inp.dispatchEvent(new Event("input")); inp.blur(); }, q?EMPTY:''); if(!items.length && !q) ddClose(); };
+  inp.addEventListener("focus",show); inp.addEventListener("input",()=>{ if(document.activeElement===inp) show(); });
+  inp.addEventListener("keydown",e=>{ if(e.key==="Escape"){ ddClose(); inp.blur(); } });
+  inp.addEventListener("blur",()=>setTimeout(()=>{ if(ddOpen&&ddOpen.fi===fi && !fi.contains(document.activeElement)) ddClose(); },120));
+})();
+document.addEventListener("mousedown",e=>{ if(ddOpen && !ddOpen.fi.contains(e.target)) ddClose(); });
+
+/* ---------- степпер + подсветка текущей секции ---------- */
+const SECS=$$(".tf-sec");
+/* состояние блока: error — внутри есть поле с ошибкой (после отправки или отклонено сервером);
+   done — заполнены все обязательные поля блока (блок без обязательных — хотя бы одно поле) */
+function secState(sec){
+  if(sec.querySelector(".bad")) return "err";
+  if(!S.draft||S.sent) return "";
+  const vis=n=>!n.closest("[hidden]");
+  const req=[...sec.querySelectorAll("[data-req]")].filter(vis);
+  if(req.length) return req.every(filled)?"done":"";
+  const any=[...sec.querySelectorAll(".fi,.q")].filter(vis).some(filled);
+  return any?"done":"";
+}
+function renderSteps(){
+  syncCond();
+  const y=window.scrollY+window.innerHeight*.3;
+  let cur=0; SECS.forEach((s,i)=>{ if(s.getBoundingClientRect().top+window.scrollY<=y) cur=i; });
+  $("#steps").innerHTML=SECS.map((s,i)=>{
+    const st=secState(s);
+    const b=st==="done"?'<img src="icons/check-circle-fill.svg" width="24" height="24" alt="Заполнено">':st==="err"?'<img src="icons/x-circle-fill.svg" width="24" height="24" alt="Есть ошибки">':(i+1);
+    return '<li class="'+[i===cur?"on":"",st].join(" ").trim()+'"><button type="button" data-i="'+i+'"><span class="n">'+b+'</span>'+s.querySelector("h2").textContent+'</button></li>';
+  }).join("");
+}
+$("#crumbList").addEventListener("click",e=>{ if(S.draft&&!S.sent){ e.preventDefault(); location.href="requests.html#drafts"; } });
+$("#steps").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) SECS[+b.dataset.i].scrollIntoView({behavior:"smooth"});});
+
+/* ---------- действия ---------- */
+$("#sendBtn").addEventListener("click",()=>{
+  const miss=reqList().filter(n=>!filled(n));
+  miss.forEach(n=>{ n.classList.add("bad"); const et=n.querySelector(".et"); if(et) et.textContent="Обязательное поле"; });
+  /* проверки BRD US-016 §5.1: дата не в прошлом; возраст — целые годы, от 18, «от» не больше «до» */
+  const E=form.elements, wrong=(el,msg)=>{ const fi=el.closest(".fi"); fi.classList.add("bad"); fi.querySelector(".et").textContent=msg; miss.push(fi); };
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(E.start.value && new Date(E.start.value+"T00:00")<today) wrong(E.start,"Дата не может быть в прошлом");
+  if(E.ageFrom.value && +E.ageFrom.value<18) wrong(E.ageFrom,"Не меньше 18");
+  if(E.ageFrom.value && E.ageTo.value && +E.ageFrom.value>+E.ageTo.value) wrong(E.ageTo,"Не меньше, чем «Возраст от»");
+  renderSteps();
+  if(miss.length){ miss[0].scrollIntoView({behavior:"smooth",block:"center"}); toast("Заполните обязательные поля: "+miss.length); return; }
+  /* всё корректно → та же заявка в режиме просмотра (состояние «Отправлена») */
+  const b=$("#sendBtn"); b.disabled=true; b.textContent="Отправляем…";
+  setTimeout(()=>{ b.disabled=false; b.textContent="Отправить заявку"; showSent(); showCreated(); },600);
+});
+$("#backBtn").addEventListener("click",()=>{ location.href = S.draft&&!S.sent ? "requests.html#drafts" : "requests.html"; });
+$("#delBtn").addEventListener("click",()=>{
+  /* DS «Modal small» (7378:95780) */
+  $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+    '<div class="m-bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>'+
+    '<div class="m-top"><h2 id="mT">Удалить черновик?</h2></div>'+
+    '<p class="m-lead">Все поля внутри будут удалены без возможности восстановления.</p>'+
+    '<div class="m-acts"><button class="btn" data-x>Отмена</button><button class="btn primary" id="mDel">Удалить</button></div></div></div>';
+  const close=()=>$("#modalRoot").innerHTML="";
+  $$("#modalRoot [data-x]").forEach(b=>b.addEventListener("click",close));
+  $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
+  /* после удаления — в список заявок (вкладка «Черновики»), там же тост «Черновик удалён» */
+  $("#mDel").addEventListener("click",()=>{ close(); try{ sessionStorage.setItem("toast","Черновик удалён"); }catch(e){} location.href="requests.html#drafts"; });
+});
+
+/* ---------- дублирование заявки: новый независимый черновик из СОХРАНЁННОГО состояния (BRD US-019 §4.1.4–6) ---------- */
+const DUP_LBL='<span class="lbl">Дублировать</span>';
+const ICX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function dupBusy(on){
+  S.dupBusy=on; const b=$("#dupBtn");
+  b.classList.toggle("busy",on);
+  b.querySelector(".lbl").textContent=on?"Дублирование…":"Дублировать";
+  const ic=b.querySelector(":scope > svg, :scope > .spin");
+  if(on){ const sp=document.createElement("span"); sp.className="spin"; ic.replaceWith(sp); }
+  else if(ic.classList.contains("spin")){ ic.outerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'; }
+  renderHead();
+}
+function showDupAlert(kind){
+  $("#dupAlert").innerHTML = kind==="ok"
+    ? '<div class="alert info" role="status">'+ICI+'<div class="body"><b>Это дубль заявки.</b> Проверьте все условия перед отправкой. Вложения не скопированы.</div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : kind==="warn"
+    ? '<div class="alert warn" role="status">'+ICE+'<div class="body">Не удалось сохранить последние изменения в исходной заявке. Дубликат создан по последнему сохранённому состоянию.</div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : kind==="err"
+    ? '<div class="alert err" role="alert">'+ICE+'<div class="body">Не удалось создать дубль. Исходная заявка не изменилась. <button type="button" class="sv-retry" id="dupRetry">Повторить</button></div><button type="button" class="x" aria-label="Скрыть">'+ICX+'</button></div>'
+    : "";
+  setStackH();
+}
+$("#dupAlert").addEventListener("click",e=>{
+  if(e.target.closest(".x")) showDupAlert("");
+  if(e.target.closest("#dupRetry")){ S.dupFail=false; showDupAlert(""); doDup(); }
+});
+function doDup(){
+  dupBusy(true); showDupAlert("");
+  /* сохранить правки не удалось (ошибка сервера или отказ по полю) — команда всё равно уходит, копия из последнего сохранённого */
+  const stale = S.save==="error" || S.save==="partial";
+  setTimeout(()=>{
+    dupBusy(false);
+    /* нет сети — команда копирования тоже не проходит: ошибка с «Повторить» */
+    if(S.dupFail || !navigator.onLine || S.save==="offline"){ showDupAlert("err"); window.scrollTo({top:0,behavior:"smooth"}); return; }
+    if(stale) restoreSnap(S.snap);
+    finishDup(stale);
+  },700);
+}
+/* в дубль уходит только сохранённое: значения, не принятые сервером, не переносятся; файлов, номера, истории нет */
+function finishDup(stale){
+  unsent();
+  S.bad=[]; $$(".bad").forEach(n=>n.classList.remove("bad")); markBad();
+  $$(".fi").forEach(syncFi);
+  S.draft=true; S.created=new Date(); S.saved=new Date(); S.save="ok"; S.st="dup";
+  showDupAlert(stale?"warn":"ok"); S.snap=snap(); setSeg(); renderHead(); renderSteps();
+  history.replaceState(null,"","#dup");
+  window.scrollTo({top:0});
+  const c=$(".tf-card"); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+}
+$("#dupBtn").addEventListener("click",()=>{
+  if(S.dupBusy) return;
+  if(S.save==="saving"){   // ждём окончания автосохранения и продолжаем сами
+    dupBusy(true);
+    const w=setInterval(()=>{ if(S.save==="saving") return; clearInterval(w); dupBusy(false); $("#dupBtn").click(); },150);
+    return;
+  }
+  doDup();
+});
+
+/* ---------- «Отправлена»: значения формы как список «поле — значение» по тем же 8 разделам ---------- */
+const MON=v=>{ const n=+String(v).replace(/\s/g,""); return isNaN(n)?v:n.toLocaleString("ru-RU")+" ₽"; };
+function fiVal(el){
+  if(!el.value) return "";
+  if(el.type==="date"){ const [y,m,d]=el.value.split("-"); return d+"."+m+"."+y; }
+  if(el.name==="salary"||el.name==="probSalary") return MON(el.value);
+  return el.value;
+}
+function showSent(o={}){
+  $$(".kvv").forEach(n=>n.remove());
+  $$(".tf-sec, .tf-general").forEach(sec=>{
+    const rows=[...sec.querySelectorAll(".fi,.q")].filter(n=>!n.closest("[hidden]")).map(n=>{
+      if(n.classList.contains("q")) return [n.querySelector(".qlab").childNodes[0].textContent.trim(), qVal(n)];
+      const el=n.querySelector("input,select,textarea");
+      return [n.dataset.label || n.querySelector(".pl").childNodes[0].textContent.trim(), fiVal(el)];
+    });
+    const solo=sec.classList.contains("tf-general"); /* общее поле: заголовок блока, значение без повторной подписи */
+    const dl=document.createElement("dl"); dl.className="kvv"+(solo?" solo":"");
+    dl.innerHTML=rows.map(([k,v])=>'<div>'+(solo?'':'<dt>'+k+'</dt>')+'<dd'+(v?"":' class="none"')+'>'+(v?v.replace(/</g,"&lt;"):"Не указано")+'</dd></div>').join("");
+    sec.appendChild(dl);
+  });
+  clearTimeout(saveT); showDupAlert("");
+  const now=new Date(), yy=String(now.getFullYear()).slice(2);
+  S.sent=true; S.sentAt=o.sentAt||now; S.ref=o.ref||("№"+yy+pad(now.getMonth()+1)+pad(now.getDate())+"_1"); S.save="ok"; S.bad=[];
+  S.status=o.st||"new"; S.hired=o.hired||0; S.partners=o.partners||null; S.hist=o.hist||[]; if(o.created) S.created=o.created;
+  renderSide();
+  document.body.classList.add("sent"); S.st="sent"; setSeg();
+  history.replaceState(null,"","#"+(o.id?"req="+o.id:"sent"));
+  renderHead(); renderSteps(); window.scrollTo({top:0});
+}
+/* модалка «Заявка создана» (Figma 7323:49867) поверх отправленной заявки; закрытие — остаёмся на заявке */
+function showCreated(){
+  $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
+    '<div class="m-bubble ok"><img src="icons/check-circle-fill.svg" width="32" height="32" alt=""></div>'+
+    '<div class="m-top"><h2 id="mT">Готово, приняли вашу заявку</h2></div>'+
+    '<p class="m-lead">Наши менеджеры проверят ее и свяжутся с вами в ближайшее время.</p>'+
+    '<div class="m-acts"><button class="btn" id="mMore">Создать еще заявку</button><button class="btn primary" id="mList">К списку заявок</button></div></div></div>';
+  const close=()=>$("#modalRoot").innerHTML="";
+  $("#mbg").addEventListener("click",e=>{if(e.target.id==="mbg") close();});
+  $("#mMore").addEventListener("click",()=>{ close(); go("empty"); history.replaceState(null,"","#empty"); window.scrollTo({top:0}); });
+  $("#mList").addEventListener("click",()=>{ location.href="requests.html"; });
+  $(".modal").setAttribute("tabindex","-1"); $(".modal").focus({preventScroll:true});
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#mbg")) $("#modalRoot").innerHTML=""; });
+function unsent(){ if(!S.sent) return; S.sent=false; document.body.classList.remove("sent"); $$(".kvv").forEach(n=>n.remove()); $("#sideCards").hidden=true; }
+const dts=d=>dmy(d)+", "+hm(d)+":"+pad(d.getSeconds());
+function renderSide(){
+  const E=form.elements, qty=+E.qty.value||0, start=fiVal(E.start);
+  const cr=S.created||S.sentAt;
+  $("#sideCards").innerHTML=
+    '<div class="scard"><h3>Прогресс найма</h3><div class="prog-num">Нанято кандидатов</div><div class="prog-num"><b>'+S.hired+'</b> / '+qty+'</div>'+
+      '<div class="bar"><i style="width:'+(qty?Math.round(S.hired/qty*100):0)+'%"></i></div><div class="sinfo"><span>Дата выхода на работу</span><b>'+(start||"Не указана")+'</b></div></div>'+
+    '<div class="scard"><h3>Партнёры</h3>'+
+      '<div class="partner"><div class="lg">ИГ</div><div><div class="pn">Работодатель</div><div class="pv">ИП Гаврилова А. В.</div></div></div>'+
+      [["Партнёр в РФ",S.partners&&S.partners[0]],["Партнёр в Индии",S.partners&&S.partners[1]]].map(([r,n])=>n
+        ?'<div class="partner"><div class="lg">'+n.replace(/[«»"]/g,"").split(/\s+/).filter(w=>!/^(ООО|Inc\.)$/.test(w)).map(w=>w[0]).join("").slice(0,2).toUpperCase()+'</div><div><div class="pn">'+r+'</div><div class="pv">'+n+'</div></div></div>'
+        :'<div class="partner"><div class="lg none">—</div><div><div class="pn">'+r+'</div><div class="pv none">Не назначен</div></div></div>').join("")+'</div>'+
+    '<div class="scard"><button class="collapse" id="historyToggle" type="button" aria-expanded="false" aria-controls="historyBody"><h3 style="margin:0">История статусов</h3><span class="cv">⌄</span></button>'+
+      '<div class="history" id="historyBody" hidden>'+
+        '<div class="hrow"><span class="hpill"><span class="hdot draft"></span>Черновик</span><span class="htime">'+dts(cr)+'</span></div>'+
+        '<div class="hrow"><span class="hpill"><span class="hdot"></span>Новая</span><span class="htime">'+dts(S.sentAt)+'</span></div>'+
+        S.hist.map(([st,d])=>'<div class="hrow"><span class="hpill"><span class="hdot s-'+st+'"></span>'+STL[st]+'</span><span class="htime">'+dts(d)+'</span></div>').join("")+'</div></div>';
+  $("#sideCards").hidden=false;
+  $("#historyToggle").addEventListener("click",e=>{ const b=$("#historyBody"); b.hidden=!b.hidden; e.currentTarget.setAttribute("aria-expanded",String(!b.hidden)); });
+}
+
+function reset(){ unsent(); clearTimeout(saveT); S.snap=null; showDupAlert(""); S.dupFail=false; S.draft=false; S.created=S.saved=null; S.save="ok"; S.bad=[]; S.st="empty"; applyDefaults(); markBad(); setSeg(); renderHead(); renderSteps(); }
+/* демо-черновик + состояние индикатора сохранения из харнесса */
+function demo(st){
+  unsent(); clearTimeout(saveT); showDupAlert(""); S.dupFail=st==="duperr";
+  if(st==="fromreq") return fromReq();
+  applyDefaults();
+  const E=form.elements;
+  E.attract.value="Квотируемые"; setQ("quota","Да"); E.prof.value="Электросварщик ручной сварки"; E.region.value="Московская обл."; E.qty.value="12";
+  setQ("term","1 год"); setQ("food","Да");
+  S.bad=[];
+  if(st==="field"||st==="fields"){ E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; if(st==="fields") E.salary.value="95000"; }
+  S.snap=snap();
+  if(st==="error"||st==="offline") E.qty.value="15";   // правка после последнего сохранения
+  if(st==="field"||st==="fields"){
+    E.address.value="Московская область, городской округ Подольск, деревня Северово, территория индустриального парка «Северное Сияние», строение 7, корпус 2, помещение 14 — проход через КПП №3, затем вдоль складов логистического комплекса до административного здания, второй этаж, кабинет отдела кадров";
+    S.bad=["address"];
+    if(st==="fields"){ E.salary.value="0"; S.bad.push("salary"); }
+  }
+  if(st==="filled"||st==="submit"||st==="sent"){
+    E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; E.grade.value="5 разряд"; E.salary.value="95000"; E.start.value="2026-11-16";
+    setQ("probation","Нет"); setQ("commute","Компания предоставляет транспорт"); setQ("foreman","Нет"); setQ("med","Нет");
+    setQ("translator","Да, на период адаптации"); setQ("interview","Онлайн"); setQ("schedule","5/2, 8 часов в день"); setQ("overtime","Нет");
+    E.duties.value="Ручная дуговая сварка металлоконструкций"; E.reqs.value="Опыт от 2 лет, НАКС"; E.ageTo.value="45"; 
+    if(st==="filled"||st==="sent"){ setQ("housing","Общежитие"); setQ("tickets","Да"); setQ("airport","Да"); }
+  }
+  $$(".fi").forEach(syncFi);
+  const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
+  S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok",dup:"ok",duperr:"ok",sent:"ok"}[st]||"partial";
+  S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
+  if(st==="submit") setTimeout(()=>$("#sendBtn").click(),50);
+  if(st==="dup") finishDup();
+  if(st==="sent"){ showSent(); showCreated(); }
+}
+/* дубль, созданный с экрана заявки (index.html → «Дублировать»): поля заявки «Электросварщик ручной сварки» */
+function fromReq(){ fillWelder(); finishDup(); }
+function fillWelder(){
+  applyDefaults();
+  const E=form.elements, v={attract:"Квотируемые",region:"Москва",prof:"Электросварщик ручной сварки",address:"Москва, Пресненская набережная, 4",qty:"100",termOther:"24",probSalary:"120000",foodOther:"Компенсация 20 000 ₽ в месяц на питание в корпоративной столовой",commuteOther:"Служебный транспорт до места работы",foremanCount:"15",med:"Психиатр, нарколог, флюорография",airportOther:"Встреча в аэропорту с табличкой, трансфер до общежития",schedDetails:"Смены по 12 часов, чередование 2/2",otTerms:"2000 ₽ / час, не чаще одного раза в месяц, не более 2 часов",housingTerms:"Общежитие рядом с работой, двухместные комнаты",grade:"От 5 разряда и выше",
+    start:"2026-04-01",salary:"150000",ageFrom:"25",ageTo:"40",extra:"Маршрут прибытия: Бангалор – Краснодар – Санкт-Петербург",
+    duties:"Сварка особо сложных конструкций, эксплуатируемых в экстремальных условиях (газо- и нефтепроводы, узлы летательных аппаратов)",
+    reqs:"Опыт работы с разнородными металлами, допуск к работе на высоте"};
+  Object.entries(v).forEach(([k,x])=>E[k].value=x);
+  [["quota","Да"],["term","Другой срок"],["probation","Да"],["food","Другое"],["housing","Общежитие"],["commute","Другое"],["foreman","Да"],["foremanHow","Назначим одного из сотрудников"],
+   ["tickets","Да"],["airport","Другое"],["translator","Да, на период адаптации"],["gender","Мужской"],
+   ["interview","Онлайн"],["schedule","Сменный график"],["overtime","Да"],["otPay","Фиксированная оплата"],["otCalc","Почасово"]].forEach(([n,x])=>setQ(n,x));
+  syncAge(); S.bad=[];
+}
+/* ---------- открытие отправленной заявки из списка (requests.html → #req=ID): та же форма в режиме просмотра ---------- */
+const STL={new:"Новая",work:"В работе",done:"Завершена",cancel:"Отменена"};
+const D=(s,h=10,m=0)=>{ const [d,mo,y]=s.split("."); return new Date(+y,+mo-1,+d,h,m,12); };
+const REQS={
+  1:{st:"new",prof:"Электросварщик ручной сварки",ref:"№12345_1",cr:"01.10.2026",reg:"Кабардино-Балкарская Республика",start:"2026-10-10",qty:6,hired:2,grade:"123-й квалификационный разряд"},
+  2:{st:"new",prof:"Монтажник",ref:"№12345_2",cr:"01.10.2026",reg:"Москва",start:"2026-10-10",qty:6,hired:0,grade:"2-й квалификационный разряд"},
+  3:{st:"work",ref:"№12290_1",cr:"12.03.2026",welder:true,hired:15,qty:25,partners:["ООО Ромашка","Reliance Inc."],hist:[["work","14.03.2026"]]},
+  4:{st:"done",prof:"Бетонщик",ref:"№11874_1",cr:"02.02.2026",reg:"Московская обл.",start:"2026-03-01",qty:10,hired:10,grade:"3-й квалификационный разряд",partners:["ООО Ромашка","Reliance Inc."],hist:[["work","04.02.2026"],["done","30.04.2026"]]},
+  5:{st:"cancel",prof:"Арматурщик",ref:"№11802_1",cr:"20.01.2026",reg:"Республика Татарстан",start:"2026-02-15",qty:8,hired:0,grade:"4-й квалификационный разряд",hist:[["cancel","27.01.2026"]]}
+};
+function openReq(id){
+  const r=REQS[id]; if(!r) return go("empty");
+  if(r.welder){ fillWelder(); form.elements.qty.value=String(r.qty); }
+  else{
+    demo("filled"); const E=form.elements;
+    if(![...E.region.options].some(o=>o.value===r.reg)) E.region.add(new Option(r.reg,r.reg));
+    E.region.value=r.reg; E.start.value=r.start; if(r.prof) E.prof.value=r.prof; E.qty.value=String(r.qty); E.grade.value=r.grade;
+  }
+  $$(".fi").forEach(syncFi);
+  const cr=D(r.cr,9,40);
+  S.draft=true; S.created=cr;
+  showSent({id, st:r.st, ref:r.ref, created:cr, sentAt:D(r.cr,10,5), hired:r.hired, partners:r.partners, hist:(r.hist||[]).map(([st,d])=>[st,D(d,11,30)])});
+}
+function go(st){ st==="empty"?reset():demo(st); }
+$$("#stateSeg button").forEach(b=>b.addEventListener("click",()=>{ go(b.dataset.st); history.replaceState(null,"","#"+b.dataset.st); window.scrollTo({top:0}); }));
+
+let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(tT); tT=setTimeout(()=>el.classList.remove("show"),2400); }
+
+/* ---------- меню прототипов ---------- */
+(function(){
+  const pm=document.getElementById("protoMenu"); if(!pm) return;
+  const trig=pm.querySelector(".pm-trigger"), p=pm.querySelector(".pm-pop");
+  const cl=()=>{p.hidden=true; trig.setAttribute("aria-expanded","false");};
+  const op=()=>{p.hidden=false; trig.setAttribute("aria-expanded","true");};
+  trig.addEventListener("click",e=>{e.stopPropagation(); p.hidden?op():cl();});
+  document.addEventListener("click",e=>{if(!pm.contains(e.target)) cl();});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape") cl();});
+})();
+
+/* ---------- glass-навигация при скролле ---------- */
+function onScroll(){ renderSteps(); }
+function setStackH(){
+  /* главная навигация не закреплена — в стек над контентом входит только шапка заявки; высота дробная (zoom/DPR) — берём точную */
+  const t=0, h=$(".lk-header").getBoundingClientRect().height;
+  document.documentElement.style.setProperty("--topnav-h",t+"px");
+  document.documentElement.style.setProperty("--stack-h",(t+h)+"px");
+}
+setStackH(); window.addEventListener("resize",()=>{setStackH(); onScroll();});
+window.addEventListener("scroll",onScroll,{passive:true});
+
+renderDrop();
+{ const h=location.hash.slice(1); if(/^req=\d+$/.test(h)) openReq(+h.slice(4)); else go(h==="fromreq"||$$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
+
+/* харнесс: роль (состав шапки клиента и админа в требованиях одинаков, меняется кабинет) */
+$$("#chRole button").forEach(b=>b.addEventListener("click",()=>{
+  $$("#chRole button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $(".who .nm").textContent=b.dataset.n; $(".who .rl").textContent=b.dataset.r;
+}));
+</script>
+<script src="compact-header.js"></script>
+</body>
+</html>
