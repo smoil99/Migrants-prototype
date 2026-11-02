@@ -521,7 +521,7 @@
   .fi .end.unit{right:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55)}
   #delBtn{position:relative}
   #delBtn .del-tip{left:0}
-  #delBtn:hover .del-tip,#delBtn:focus-visible .del-tip{opacity:1; transform:none}
+  #delBtn:not(:disabled):hover .del-tip,#delBtn:not(:disabled):focus-visible .del-tip{opacity:1; transform:none}
   /* ---------- боковые карточки заявки — как на «Экране заявки» (index.html) ---------- */
   .tf-side{align-self:stretch; min-width:0}
   .side-cards{display:grid; gap:16px; margin-bottom:32px}
@@ -1133,7 +1133,7 @@ function renderHead(){
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
   $("#backTip").hidden=!S.draft;
-  $("#delBtn").hidden=!S.draft;
+  $("#delBtn").hidden=false; $("#delBtn").disabled=!S.draft;
   const db=$("#dupBtn"), blocked=false;
   db.hidden=!S.draft;
   db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
@@ -1141,8 +1141,7 @@ function renderHead(){
     ? "Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small>"
     : "Дубль откроется для редактирования<small>Текущий черновик заявки останется в «Черновиках»</small>";
   if(S.draft){
-    const del=new Date(S.created); del.setDate(del.getDate()+30);
-    const parts=["Заполнено на "+progress()+"%","Удалится автоматически: "+dmy(del),saveHtml()];
+    const parts=[saveHtml(),"Заполнено на "+progress()+"%"];
     $("#meta").innerHTML=parts.join(' <span class="bul">•</span> ');
   }
   setStackH();
