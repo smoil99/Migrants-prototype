@@ -439,9 +439,9 @@
     .who .nm,.who .rl{display:none}
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
-  /* форма заявки: главная навигация не залипает — закреплена только шапка заявки (у верха экрана) */
+  /* форма заявки: навигация и шапка идут в потоке страницы; при уходе шапки с экрана выезжает закреплённая #pinHead */
   .topnav{position:relative}
-  .lk-header{top:env(safe-area-inset-top,0px)}
+  .lk-header{position:relative; top:auto}
 </style>
 <style>
   /* ---------- целевая форма заявки (Figma 6783:33804 пустая · 7439:148673 черновик) ---------- */
@@ -461,16 +461,6 @@
     box-shadow:0 10px 24px -10px rgba(0,0,0,.7); opacity:0; transform:translateY(4px); transition:.14s; text-align:left; font-weight:400}
   .tf-tip small{display:block; color:var(--muted); font-size:12px}
   .tf-back:hover .tf-tip,.tf-back:focus-visible .tf-tip{opacity:1; transform:none}
-  /* компактная шапка после скролла: заголовок 20px, крошки скрыты (до скролла шапка не меняется) */
-  .tf-title h1{transform-origin:0 0}   /* размер заголовка анимируется через FLIP (scale), см. headerFlip() */
-  /* «Назад» остаётся 40px и выносится слева от заголовка и деталей черновика; они выравниваются по одному левому краю */
-  body.scrolled .lk-header-in{position:relative}
-  body.scrolled .lk-header-in > *{margin-left:52px}   /* 40 кнопка + 12 отступ */
-  body.scrolled .tf-back{position:absolute; left:clamp(16px,4vw,40px); top:50%; transform:translateY(-50%)}
-  body.scrolled .tf-title h1{font-size:20px; line-height:26px}
-  body.scrolled .tf-meta,body.scrolled .tf-sub{margin-top:0}   /* в компактной шапке детали черновика и подзаголовок пустой заявки — вплотную к заголовку */
-  body.scrolled .tf-crumbs{display:none}
-  body.scrolled .tf-tip{bottom:auto; top:calc(100% + 8px); transform:translateY(-4px)}
   /* «Дублировать» — вторичная кнопка DS справа в строке заголовка (слот «Экспорт» шапки 6783:33804) */
   .dup-btn{appearance:none; position:relative; margin-left:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:32px; padding:0 14px;
     border:0; border-radius:var(--r-pill); background:rgba(255,255,255,.10); box-shadow:inset 0 1px 0 rgba(255,255,255,.10), inset 0 0 0 1px rgba(255,255,255,.06);
@@ -703,6 +693,46 @@
     .tf-foot .btn{flex:1 1 100%}
     .tf-crumbs{display:none}
   }
+
+  /* ---------- закреплённая шапка: выезжает сверху, контент не сдвигается ---------- */
+  .pin-head{position:fixed; top:0; left:0; right:0; z-index:38; padding-top:env(safe-area-inset-top,0px); background:var(--glass);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
+    transform:translateY(-100%); visibility:hidden; transition:transform .2s ease, visibility .2s}
+  .pin-head.on{transform:none; visibility:visible}
+  .pin-in{position:relative; box-sizing:border-box; max-width:1472px; margin:0 auto; padding:16px clamp(16px,4vw,40px)}
+  .pin-in > *{margin-left:52px}   /* 40 кнопка + 12 отступ */
+  .pin-in .tf-back{position:absolute; left:clamp(16px,4vw,40px); top:50%; transform:translateY(-50%)}
+  .pin-in .tf-title h1{font-size:20px; line-height:26px}
+  .pin-in .tf-meta,.pin-in .tf-sub{margin-top:0}
+  .pin-in .tf-sub{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .pin-in .tf-tip{bottom:auto; top:calc(100% + 8px); transform:translateY(-4px)}
+  .pin-in .sv-tip{bottom:auto; top:calc(100% + 8px)}
+  .pin-in .sv-tip::after{top:auto; bottom:100%; border-top-color:transparent; border-bottom-color:#1c2023}
+  .pin-in .sv-tip::before{top:auto; bottom:100%}
+  .pin-head:has(.tf-tip:hover,.dup-btn:hover,.tf-back:hover){z-index:45}
+
+  /* ---------- длинное название: одна строка с многоточием, на телефоне две; полный текст — в #titleTip ---------- */
+  .tf-title{flex-wrap:nowrap}
+  .tf-title h1{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .tf-title .tf-back,.tf-title .tf-chip,.tf-title .rc-ref,.tf-title .dup-btn{flex:none}
+  .title-tip{position:fixed; z-index:95; max-width:min(480px,calc(100vw - 32px)); padding:6px 10px; border-radius:8px; border:1px solid var(--line-strong);
+    background:#1c2023; color:#fff; font-size:13px; line-height:18px; box-shadow:0 10px 24px -10px rgba(0,0,0,.7); pointer-events:none}
+  @media (max-width:640px){
+    .lk-header .tf-title{display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:4px 12px}
+    .lk-header .tf-title h1{grid-column:2; font-size:20px; line-height:26px; white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; flex:none}
+    .lk-header .tf-back{grid-column:1; grid-row:1}
+    .lk-header .dup-btn{grid-column:3; grid-row:1}
+    .lk-header .tf-chip,.lk-header .rc-ref{grid-column:2/-1; grid-row:2; justify-self:start}
+    .lk-header .rc-ref:not([hidden]) ~ .tf-chip{justify-self:end}
+    .pin-in .tf-title{gap:8px}
+    .pin-in .tf-title h1{flex:1 1 0; font-size:17px; line-height:24px}
+    .pin-in .tf-meta{font-size:13px}
+    .pin-in .tf-chip{display:none}
+    .sv-tip{left:auto; right:-8px; transform:translate(0,4px)}
+    .sv-info:hover .sv-tip,.sv-info:focus-within .sv-tip{transform:none}
+    .sv-tip::after{left:auto; right:10px}
+  }
+  @media (prefers-reduced-motion:reduce){ .pin-head{transition:none} }
 </style>
 </head>
 <body>
@@ -773,6 +803,7 @@
         <button data-st="field" aria-pressed="false">Ошибка в поле</button>
         <button data-st="fields" aria-pressed="false">Ошибки в полях</button>
         <button data-st="filled" aria-pressed="false">Всё заполнено</button>
+        <button data-st="long" aria-pressed="false">Длинное название</button>
         <button data-st="submit" aria-pressed="false">Ошибки после отправки</button>
         <button data-st="dup" aria-pressed="false">Дубль создан</button>
         <button data-st="duperr" aria-pressed="false">Ошибка дублирования</button>
@@ -811,6 +842,8 @@
   <p class="tf-sub" id="sub">Заполните вручную, продиктуйте или загрузите файл — нейросеть заполнит поля за вас</p>
   <p class="tf-meta" id="meta" hidden></p>
 </div></header>
+<div class="pin-head" id="pinHead" inert><div class="pin-in" id="pinIn"></div></div>
+<div class="title-tip" id="titleTip" role="tooltip" hidden></div>
 
 <main class="tf-wrap">
 
@@ -1383,6 +1416,7 @@ function demo(st){
   E.attract.value="Квотируемые"; setQ("quota","Да"); E.prof.value="Электросварщик ручной сварки"; E.region.value="Московская обл."; E.qty.value="12";
   setQ("term","1 год"); setQ("food","Да");
   S.bad=[];
+  if(st==="long") E.prof.value="Электрогазосварщик ручной дуговой и полуавтоматической сварки на монтаже металлоконструкций промышленных объектов (пятый разряд, вахта)";
   if(st==="field"||st==="fields"){ E.address.value="Московская обл., г. Подольск, ул. Комсомольская, д. 1"; if(st==="fields") E.salary.value="95000"; }
   S.snap=snap();
   if(st==="error"||st==="offline") E.qty.value="15";   // правка после последнего сохранения
@@ -1401,7 +1435,7 @@ function demo(st){
   $$(".fi").forEach(syncFi);
   const c=new Date(); c.setDate(c.getDate()-17); c.setHours(15,30);
   S.draft=true; S.created=c; S.saved=new Date(); S.saved.setHours(15,30);
-  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",submit:"ok",dup:"ok",duperr:"ok",sent:"ok"}[st]||"partial";
+  S.save={draft:"ok",saving:"saving",error:"error",offline:"offline",filled:"ok",long:"ok",submit:"ok",dup:"ok",duperr:"ok",sent:"ok"}[st]||"partial";
   S.st=st; markBad(); setSeg(); renderHead(); renderSteps();
   if(st==="submit") setTimeout(()=>$("#sendBtn").click(),50);
   if(st==="dup") finishDup();
@@ -1460,43 +1494,55 @@ let tT; function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.
   document.addEventListener("keydown",e=>{if(e.key==="Escape") cl();});
 })();
 
-/* ---------- glass-навигация при скролле ---------- */
+/* ---------- закреплённая шапка: копия полной, действия нажимают исходные кнопки ---------- */
+const pin=$("#pinHead"), lkHead=$(".lk-header");
+let pinKey="";
+function syncPin(){
+  const src=[$(".tf-title"),$("#sub"),$("#meta")], key=src.map(e=>e.outerHTML).join("");
+  if(key===pinKey) return;
+  pinKey=key;
+  const parts=src.map(e=>e.cloneNode(true));
+  parts.forEach(e=>{ e.removeAttribute("id"); e.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id")); });
+  $("#pinIn").replaceChildren(...parts);
+  $("#pinIn h1").setAttribute("role","presentation");
+  markCut(); setStackH();
+}
+new MutationObserver(syncPin).observe(lkHead,{subtree:true,childList:true,characterData:true,attributes:true});
+pin.addEventListener("click",e=>{
+  const q=[[".tf-back","#backBtn"],[".dup-btn","#dupBtn"],[".sv-retry","#retry"]].find(([a])=>e.target.closest(a));
+  if(q){ $(q[1]).click(); return; }
+  const f=e.target.closest("[data-f]"); if(f) goField(f.dataset.f);
+});
 function onScroll(){
-  // компактная шапка — когда шапка заявки доехала до верха (главная навигация уже ушла с экрана)
-  const was=document.body.classList.contains("scrolled"), on=window.scrollY>$(".harness").offsetHeight+$(".topnav").offsetHeight-2;
-  if(was!==on) headerFlip(()=>document.body.classList.toggle("scrolled",on));
-  if(was!==on) setStackH();   /* высота шапки меняется — пересчитать отступы якорей и боковой панели */
+  const on=lkHead.getBoundingClientRect().bottom<=0;
+  if(on!==pin.classList.contains("on")){ pin.classList.toggle("on",on); pin.inert=!on; hideTitleTip(); }
   renderSteps();
 }
-/* smart animate шапки (FLIP): запоминаем положения, переключаем режим, плавно ведём элементы из старых позиций в новые.
-   Заголовок дополнительно масштабируется 28→20px; строка под ним (детали черновика / подзаголовок), чип, «Назад», «Дублировать» — сдвигом */
-function headerFlip(apply){
-  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const els=["#title","#draftChip","#sentRef","#meta","#sub","#backBtn","#dupBtn"].map(q=>$(q)).filter(e=>e&&!e.hidden&&e.offsetParent);
-  const first=els.map(e=>e.getBoundingClientRect());
-  els.forEach(e=>e.getAnimations().forEach(a=>a.cancel()));
-  apply();
-  if(reduce) return;
-  els.forEach((e,i)=>{
-    const f=first[i], l=e.getBoundingClientRect(); if(!l.width||!l.height) return;
-    const dx=f.left-l.left, dy=f.top-l.top, sc=e.id==="title"?f.width/l.width:1;   // ширина текста пропорциональна размеру шрифта
-    if(Math.abs(dx)<.5&&Math.abs(dy)<.5&&Math.abs(sc-1)<.01) return;
-    const base=getComputedStyle(e).transform, keep=base&&base!=="none"?base+" ":"";   // у «Назад» в компактной шапке — translateY(-50%)
-    e.animate([{transform:"translate("+dx+"px,"+dy+"px) "+keep+"scale("+sc+")"},{transform:keep||"none"}],{duration:260,easing:"cubic-bezier(.2,0,0,1)"});
-  });
-}
-$(".lk-header").addEventListener("transitionend",e=>{ if(/^(height|font-size|padding-top|padding-bottom)$/.test(e.propertyName)) setStackH(); });
 function setStackH(){
-  /* главная навигация не закреплена — в стек над контентом входит только шапка заявки; высота дробная (zoom/DPR) — берём точную */
-  const t=0, h=$(".lk-header").getBoundingClientRect().height;
-  document.documentElement.style.setProperty("--topnav-h",t+"px");
-  document.documentElement.style.setProperty("--stack-h",(t+h)+"px");
+  /* над контентом при скролле только закреплённая шапка; высота дробная (zoom/DPR) — берём точную */
+  document.documentElement.style.setProperty("--stack-h",pin.getBoundingClientRect().height+"px");
 }
-setStackH(); window.addEventListener("resize",()=>{setStackH(); onScroll();});
+
+/* ---------- полное название: при наведении, фокусе и тапе, если текст обрезан ---------- */
+const titleTip=$("#titleTip"), isCut=e=>e.scrollWidth>e.clientWidth+1||e.scrollHeight>e.clientHeight+1;
+function showTitleTip(el){
+  if(!isCut(el)) return;
+  titleTip.textContent=el.textContent; titleTip.hidden=false;
+  const r=el.getBoundingClientRect();
+  titleTip.style.left=Math.max(16,Math.min(r.left,innerWidth-titleTip.offsetWidth-16))+"px"; titleTip.style.top=(r.bottom+6)+"px";
+}
+function hideTitleTip(){ titleTip.hidden=true; }
+function markCut(){ $$("#title,#pinIn h1").forEach(e=>{ if(isCut(e)) e.tabIndex=0; else e.removeAttribute("tabindex"); }); }
+[["mouseover",showTitleTip],["mouseout",hideTitleTip],["focusin",showTitleTip],["focusout",hideTitleTip],["click",el=>titleTip.hidden?showTitleTip(el):hideTitleTip()]]
+  .forEach(([ev,fn])=>document.addEventListener(ev,e=>{ const el=e.target.closest&&e.target.closest("#title,#pinIn h1"); if(el) fn(el); }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") hideTitleTip(); });
+window.addEventListener("scroll",hideTitleTip,{passive:true});
+window.addEventListener("resize",()=>{setStackH(); onScroll(); markCut();});
 window.addEventListener("scroll",onScroll,{passive:true});
 
 renderDrop();
 { const h=location.hash.slice(1); if(/^req=\d+$/.test(h)) openReq(+h.slice(4)); else go(h==="fromreq"||$$("#stateSeg button").some(b=>b.dataset.st===h)?h:"empty"); }
+syncPin(); setStackH(); onScroll();
 </script>
 </body>
 </html>
