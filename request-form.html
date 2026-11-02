@@ -449,7 +449,7 @@
   .topnav-in,.harness-row{max-width:1392px}
   .lk-header-in{max-width:1472px; padding-bottom:16px}
   .tf-wrap{padding-top:8px!important}
-  .tf-crumbs{font-size:12.5px; color:var(--muted); margin:0 0 14px}
+  .tf-crumbs{font-size:12.5px; color:var(--muted); margin:0 0 14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .tf-crumbs a{color:var(--muted)} .tf-crumbs a:hover{color:#fff}
   .tf-crumbs span{color:#fff; font-weight:500}
   .tf-title{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
@@ -550,7 +550,6 @@
   /* тултипы шапки уходят вверх, в зону навигации: пока они открыты, шапка выше навигации */
   .lk-header:has(.dup-btn:hover,.dup-btn:focus-visible,.tf-back:hover,.tf-back:focus-visible){z-index:40}
   /* ---------- состояние «Отправлена»: та же форма в режиме просмотра ---------- */
-  .rc-ref{font-size:15px; line-height:22px; color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.28); border-radius:6px; padding:0 7px; white-space:nowrap; font-variant-numeric:tabular-nums}
   .tf-chip.s-new{color:#fff; font-weight:500}
   .tf-chip.s-new::before{background:var(--accent)}
   .tf-chip.s-work,.tf-chip.s-done,.tf-chip.s-cancel{color:#fff; font-weight:500}
@@ -715,7 +714,7 @@
   /* ---------- длинное название: одна строка с многоточием, на телефоне две; полный текст — в #titleTip ---------- */
   .tf-title{flex-wrap:nowrap}
   .tf-title h1{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .tf-title .tf-back,.tf-title .tf-chip,.tf-title .rc-ref,.tf-title .dup-btn{flex:none}
+  .tf-title .tf-back,.tf-title .tf-chip,.tf-title .dup-btn{flex:none}
   .title-tip{position:fixed; z-index:95; max-width:min(480px,calc(100vw - 32px)); padding:6px 10px; border-radius:8px; border:1px solid var(--line-strong);
     background:#1c2023; color:#fff; font-size:13px; line-height:18px; box-shadow:0 10px 24px -10px rgba(0,0,0,.7); pointer-events:none}
   @media (max-width:640px){
@@ -723,8 +722,7 @@
     .lk-header .tf-title h1{grid-column:2; font-size:20px; line-height:26px; white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; flex:none}
     .lk-header .tf-back{grid-column:1; grid-row:1}
     .lk-header .dup-btn{grid-column:3; grid-row:1}
-    .lk-header .tf-chip,.lk-header .rc-ref{grid-column:2/-1; grid-row:2; justify-self:start}
-    .lk-header .rc-ref:not([hidden]) ~ .tf-chip{justify-self:end}
+    .lk-header .tf-chip{grid-column:2/-1; grid-row:2; justify-self:start}
     .pin-in .tf-title{gap:8px}
     .pin-in .tf-title h1{flex:1 1 0; font-size:17px; line-height:24px}
     .pin-in .tf-meta{font-size:13px}
@@ -832,7 +830,6 @@
       <span class="tf-tip" id="backTip" hidden>Вернуться к заявкам<small>Черновик сохранится</small></span>
     </button>
     <h1 id="title">Новая заявка</h1>
-    <span class="rc-ref" id="sentRef" hidden></span>
     <span class="tf-chip" id="draftChip" hidden>Черновик</span>
     <button type="button" class="dup-btn" id="dupBtn" hidden aria-label="Дублировать заявку">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
@@ -1155,14 +1152,14 @@ function renderHead(){
   if(S.sent){
     $("#draftChip").hidden=false; $("#draftChip").textContent=STL[S.status]; $("#draftChip").className="tf-chip s-"+S.status;
     $("#sub").hidden=true; $("#meta").hidden=false; $("#backTip").hidden=true; $("#delBtn").hidden=true;
-    $("#title").textContent=form.elements.prof.value||"Заявка"; $("#sentRef").hidden=false; $("#sentRef").textContent=S.ref; $("#crumbCur").textContent="Заявка "+S.ref;
+    $("#title").textContent=form.elements.prof.value||"Заявка"; $("#crumbCur").textContent=$("#title").textContent;
     const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
     $("#dupTip").innerHTML="Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small>";
-    $("#meta").innerHTML="Отправлена: "+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
+    $("#meta").innerHTML=S.ref+' <span class="bul">•</span> Отправлена: '+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
     setStackH(); return;
   }
   $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
-  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Новая заявка"; $("#sentRef").hidden=true; $("#crumbCur").textContent="Новая заявка";
+  $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Новая заявка"; $("#crumbCur").textContent="Новая заявка";
   $("#draftChip").hidden=!S.draft;
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
