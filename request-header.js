@@ -533,4 +533,29 @@ document.documentElement.classList.toggle("rh-pin",PIN_HEADER);
       dup.querySelector(".spin").outerHTML=COPY_ICON;
     });
   }
+
+  /* закреплённая шапка просмотра: выезжает, когда шапка заявки ушла с экрана; контент не сдвигается. В *-compact своя панель */
+  const lk=document.querySelector(".lk-header");
+  if(lk && !window.REQUEST_FORM_URL){
+    const root=document.documentElement, tabs=lk.querySelector(".rh-tabs"), BACK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>';
+    const pin=document.createElement("div"); pin.className="rh-pinbar"; pin.inert=true;
+    pin.innerHTML='<div class="rh-pinbar-in"><a class="rh-pinbar-back" href="requests.html" aria-label="Вернуться к заявкам">'+BACK+'</a><div class="rh-pinbar-col"><div class="rh-pinbar-row"><span class="rh-pinbar-title"></span><span class="rh-pinbar-st"></span><nav class="rh-pinbar-tabs" aria-label="Разделы заявки"></nav><button type="button" class="dup-btn rh-pinbar-dup" aria-label="Дублировать заявку">'+COPY_ICON+'<span class="lbl">Дублировать</span></button></div><div class="rh-pinbar-meta"></div></div></div>';
+    lk.after(pin);
+    const q=s=>pin.querySelector(s), title=lk.querySelector("h1");
+    const sync=()=>{
+      q(".rh-pinbar-title").textContent=title.textContent; q(".rh-pinbar-title").title=title.textContent;
+      q(".rh-pinbar-st").innerHTML=lk.querySelector(".rh-status").outerHTML;
+      q(".rh-pinbar-tabs").innerHTML=tabs.innerHTML;
+      q(".rh-pinbar-meta").innerHTML=lk.querySelector(".rh-meta").innerHTML;
+      q(".rh-pinbar-dup").hidden=!dup||dup.offsetParent===null;
+    };
+    const setPin=()=>{ const h=pin.offsetHeight+"px"; if(root.style.getPropertyValue("--stack-h")!==h) root.style.setProperty("--stack-h",h); };
+    const onPin=()=>{ const on=lk.offsetParent!==null&&lk.getBoundingClientRect().bottom<=0; pin.classList.toggle("on",on); pin.inert=!on; };
+    q(".rh-pinbar-dup").addEventListener("click",()=>dup.click());
+    new MutationObserver(sync).observe(lk,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:["hidden","style","class"]});
+    new MutationObserver(setPin).observe(root,{attributes:true,attributeFilter:["style"]});
+    new ResizeObserver(setPin).observe(pin);
+    window.addEventListener("scroll",onPin,{passive:true}); window.addEventListener("resize",onPin);
+    sync(); setPin(); onPin();
+  }
 })();

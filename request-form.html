@@ -711,6 +711,18 @@
   .pin-in .sv-tip::before{top:auto; bottom:100%}
   .pin-head:has(.tf-tip:hover,.dup-btn:hover,.tf-back:hover){z-index:45}
 
+  .pin-tabs{flex:none; display:flex; align-items:center; gap:2px; margin-left:auto; overflow-x:auto; scrollbar-width:none}
+  .pin-tabs::-webkit-scrollbar{display:none}
+  .pin-tabs a{flex:none; padding:5px 10px; border-radius:32px; font-size:13px; line-height:20px; font-weight:500; color:var(--muted); text-decoration:none}
+  .pin-tabs a:hover{color:#fff}
+  .pin-tabs a[aria-current="page"]{background:rgba(255,255,255,.10); color:#fff}
+  .pin-in .pin-tabs + .dup-btn{margin-left:0}
+  @media (max-width:1100px){
+    .pin-in:has(.pin-tabs) .tf-title{flex-wrap:wrap}
+    .pin-tabs{order:5; flex:1 0 100%; margin-left:0}
+    .pin-in .pin-tabs + .dup-btn{margin-left:auto}
+  }
+
   /* ---------- длинное название: одна строка с многоточием, на телефоне две; полный текст — в #titleTip ---------- */
   .tf-title{flex-wrap:nowrap}
   .tf-title h1{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -1503,6 +1515,9 @@ function syncPin(){
   pinKey=key;
   const parts=src.map(e=>e.cloneNode(true));
   parts.forEach(e=>{ e.removeAttribute("id"); e.querySelectorAll("[id]").forEach(x=>x.removeAttribute("id")); });
+  if(S.sent){ const nav=document.createElement("nav"); nav.className="pin-tabs"; nav.setAttribute("aria-label","Разделы заявки");
+    nav.innerHTML='<a href="#sent" aria-current="page">Обзор</a><a href="request-candidates.html">Кандидаты</a><a href="services.html">Услуги</a><a href="documents.html">Документы</a>';
+    parts[0].querySelector(".dup-btn").before(nav); }
   $("#pinIn").replaceChildren(...parts);
   $("#pinIn h1").setAttribute("role","presentation");
   markCut(); setStackH();

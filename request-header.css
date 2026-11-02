@@ -307,3 +307,42 @@ html{overflow-x:clip}   /* скрытые подсказки и меню у пр
 
 .sm-acts.cf-confirm-acts{justify-content:flex-end}
 .sm-acts.cf-confirm-acts .sm-btn{flex:none}
+
+/* ---------- закреплённая шапка просмотра: навигация уезжает со страницей, панель выезжает сверху ---------- */
+.topnav{position:relative}
+body.scrolled .topnav{background:transparent; border-bottom-color:transparent; -webkit-backdrop-filter:none; backdrop-filter:none}
+.rh-pinbar{position:fixed; top:0; left:0; right:0; z-index:38; padding-top:env(safe-area-inset-top,0px); background:var(--glass,rgba(24,28,31,.62));
+  -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); box-shadow:0 12px 34px -22px rgba(0,0,0,.8);
+  transform:translateY(-100%); visibility:hidden; transition:transform .2s ease, visibility .2s}
+.rh-pinbar.on{transform:none; visibility:visible}
+.rh-pinbar-in{display:flex; align-items:center; gap:12px; box-sizing:border-box; max-width:1240px; margin:0 auto; padding:16px clamp(16px,4vw,40px)}
+.rh-pinbar-back{flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.10); color:#fff}
+.rh-pinbar-back:hover{background:rgba(255,255,255,.16)}
+.rh-pinbar-back svg{width:18px; height:18px}
+.rh-pinbar-col{flex:1; min-width:0}
+.rh-pinbar-row{display:flex; align-items:center; gap:12px; min-width:0}
+.rh-pinbar-title{flex:0 1 auto; min-width:0; font-size:20px; line-height:26px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.rh-pinbar-st{flex:none; display:inline-flex}
+.rh-pinbar-st .rh-status{padding:2px 11px; font-size:13px}
+.rh-pinbar-tabs{flex:none; display:flex; align-items:center; gap:2px; margin-left:auto; overflow-x:auto; scrollbar-width:none}
+.rh-pinbar-tabs::-webkit-scrollbar{display:none}
+.rh-pinbar-tabs a{flex:none; padding:5px 10px; border-radius:32px; font-size:13px; line-height:20px; font-weight:500; color:var(--muted,#8A9092); text-decoration:none}
+.rh-pinbar-tabs a:hover{color:#fff}
+.rh-pinbar-tabs a[aria-current="page"]{background:rgba(255,255,255,.10); color:#fff}
+.rh-pinbar-dup{flex:none; margin:0}
+.rh-pinbar-meta{display:flex; gap:0 16px; font-size:13px; line-height:20px; color:var(--muted,#8A9092); white-space:nowrap; overflow:hidden}
+.rh-pinbar-meta > span{display:inline-flex; align-items:center; gap:6px}
+.rh-pinbar-meta svg{width:14px; height:14px; flex:none}
+@media (max-width:1100px){
+  .rh-pinbar-row{flex-wrap:wrap}
+  .rh-pinbar-title{flex:1 1 0}
+  .rh-pinbar-tabs{order:5; flex:1 0 100%; margin-left:0}
+  .rh-pinbar-meta{display:none}
+}
+@media (max-width:640px){
+  .rh-pinbar-title{font-size:16px; line-height:24px}
+  .rh-pinbar-st{display:none}
+  .rh-pinbar-dup{width:32px; padding:0}
+  .rh-pinbar-dup .lbl{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .rh-pinbar{transition:none} }
