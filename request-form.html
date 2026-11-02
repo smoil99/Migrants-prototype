@@ -511,7 +511,8 @@
   .fi .end.unit{right:14px; top:13px; font-size:15px; line-height:20px; color:rgba(255,255,255,.55)}
   #delBtn{position:relative}
   #delBtn .del-tip{left:0}
-  #delBtn:not(:disabled):hover .del-tip,#delBtn:not(:disabled):focus-visible .del-tip{opacity:1; transform:none}
+  #delBtn:hover .del-tip,#delBtn:focus-visible .del-tip{opacity:1; transform:none}
+  #delBtn[aria-disabled="true"]{background:rgba(255,255,255,.06); color:var(--dim); box-shadow:none; cursor:not-allowed; filter:none}
   /* ---------- боковые карточки заявки — как на «Экране заявки» (index.html) ---------- */
   .tf-side{align-self:stretch; min-width:0}
   .side-cards{display:grid; gap:16px; margin-bottom:32px}
@@ -1015,7 +1016,7 @@
       </div>
 
       <div class="tf-foot">
-        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик<span class="tf-tip del-tip" role="tooltip">Удалить черновик без восстановления<small>Вы вернетесь в список заявок</small></span></button>
+        <button type="button" class="btn" id="delBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Удалить черновик<span class="tf-tip del-tip" id="delTip" role="tooltip">Удалить черновик без восстановления<small>Вы вернетесь в список заявок</small></span></button>
         <span class="sp"></span>
         <button type="button" class="btn primary" id="sendBtn">Отправить заявку</button>
       </div>
@@ -1166,12 +1167,13 @@ function renderHead(){
   $("#sub").hidden=S.draft;
   $("#meta").hidden=!S.draft;
   $("#backTip").hidden=!S.draft;
-  $("#delBtn").hidden=false; $("#delBtn").disabled=!S.draft;
-  const db=$("#dupBtn"), blocked=false;
-  db.hidden=!S.draft;
-  db.setAttribute("aria-disabled",blocked&&!S.dupBusy);
-  $("#dupTip").innerHTML=blocked
-    ? "Сначала сохраните изменения<small>Дубль создаётся из сохранённой заявки</small>"
+  const db=$("#dupBtn"), empty=!S.draft, NA="Недоступно для пустой заявки";
+  $("#delBtn").hidden=false; $("#delBtn").setAttribute("aria-disabled",empty);
+  $("#delTip").innerHTML=empty ? NA : "Удалить черновик без восстановления<small>Вы вернетесь в список заявок</small>";
+  db.hidden=false;
+  db.setAttribute("aria-disabled",empty);
+  $("#dupTip").innerHTML=empty
+    ? NA
     : "Дубль откроется для редактирования<small>Текущий черновик заявки останется в «Черновиках»</small>";
   if(S.draft){
     const parts=[saveHtml(),"Заполнено на "+progress()+"%"];
@@ -1268,6 +1270,7 @@ $("#sendBtn").addEventListener("click",()=>{
 });
 $("#backBtn").addEventListener("click",()=>{ location.href = S.draft&&!S.sent ? "requests.html#drafts" : "requests.html"; });
 $("#delBtn").addEventListener("click",()=>{
+  if(!S.draft) return;
   /* DS «Modal small» (7378:95780) */
   $("#modalRoot").innerHTML='<div class="mbg" id="mbg"><div class="modal m-small" role="dialog" aria-modal="true" aria-labelledby="mT">'+
     '<div class="m-bubble"><img src="icons/warning-diamond-fill.svg" width="32" height="32" alt=""></div>'+
@@ -1331,7 +1334,7 @@ function finishDup(stale){
   const c=$(".tf-card"); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
 }
 $("#dupBtn").addEventListener("click",()=>{
-  if(S.dupBusy) return;
+  if(S.dupBusy||$("#dupBtn").getAttribute("aria-disabled")==="true") return;
   if(S.save==="saving"){   // ждём окончания автосохранения и продолжаем сами
     dupBusy(true);
     const w=setInterval(()=>{ if(S.save==="saving") return; clearInterval(w); dupBusy(false); $("#dupBtn").click(); },150);
