@@ -711,6 +711,17 @@
   .pin-in .sv-tip::before{top:auto; bottom:100%}
   .pin-head:has(.tf-tip:hover,.dup-btn:hover,.tf-back:hover){z-index:45}
 
+  /* отправленная заявка: строка сведений и табы как на экране заявки (request-header.css) */
+  body.sent .tf-meta{gap:6px 20px; font-size:13px; line-height:20px; color:#fff}
+  body.sent .tf-meta > span{display:inline-flex; align-items:center; gap:6px}
+  body.sent .tf-meta svg{width:15px; height:15px; flex:none}
+  body.sent .lk-header > .lk-header-in{padding-bottom:0}
+  .tf-tabs{display:flex; gap:26px; margin-top:16px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+  .tf-tabs::-webkit-scrollbar{display:none}
+  .tf-tabs a{position:relative; flex:none; padding:0 0 12px; font-size:14px; line-height:20px; font-weight:500; color:var(--muted); text-decoration:none}
+  .tf-tabs a:hover{color:#dbe6e8}
+  .tf-tabs a[aria-current="page"]{color:#fff}
+  .tf-tabs a[aria-current="page"]::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary)}
   .pin-tabs{flex:none; display:flex; align-items:center; gap:2px; margin-left:auto; overflow-x:auto; scrollbar-width:none}
   .pin-tabs::-webkit-scrollbar{display:none}
   .pin-tabs a{flex:none; padding:5px 10px; border-radius:32px; font-size:13px; line-height:20px; font-weight:500; color:var(--muted); text-decoration:none}
@@ -852,6 +863,9 @@
   </div>
   <p class="tf-sub" id="sub">Заполните вручную, продиктуйте или загрузите файл — нейросеть заполнит поля за вас</p>
   <p class="tf-meta" id="meta" hidden></p>
+  <nav class="tf-tabs" id="sentTabs" aria-label="Разделы заявки" hidden>
+    <a href="#sent" aria-current="page">Обзор</a><a href="request-candidates.html">Кандидаты</a><a href="services.html">Услуги</a><a href="documents.html">Документы</a>
+  </nav>
 </div></header>
 <div class="pin-head" id="pinHead" inert><div class="pin-in" id="pinIn"></div></div>
 <div class="title-tip" id="titleTip" role="tooltip" hidden></div>
@@ -1161,6 +1175,10 @@ function saveHtml(){
   }
   return 'Сохранено: '+t;
 }
+const MI={ref:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 9h15M4 15h15M10 4 8 20M16 4l-2 16"/></svg>',
+  grade:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.2l2.4 2.4 4.6-4.8"/></svg>',
+  qty:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.3c1.6.6 2.7 2.2 3 4.7"/></svg>',
+  city:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>'};
 function renderHead(){
   if(S.sent){
     $("#draftChip").hidden=false; $("#draftChip").textContent=STL[S.status]; $("#draftChip").className="tf-chip s-"+S.status;
@@ -1168,9 +1186,12 @@ function renderHead(){
     $("#title").textContent=form.elements.prof.value||"Заявка"; $("#crumbCur").textContent=$("#title").textContent;
     const db=$("#dupBtn"); db.hidden=false; db.setAttribute("aria-disabled","false");
     $("#dupTip").innerHTML="Дубль откроется для редактирования<small>Заявка не изменится, вложения не будут перенесены</small>";
-    $("#meta").innerHTML=S.ref+' <span class="bul">•</span> Отправлена: '+dmy(S.sentAt)+", "+hm(S.sentAt)+' <span class="bul">•</span> Создано: '+dmy(S.created||S.sentAt);
+    const E=form.elements, mi=(ic,t)=>'<span>'+ic+'<span>'+esc(t)+'</span></span>';
+    $("#meta").innerHTML=mi(MI.ref,S.ref)+(E.grade.value?mi(MI.grade,"Разряд: "+E.grade.value):"")+mi(MI.qty,"Количество: "+E.qty.value+" чел.")+(E.region.value?mi(MI.city,E.region.value):"");
+    $("#sentTabs").hidden=false;
     setStackH(); return;
   }
+  $("#sentTabs").hidden=true;
   $("#draftChip").textContent="Черновик"; $("#draftChip").className="tf-chip";
   $("#title").textContent=(S.draft && form.elements.prof.value.trim()) || "Новая заявка"; $("#crumbCur").textContent="Новая заявка";
   $("#draftChip").hidden=!S.draft;
